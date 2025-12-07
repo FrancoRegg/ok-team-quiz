@@ -1,35 +1,42 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react';
+import io from 'socket.io-client';
+
+// Conectar Backend
+const socket = io('http://localhost:3000');
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [isConnected, setIsConnected] = useState(socket.connected);
+
+  useEffect(() => {
+    // Escuchar eventos de conexión del socket
+    socket.on('connect', () => {
+      setIsConnected(true);
+      console.log("Conectado al servidor con ID:", socket.id);
+    });
+
+    socket.on('disconnect', () => {
+      setIsConnected(false);
+    });
+
+    // Limpieza al cerrar el componente
+    return () => {
+      socket.off('connect');
+      socket.off('disconnect');
+    };
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div style={{ textAlign: 'center', marginTop: '50px', fontFamily: 'Arial' }}>
+      <h1>Prueba de Conexión OK TEAM</h1>
+      <h2>
+        Estado del Servidor: {' '}
+        <span style={{ color: isConnected ? 'green' : 'red', fontWeight: 'bold' }}>
+          {isConnected ? '🟢 CONECTADO' : '🔴 DESCONECTADO'}
+        </span>
+      </h2>
+      <p>Si ves esto en verde, la Fase 0 y 1 están listas.</p>
+    </div>
+  );
 }
 
-export default App
+export default App;
