@@ -17,6 +17,7 @@ const io = new Server(server, {
 });
 
 const players = {}
+let gameState = 'LOBBY'
 
 // Escucha los eventos de conexion
 io.on("connection", (socket) => {
@@ -34,6 +35,8 @@ io.on("connection", (socket) => {
         };
 
         socket.join('game_room')
+
+        socket.emit('game_state', gameState)
 
         const playerList = Object.values(players)
         io.to('game_room').emit('update_players', playerList)
