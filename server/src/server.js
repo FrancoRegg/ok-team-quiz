@@ -47,6 +47,15 @@ io.on("connection", (socket) => {
         console.log("Desconectado: ", socket.id);
         delete players[socket.id]
     });
+
+    socket.on('start_game', ()=>{
+        gameState = "QUESTION"
+
+        io.to('game_room').emit('game_state', gameState)
+        console.log("El juego comenzo", gameState)
+    });
+
+    
     
 });
 
