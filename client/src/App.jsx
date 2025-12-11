@@ -8,7 +8,8 @@ function App() {
   const [isConnected, setIsConnected] = useState(socket.connected);
   const [inside, setInside] = useState(false);
   const [nameGroup, setNameGroup] = useState("");
-
+  const [gameState, setGameState] = useState("LOBBY")
+  console.log("ESTADO DEL JUEGO",gameState)
   useEffect(() => {
     // Escuchar eventos de conexión del socket
     socket.on('connect', () => {
@@ -18,6 +19,10 @@ function App() {
 
     socket.on('disconnect', () => {
       setIsConnected(false);
+    });
+
+    socket.on('game_state', (stateFromServer)=>{
+      setGameState(stateFromServer)
     });
 
     // Limpieza al cerrar el componente
