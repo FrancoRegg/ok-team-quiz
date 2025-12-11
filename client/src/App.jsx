@@ -29,6 +29,7 @@ function App() {
     return () => {
       socket.off('connect');
       socket.off('disconnect');
+      socket.off('game_state');
     };
   }, []);
 
