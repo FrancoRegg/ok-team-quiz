@@ -22,6 +22,7 @@ function HostView() {
                     <li key={i}>{grupo.name}</li>
                 ))}
             </ul>
+            <button onClick={()=>{socket.emit('start_game')}}>Empezar Juego</button>
         </div>
         
     );
