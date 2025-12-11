@@ -55,7 +55,11 @@ io.on("connection", (socket) => {
         console.log("El juego comenzo", gameState)
     });
 
-    
+    socket.on('reset_game', () => {
+        gameState = "LOBBY"
+
+        io.to('game_room').emit('game_state', gameState)
+    })
     
 });
 
