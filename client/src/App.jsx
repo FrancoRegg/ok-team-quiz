@@ -43,7 +43,7 @@ function App() {
       <h1>Join the Game!</h1>
       
       {inside ? 
-        (gameState ? (
+        (gameState === 'LOBBY' ? (
           'Esperando al presentador... ⏳'
         ) : (
         <div>
@@ -62,8 +62,6 @@ function App() {
         </div>
       )}
       
-
-
       <h6>
         Estado del Servidor: {' '}
         <span style={{ color: isConnected ? 'green' : 'red', fontWeight: 'bold' }}>
