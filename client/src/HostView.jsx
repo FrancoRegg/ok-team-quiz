@@ -5,24 +5,43 @@ const socket = io('http://localhost:3000');
 
 function HostView() {
     const [groups, setGroups] = useState([])
-
+    const [gameState, setGameState] = useState("LOBBY")
 
     useEffect(() => {
         socket.emit('join_game', {name:'HOST'})
         socket.on('update_players', (data) =>{
             setGroups(data)
         })
+
+        socket.on('game_state', (data)=>{
+            setGameState(data)
+        })
+
+        //Limpieza al cerrado el componente
+        return() =>{
+            socket.off('update_players'),
+            socket.off('game_game')
+        }
     }, []);
 
     return(
         <div>
             <h1>Pantalla Grande</h1>
-            <ul>
-                {groups.filter(grupo => grupo.name !== 'HOST').map((grupo, i)=>(
-                    <li key={i}>{grupo.name}</li>
-                ))}
-            </ul>
-            <button onClick={()=>{socket.emit('start_game')}}>Empezar Juego</button>
+            {gameState === 'LOBBY' ? (
+                <div>
+                    <ul>
+                        {groups.filter(grupo => grupo.name !== 'HOST').map((grupo, i)=>(
+                            <li key={i}>{grupo.name}</li>
+                        ))}
+                    </ul>
+                    <button onClick={()=>{socket.emit('start_game')}}>Empezar Juego</button>
+                </div>) : (
+                    <div>
+                        <h1>Pregunta 1</h1>
+                        <button onClick={()=>{socket.emit('reset_game')}}>Resetear Juego</button>
+                    </div>
+                )}
+            
         </div>
         
     );
