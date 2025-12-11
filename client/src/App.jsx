@@ -42,13 +42,25 @@ function App() {
     <div style={{ textAlign: 'center', marginTop: '50px', fontFamily: 'Arial' }}>
       <h1>Join the Game!</h1>
       
-      {inside ? `BIENVENIDO AL JUEGO EQUIPO ${nameGroup.toUpperCase()}` : 
-      <div>
-        <label>
-          <input name="Entrada" value={nameGroup} onChange={e => setNameGroup(e.target.value)} />
-        </label>
-        <button onClick={enterGame}> Entrar al Juego </button>
-      </div>}
+      {inside ? 
+        (gameState ? (
+          'Esperando al presentador... ⏳'
+        ) : (
+        <div>
+          <button>Boton 1</button>
+          <button>Boton 2</button>
+          <button>Boton 3</button>
+          <button>Boton 4</button>
+        </div>
+        )
+          ) : (
+          <div>
+            <label>
+              <input name="Entrada" value={nameGroup} onChange={e => setNameGroup(e.target.value)} />
+            </label>
+            <button onClick={enterGame}> Entrar al Juego </button>
+        </div>
+      )}
       
 
 
