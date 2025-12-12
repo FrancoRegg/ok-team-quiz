@@ -16,8 +16,27 @@ const io = new Server(server, {
     }
 });
 
+const questions = [
+    {
+        title: "¿Cuál es el planeta más grande del sistema solar?",
+        options: ["Tierra", "Marte", "Júpiter", "Saturno"],
+        correct: 2 // El índice de la respuesta correcta (0, 1, 2, 3)
+    },
+    {
+        title: "¿Cuántas patas tiene una araña?",
+        options: ["6", "8", "10", "12"],
+        correct: 1
+    },
+    {
+        title: "¿En qué año llegó el hombre a la luna?",
+        options: ["1969", "1975", "1960", "1980"],
+        correct: 0
+    }
+];
+
 const players = {}
 let gameState = 'LOBBY'
+let currentQuestionIndex = 0;
 
 // Escucha los eventos de conexion
 io.on("connection", (socket) => {
@@ -51,8 +70,13 @@ io.on("connection", (socket) => {
     socket.on('start_game', ()=>{
         gameState = "QUESTION"
 
+        const questionToSend = questions[currentQuestionIndex]
+
         io.to('game_room').emit('game_state', gameState)
         console.log("El juego comenzo", gameState)
+
+        io.to('game_room').emit('new_question', questionToSend)
+        console.log("Pregunta enviada:", questionToSend.options)
     });
 
     socket.on('reset_game', () => {
