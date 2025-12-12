@@ -9,7 +9,8 @@ function App() {
   const [inside, setInside] = useState(false);
   const [nameGroup, setNameGroup] = useState("");
   const [gameState, setGameState] = useState("LOBBY")
-  console.log("ESTADO DEL JUEGO",gameState)
+  const [optionsAnswers, setOptionsAnswers] = useState([])
+  console.log("OPCIONES DE RESPUESTAS:", optionsAnswers)
   useEffect(() => {
     // Escuchar eventos de conexión del socket
     socket.on('connect', () => {
@@ -21,15 +22,20 @@ function App() {
       setIsConnected(false);
     });
 
-    socket.on('game_state', (stateFromServer)=>{
+    socket.on('game_state', (stateFromServer) => {
       setGameState(stateFromServer)
     });
+
+    socket.on('new_question', (answers) => {
+      setOptionsAnswers(answers)
+    })
 
     // Limpieza al cerrar el componente
     return () => {
       socket.off('connect');
       socket.off('disconnect');
       socket.off('game_state');
+      socket.off('new_question');
     };
   }, []);
 
@@ -48,10 +54,9 @@ function App() {
           'Esperando al presentador... ⏳'
         ) : (
         <div>
-          <button>Boton 1</button>
-          <button>Boton 2</button>
-          <button>Boton 3</button>
-          <button>Boton 4</button>
+          {optionsAnswers.options.map((answer, i) => (
+            <button key={i}>{answer}</button>
+          ))}
         </div>
         )
           ) : (
