@@ -20,7 +20,7 @@ const questions = [
     {
         title: "¿Cuál es el planeta más grande del sistema solar?",
         options: ["Tierra", "Marte", "Júpiter", "Saturno"],
-        correct: 2 // El índice de la respuesta correcta (0, 1, 2, 3)
+        correct: 2 
     },
     {
         title: "¿Cuántas patas tiene una araña?",
@@ -43,7 +43,7 @@ io.on("connection", (socket) => {
     
     socket.on('join_game', (data)=>{
         const groupId = data.name 
-        if (groupId == ""){
+        if (!groupId || groupId === ""){
             console.log("No se permiten campos vacios")
             return;
         } 
@@ -55,43 +55,77 @@ io.on("connection", (socket) => {
 
         socket.join('game_room')
 
+        // Enviamos estado actual al que entra
         socket.emit('game_state', gameState)
-
-        const playerList = Object.values(players)
-        io.to('game_room').emit('update_players', playerList)
+        // Actualizamos la lista para TODOS en la sala
+        io.to('game_room').emit('update_players', Object.values(players))
     })
 
     socket.on('disconnect', () => {
         delete players[socket.id]
+        // Avisar a los jugadores de quien abandono la partida
+        io.to('game_room').emit('update_players', Object.values(players))
     });
 
     socket.on('start_game', () => {
         gameState = "QUESTION"
+        
+        // Verificar si ya se acabaron las preguntas
+        if (currentQuestionIndex >= questions.length) {
+            currentQuestionIndex = 0; 
+        }
 
-        const questionToSend = questions[currentQuestionIndex]
+        const fullQuestion = questions[currentQuestionIndex]
+
+        const questionToSend = {
+            title: fullQuestion.title,
+            options: fullQuestion.options
+        }
+
+        for(const id in players){
+            players[id].hasAnswered = false;
+        }
 
         io.to('game_room').emit('game_state', gameState)
-
         io.to('game_room').emit('new_question', questionToSend)
+
+        currentQuestionIndex++;
     });
 
     socket.on('reset_game', () => {
         gameState = "LOBBY"
+        currentQuestionIndex = 0;
+
+        // Reiniciar puntajes de todos los grupos
+        for (const id in players) {
+            players[id].score = 0;
+        }
 
         io.to('game_room').emit('game_state', gameState)
+        io.to('game_room').emit('update_players', Object.values(players))
     })
     
     socket.on('submit_answer', (data) => {
         const player = players[socket.id]
-        const currentQuestion = questions[currentQuestionIndex]
-        
-        if (data.answer === currentQuestion.correct){
-            
-            console.log("CORRECTOOOOO")
-        }else{
-            console.log("INCORRECTO")
+        // Validación por si el grupo se desconectó o no existe
+        if (!player) return; 
+
+        if(player.hasAnswered){
+            return;
+        }
+        player.hasAnswered = true;
+
+        const questionInPlay = questions[currentQuestionIndex - 1]; 
+
+        if (data.answer === questionInPlay.correct){
+            player.score += 100;
+            console.log(`Jugador ${player.name} acertó!`)
+        } else {
+            console.log(`Jugador ${player.name} falló.`)
         }
         
+        // Envia lista actualizada de puntajes inmediatamente
+        io.to('game_room').emit('update_players', Object.values(players))
     })
 });
 
