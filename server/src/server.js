@@ -40,7 +40,7 @@ let currentQuestionIndex = 0;
 
 // Escucha los eventos de conexion
 io.on("connection", (socket) => {
-    console.log("Nueva conexion: ", socket.id);
+    
     socket.on('join_game', (data)=>{
         const groupId = data.name 
         if (groupId == ""){
@@ -59,24 +59,20 @@ io.on("connection", (socket) => {
 
         const playerList = Object.values(players)
         io.to('game_room').emit('update_players', playerList)
-        console.log(`${groupId} se unio a la partida`)
     })
 
     socket.on('disconnect', () => {
-        console.log("Desconectado: ", socket.id);
         delete players[socket.id]
     });
 
-    socket.on('start_game', ()=>{
+    socket.on('start_game', () => {
         gameState = "QUESTION"
 
         const questionToSend = questions[currentQuestionIndex]
 
         io.to('game_room').emit('game_state', gameState)
-        console.log("El juego comenzo", gameState)
 
         io.to('game_room').emit('new_question', questionToSend)
-        console.log("Pregunta enviada:", questionToSend.options)
     });
 
     socket.on('reset_game', () => {
@@ -85,6 +81,18 @@ io.on("connection", (socket) => {
         io.to('game_room').emit('game_state', gameState)
     })
     
+    socket.on('submit_answer', (data) => {
+        const player = players[socket.id]
+        const currentQuestion = questions[currentQuestionIndex]
+        
+        if (data.answer === currentQuestion.correct){
+            
+            console.log("CORRECTOOOOO")
+        }else{
+            console.log("INCORRECTO")
+        }
+        
+    })
 });
 
 
