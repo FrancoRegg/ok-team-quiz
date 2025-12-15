@@ -9,8 +9,8 @@ function App() {
   const [inside, setInside] = useState(false);
   const [nameGroup, setNameGroup] = useState("");
   const [gameState, setGameState] = useState("LOBBY")
-  const [optionsAnswers, setOptionsAnswers] = useState([])
-  console.log("OPCIONES DE RESPUESTAS:", optionsAnswers)
+  const [optionsAnswers, setOptionsAnswers] = useState(null)
+  
   useEffect(() => {
     // Escuchar eventos de conexión del socket
     socket.on('connect', () => {
@@ -41,9 +41,14 @@ function App() {
 
   function enterGame(){
     
-    socket.emit('join_game', {name:nameGroup})
+    socket.emit('join_game', { name: nameGroup })
     setInside(true);
   }
+
+  function submitAnswer(i){
+    socket.emit('submit_answer', { answer: i })
+    console.log("INDICES",i)
+  } 
 
   return (
     <div style={{ textAlign: 'center', marginTop: '50px', fontFamily: 'Arial' }}>
@@ -55,7 +60,7 @@ function App() {
         ) : (
         <div>
           {optionsAnswers.options.map((answer, i) => (
-            <button key={i}>{answer}</button>
+            <button onClick={() => submitAnswer(i)} key={i}>{answer}</button>
           ))}
         </div>
         )
