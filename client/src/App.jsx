@@ -59,10 +59,20 @@ function App() {
           'Esperando al presentador... ⏳'
         ) : (
         <div>
-          {optionsAnswers.options.map((answer, i) => (
-            <button onClick={() => submitAnswer(i)} key={i}>{answer}</button>
-          ))}
-        </div>
+            {optionsAnswers?.options ? (
+              optionsAnswers.options.map((answer, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => submitAnswer(i)}
+                  style={{ margin: '10px', padding: '10px 20px', fontSize: '16px' }}
+                >
+                  {answer}
+                </button>
+              ))
+            ) : (
+              <p>Cargando preguntas...</p>
+            )}
+          </div>
         )
           ) : (
           <div>
