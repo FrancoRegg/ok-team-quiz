@@ -10,7 +10,8 @@ function App() {
   const [nameGroup, setNameGroup] = useState("");
   const [gameState, setGameState] = useState("LOBBY")
   const [optionsAnswers, setOptionsAnswers] = useState(null)
-  
+  const [hasAnswered, setHasAnswered] = useState(false)
+
   useEffect(() => {
     // Escuchar eventos de conexión del socket
     socket.on('connect', () => {
@@ -28,6 +29,7 @@ function App() {
 
     socket.on('new_question', (answers) => {
       setOptionsAnswers(answers)
+      setHasAnswered(false)
     })
 
     // Limpieza al cerrar el componente
@@ -47,7 +49,7 @@ function App() {
 
   function submitAnswer(i){
     socket.emit('submit_answer', { answer: i })
-    console.log("INDICES",i)
+    setHasAnswered(true)
   } 
 
   return (
@@ -62,6 +64,7 @@ function App() {
             {optionsAnswers?.options ? (
               optionsAnswers.options.map((answer, i) => (
                 <button 
+                  disabled={hasAnswered}
                   key={i} 
                   onClick={() => submitAnswer(i)}
                   style={{ margin: '10px', padding: '10px 20px', fontSize: '16px' }}
