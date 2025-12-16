@@ -119,9 +119,15 @@ io.on("connection", (socket) => {
 
         if (data.answer === questionInPlay.correct){
             player.score += 100;
-            console.log(`Jugador ${player.name} acertó!`)
+            socket.emit('answer_result', { 
+                correct : true,
+                correctIndex: questionInPlay.correct
+            })
         } else {
-            console.log(`Jugador ${player.name} falló.`)
+            socket.emit('answer_result', { 
+                correct : false,
+                correctIndex: questionInPlay.correct
+            })
         }
         
         // Envia lista actualizada de puntajes inmediatamente
