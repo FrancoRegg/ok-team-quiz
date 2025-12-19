@@ -14,6 +14,7 @@ function App() {
   const [answerStatus, setAnswerStatus] = useState(null);
   const [myAnswer, setMyAnswer] = useState(null);       
   const [correctAnswer, setCorrectAnswer] = useState(null);
+  const [scoreGroup, setScoreGroup] = useState(0)
 
   useEffect(() => {
     // Escuchar eventos de conexión del socket
@@ -26,8 +27,8 @@ function App() {
       setIsConnected(false);
     });
 
-    socket.on('game_state', (stateFromServer) => {
-      setGameState(stateFromServer)
+    socket.on('game_state', (state) => {
+      setGameState(state)
     });
 
     socket.on('new_question', (answers) => {
@@ -47,12 +48,20 @@ function App() {
       setCorrectAnswer(data.correctIndex)
     })
 
+    socket.on('update_players', (data) =>{
+        const myData = data.find(player => player.id === socket.id)
+            if(myData){
+                setScoreGroup(myData.score)
+            }
+        })
+
     // Limpieza al cerrar el componente
     return () => {
       socket.off('connect');
       socket.off('disconnect');
       socket.off('game_state');
       socket.off('new_question');
+      socket.off('update_players')
     };
   }, []);
 
@@ -80,6 +89,16 @@ function App() {
 
     // 4. El resto de botones se quedan grises o normales
     return 'gray';
+  }
+
+  if(gameState === 'GAME_OVER'){
+    return(
+      <div >
+        <h1>¡Juego Terminado! 🏁</h1>
+        <p>Mira la pantalla grande para ver al ganador.</p>
+        <h3>Tu puntaje final: {scoreGroup}</h3>
+      </div>
+    )
   }
 
   return (
@@ -125,7 +144,7 @@ function App() {
       )}
       
       <h6>
-        Estado del Servidor: {' '}
+        Estado del Servidor: {''}
         <span style={{ color: isConnected ? 'green' : 'red', fontWeight: 'bold' }}>
           {isConnected ? '🟢 CONECTADO' : '🔴 DESCONECTADO'}
         </span>
