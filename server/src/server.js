@@ -68,13 +68,18 @@ io.on("connection", (socket) => {
     });
 
     socket.on('start_game', () => {
-        gameState = "QUESTION"
         
         // Verificar si ya se acabaron las preguntas
         if (currentQuestionIndex >= questions.length) {
-            currentQuestionIndex = 0; 
+            gameState = 'GAME_OVER' 
+
+            io.to('game_room').emit('game_state', gameState)
+            io.to('game_room').emit('update_players', Object.values(players))
+
+            return;
         }
 
+        gameState = "QUESTION"
         const fullQuestion = questions[currentQuestionIndex]
 
         const questionToSend = {
@@ -82,13 +87,14 @@ io.on("connection", (socket) => {
             options: fullQuestion.options
         }
 
+        //Resetear el juego
         for(const id in players){
             players[id].hasAnswered = false;
         }
 
         io.to('game_room').emit('game_state', gameState)
         io.to('game_room').emit('new_question', questionToSend)
-
+        
         currentQuestionIndex++;
     });
 
