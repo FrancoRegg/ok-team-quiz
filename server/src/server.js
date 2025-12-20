@@ -5,7 +5,9 @@ const { Server } = require('socket.io')
 const cors = require('cors');
 const { sequelize } = require('../config/db');
 const { sincro } = require('../config/sync')
+const Question = require('../models/Questions')
 
+// Sincronizaicon de tablas
 sincro();
  
 const port = process.env.PORT;
@@ -21,23 +23,26 @@ const io = new Server(server, {
     }
 });
 
-const questions = [
-    {
-        title: "¿Cuál es el planeta más grande del sistema solar?",
-        options: ["Tierra", "Marte", "Júpiter", "Saturno"],
-        correct: 2 
-    },
-    {
-        title: "¿Cuántas patas tiene una araña?",
-        options: ["6", "8", "10", "12"],
-        correct: 1
-    },
-    {
-        title: "¿En qué año llegó el hombre a la luna?",
-        options: ["1969", "1975", "1960", "1980"],
-        correct: 0
+// Variable global para guardar las preguntas en memoria
+let questions = []; 
+
+// Función para cargar preguntas desde la BD
+async function loadQuestions() {
+    try {
+        // Pedimos todas las preguntas a Postgres
+        const questionsFromDB = await Question.findAll();
+        
+        // Convertimos los datos "crudos" de Sequelize a objetos JSON simples
+        questions = questionsFromDB.map(q => q.toJSON());
+        
+        console.log(`✅ ${questions.length} preguntas cargadas desde la Base de Datos.`);
+    } catch (error) {
+        console.error("❌ Error al cargar preguntas:", error);
     }
-];
+}
+
+// Ejecutamos la carga al iniciar
+loadQuestions();
 
 const players = {}
 let gameState = 'LOBBY'
@@ -128,16 +133,16 @@ io.on("connection", (socket) => {
 
         const questionInPlay = questions[currentQuestionIndex - 1]; 
 
-        if (data.answer === questionInPlay.correct){
+        if (data.answer === questionInPlay.correctIndex){
             player.score += 100;
             socket.emit('answer_result', { 
                 correct : true,
-                correctIndex: questionInPlay.correct
+                correctIndex: questionInPlay.correctIndex
             })
         } else {
             socket.emit('answer_result', { 
                 correct : false,
-                correctIndex: questionInPlay.correct
+                correctIndex: questionInPlay.correctIndex
             })
         }
         
