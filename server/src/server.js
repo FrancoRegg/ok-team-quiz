@@ -4,14 +4,15 @@ const http = require('http');
 const { Server } = require('socket.io')
 const cors = require('cors');
 const { sequelize } = require('../config/db');
+const { sincro } = require('../config/sync')
 
+sincro();
+ 
 const port = process.env.PORT;
 const app = express() // Inicializar express
 
 app.use(cors()); // Permite la conexion desde el frontend
 const server = http.createServer(app); // Creamos el servidor HTTP a partir de Express
-
-
 
 const io = new Server(server, {
     cors: {
