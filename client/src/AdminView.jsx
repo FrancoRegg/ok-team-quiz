@@ -24,6 +24,42 @@ function AdminView() {
         setOptions(copyOptions);
     }
 
+    const handleSubmit = async() => {
+        if(!title || options.some(opt => opt.trim() === "")){
+            alert("Debes rellenar el titulo y las opciones");
+            return;
+        }
+
+        let newQuestion = {title: title, type: type, options: options, mediaUrl: mediaUrl, correctIndex: correctIndex}
+        
+        try{
+            const response = await fetch('http://localhost:3000/api/questions',{
+                method: 'POST',
+                body: JSON.stringify(newQuestion),
+                headers:{
+                    'Content-Type': 'application/json'
+                }
+            
+            })
+            if(response.ok){
+                alert("¡Pregunta guardada con éxito! 🎉")
+                setTitle("")
+                setType("TEXT")
+                setOptions(["", ""])
+                setMediaUrl("")
+                setCorrectIndex(0)
+            }else{
+                alert("Hubo un error al guardar en el servidor.")
+            }
+
+        }catch(error){
+            console.error("Error de red:", error);
+            alert("No se pudo conectar con el servidor. Revisa que esté encendido.");
+            }
+        
+        
+    }
+
     return(
         <div>
             <h1>Panel de Administracion</h1>
@@ -75,6 +111,13 @@ function AdminView() {
                                 onChange={(e) => setMediaUrl(e.target.value)}/>
                         </label>
                     )}
+            </div>
+            <div>
+                <button 
+                    onClick={handleSubmit}
+                >
+                    💾 Guardar Pregunta
+                </button>
             </div>
         </div>
     )
