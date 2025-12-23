@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
-
+import AdminView from './AdminView';
 // Conectar Backend
 const socket = io('http://localhost:3000');
 
@@ -137,7 +137,7 @@ function App() {
           ) : (
           <div>
             <label>
-              <input name="Entrada" value={nameGroup} onChange={e => setNameGroup(e.target.value)} />
+              <input name="Entrada" value={nameGroup} onChange={(e) => setNameGroup(e.target.value)} />
             </label>
             <button onClick={enterGame}> Entrar al Juego </button>
         </div>
@@ -149,6 +149,8 @@ function App() {
           {isConnected ? '🟢 CONECTADO' : '🔴 DESCONECTADO'}
         </span>
       </h6>
+
+      <AdminView />
     </div>
   );
 }
