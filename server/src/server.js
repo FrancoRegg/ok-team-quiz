@@ -6,14 +6,15 @@ const cors = require('cors');
 const { sequelize } = require('../config/db');
 const { sincro } = require('../config/sync')
 const Question = require('../models/Questions')
+const questionRoutes = require('../routes/questionRoutes')
 
 // Sincronizaicon de tablas
 sincro();
  
 const port = process.env.PORT;
 const app = express() // Inicializar express
-
 app.use(cors()); // Permite la conexion desde el frontend
+app.use(express.json());
 const server = http.createServer(app); // Creamos el servidor HTTP a partir de Express
 
 const io = new Server(server, {
@@ -151,7 +152,7 @@ io.on("connection", (socket) => {
     })
 });
 
-
+app.use('/api/questions', questionRoutes)
 
 server.listen(port, () => {
     console.log(`Servidor corriendo en el puerto ${port}`)
