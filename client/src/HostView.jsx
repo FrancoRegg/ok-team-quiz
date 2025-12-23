@@ -85,6 +85,22 @@ function HostView() {
             <h1>Pantalla Proyectada</h1>
                 <div>
                     <h1>{currentQuestion?.title}</h1>
+                    {currentQuestion?.mediaUrl && (
+                        <div>
+                            {currentQuestion.type === 'IMAGE' ? (
+                                <img 
+                                    src={currentQuestion.mediaUrl} 
+                                    alt="Pregunta" 
+                                />
+                            ) : currentQuestion.type === 'VIDEO' ? (
+                                <video 
+                                    src={currentQuestion.mediaUrl} 
+                                    controls 
+                                    autoPlay 
+                                />
+                            ) : null}
+                        </div>
+                    )}
                     <div>
                         <ul>
                             {groups
