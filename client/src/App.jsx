@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
-import AdminView from './AdminView';
+
 // Conectar Backend
 const socket = io('http://localhost:3000');
 
@@ -149,8 +149,6 @@ function App() {
           {isConnected ? '🟢 CONECTADO' : '🔴 DESCONECTADO'}
         </span>
       </h6>
-
-      <AdminView />
     </div>
   );
 }
