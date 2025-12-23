@@ -95,7 +95,9 @@ io.on("connection", (socket) => {
 
         const questionToSend = {
             title: fullQuestion.title,
-            options: fullQuestion.options
+            options: fullQuestion.options,
+            type: fullQuestion.type,      
+            mediaUrl: fullQuestion.mediaUrl
         }
 
         //Resetear el juego
