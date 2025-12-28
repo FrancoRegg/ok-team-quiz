@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import QRCode from "react-qr-code";
 
-const socket = io('http://localhost:3000');
+const socket = io('http://192.168.1.42:3000');
 
 function HostView() {
     const [groups, setGroups] = useState([])

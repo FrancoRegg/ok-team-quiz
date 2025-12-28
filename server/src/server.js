@@ -19,7 +19,7 @@ const server = http.createServer(app); // Creamos el servidor HTTP a partir de E
 
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173", // Esta es la URL donde correrá React
+        origin: "*", // Esta es la URL donde correrá React
         methods: ["GET", "POST"] 
     }
 });

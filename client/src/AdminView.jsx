@@ -33,7 +33,7 @@ function AdminView() {
         let newQuestion = {title: title, type: type, options: options, mediaUrl: mediaUrl, correctIndex: correctIndex}
         
         try{
-            const response = await fetch('http://localhost:3000/api/questions',{
+            const response = await fetch('http://192.168.1.42:3000/api/questions',{
                 method: 'POST',
                 body: JSON.stringify(newQuestion),
                 headers:{

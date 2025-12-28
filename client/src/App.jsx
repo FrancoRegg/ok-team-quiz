@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 
 // Conectar Backend
-const socket = io('http://localhost:3000');
+const socket = io('http://192.168.1.42:3000');
 
 function App() {
   const [isConnected, setIsConnected] = useState(socket.connected);
