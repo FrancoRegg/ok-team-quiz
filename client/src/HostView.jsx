@@ -36,11 +36,11 @@ function HostView() {
         return(
             <div>
                 <h1>Pantalla Proyectada</h1>
-                <div style={{textAlign: 'center', fontFamily: 'Arial'}}>
+                <div>
                     <h1>¡Únete al Quiz!</h1>
                 
                     {/* ZONA DEL CÓDIGO QR */}
-                    <div style={{ background: 'white', padding: '16px', display: 'inline-block', borderRadius: '10px', border: '2px solid #333' }}>
+                    <div>
                         {joinUrl && (
                             <QRCode 
                                 value={joinUrl} 
@@ -49,9 +49,9 @@ function HostView() {
                         )}
                     </div>
                 </div>
-                <h3>Escanea o entra en: <span style={{color: 'blue'}}>{joinUrl}</span></h3>
+                <h3>Escanea o entra en: <span>{joinUrl}</span></h3>
                 
-                <hr style={{margin: '20px'}}/>
+                <hr/>
 
                 <h3>Esperando Jugadores...</h3>
                 <ul>

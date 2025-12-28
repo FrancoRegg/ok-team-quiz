@@ -102,7 +102,7 @@ function App() {
   }
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '50px', fontFamily: 'Arial' }}>
+    <div>
       <h1>Join the Game!</h1>
       
       {inside ? 
