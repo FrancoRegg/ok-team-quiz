@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
+import QRCode from "react-qr-code";
 
 const socket = io('http://localhost:3000');
 
@@ -7,8 +8,11 @@ function HostView() {
     const [groups, setGroups] = useState([])
     const [gameState, setGameState] = useState("LOBBY")
     const [currentQuestion, setCurrentQuestion] = useState(null)
-    
+    const [joinUrl, setJoinUrl] = useState("");
+
     useEffect(() => {
+        setJoinUrl(window.location.origin);
+
         socket.emit('join_game', {name:'HOST'})
         socket.on('update_players', (data) =>{
             setGroups(data)
@@ -32,6 +36,23 @@ function HostView() {
         return(
             <div>
                 <h1>Pantalla Proyectada</h1>
+                <div style={{textAlign: 'center', fontFamily: 'Arial'}}>
+                    <h1>¡Únete al Quiz!</h1>
+                
+                    {/* ZONA DEL CÓDIGO QR */}
+                    <div style={{ background: 'white', padding: '16px', display: 'inline-block', borderRadius: '10px', border: '2px solid #333' }}>
+                        {joinUrl && (
+                            <QRCode 
+                                value={joinUrl} 
+                                size={200}
+                            />
+                        )}
+                    </div>
+                </div>
+                <h3>Escanea o entra en: <span style={{color: 'blue'}}>{joinUrl}</span></h3>
+                
+                <hr style={{margin: '20px'}}/>
+
                 <h3>Esperando Jugadores...</h3>
                 <ul>
                     {groups.filter(grupo => grupo.name !== 'HOST').map((value)=>(
