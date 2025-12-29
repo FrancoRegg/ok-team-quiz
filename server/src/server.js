@@ -49,6 +49,36 @@ const players = {}
 let gameState = 'LOBBY'
 let currentQuestionIndex = 0;
 
+const sendNextQuestion = () =>{
+    if (currentQuestionIndex >= questions.length){
+        gameState = 'GAME_OVER' 
+
+        io.to('game_room').emit('game_state', gameState)
+        io.to('game_room').emit('update_players', Object.values(players))
+        return;
+    }
+
+    gameState = "QUESTION"
+    const fullQuestion = questions[currentQuestionIndex]
+
+    const questionToSend = {
+        title: fullQuestion.title,
+        options: fullQuestion.options,
+        type: fullQuestion.type,      
+        mediaUrl: fullQuestion.mediaUrl 
+    }
+
+    for(const id in players){
+        players[id].hasAnswered = false;
+    }
+
+    io.to('game_room').emit('game_state', gameState)
+    io.to('game_room').emit('new_question', questionToSend)
+    
+    
+    currentQuestionIndex++;
+}
+
 // Escucha los eventos de conexion
 io.on("connection", (socket) => {
     
@@ -79,36 +109,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on('start_game', () => {
-        
-        // Verificar si ya se acabaron las preguntas
-        if (currentQuestionIndex >= questions.length) {
-            gameState = 'GAME_OVER' 
-
-            io.to('game_room').emit('game_state', gameState)
-            io.to('game_room').emit('update_players', Object.values(players))
-
-            return;
-        }
-
-        gameState = "QUESTION"
-        const fullQuestion = questions[currentQuestionIndex]
-
-        const questionToSend = {
-            title: fullQuestion.title,
-            options: fullQuestion.options,
-            type: fullQuestion.type,      
-            mediaUrl: fullQuestion.mediaUrl
-        }
-
-        //Resetear el juego
-        for(const id in players){
-            players[id].hasAnswered = false;
-        }
-
-        io.to('game_room').emit('game_state', gameState)
-        io.to('game_room').emit('new_question', questionToSend)
-        
-        currentQuestionIndex++;
+        sendNextQuestion()
     });
 
     socket.on('reset_game', () => {
@@ -118,6 +119,7 @@ io.on("connection", (socket) => {
         // Reiniciar puntajes de todos los grupos
         for (const id in players) {
             players[id].score = 0;
+            players[id].hasAnswered = false;
         }
 
         io.to('game_room').emit('game_state', gameState)
@@ -129,7 +131,7 @@ io.on("connection", (socket) => {
         // Validación por si el grupo se desconectó o no existe
         if (!player) return; 
 
-        if(player.hasAnswered){
+        if (player.hasAnswered){
             return;
         }
         player.hasAnswered = true;
@@ -151,6 +153,20 @@ io.on("connection", (socket) => {
         
         // Envia lista actualizada de puntajes inmediatamente
         io.to('game_room').emit('update_players', Object.values(players))
+
+        const allPlayers = Object.values(players).filter(p => p.name !== 'HOST');
+        const totalPlayers = allPlayers.length;
+        
+        const answersCount = allPlayers.filter(p => p.hasAnswered).length;
+
+        if (totalPlayers > 0 && answersCount === totalPlayers) {
+            console.log("Todos han respondido. Avanzando en 3 segundos...");
+            
+            // Esperamos 3 segundos para que vean si acertaron o fallaron
+            setTimeout(() => {
+                sendNextQuestion();
+            }, 3000); 
+        }
     })
 });
 
