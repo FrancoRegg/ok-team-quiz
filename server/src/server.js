@@ -30,12 +30,9 @@ let questions = [];
 // Función para cargar preguntas desde la BD
 async function loadQuestions() {
     try {
-        // Pedimos todas las preguntas a Postgres
         const questionsFromDB = await Question.findAll();
         
-        // Convertimos los datos "crudos" de Sequelize a objetos JSON simples
         questions = questionsFromDB.map(q => q.toJSON());
-        
         console.log(`✅ ${questions.length} preguntas cargadas desde la Base de Datos.`);
     } catch (error) {
         console.error("❌ Error al cargar preguntas:", error);
@@ -87,24 +84,55 @@ io.on("connection", (socket) => {
         if (!groupId || groupId === ""){
             console.log("No se permiten campos vacios")
             return;
-        } 
-        players[socket.id] = {
-            name : groupId,
-            score : 0,
-            id : socket.id
-        };
+        }
+        
+        const existingPlayerId = Object.keys(players).find(key => players[key].name === groupId);
+
+        if (existingPlayerId) {
+            console.log(`${groupId} se ha reconectado. Recuperando puntaje.`);
+            
+            const oldData = players[existingPlayerId];
+            
+            delete players[existingPlayerId];
+        
+            players[socket.id] = {
+                name : groupId,
+                score : oldData.score,
+                id : socket.id,
+                hasAnswered: false,
+            };
+        }else{
+            players[socket.id] = {
+                name: groupId,
+                score: 0,
+                id: socket.id,
+                hasAnswered: false
+            };
+        }
 
         socket.join('game_room')
-
-        // Enviamos estado actual al que entra
         socket.emit('game_state', gameState)
-        // Actualizamos la lista para TODOS en la sala
         io.to('game_room').emit('update_players', Object.values(players))
+
+        if (gameState === 'QUESTION' && currentQuestionIndex > 0) {
+            const currentQ = questions[currentQuestionIndex - 1]; 
+            
+            if (currentQ) {
+                const questionData = {
+                    title: currentQ.title,
+                    options: currentQ.options,
+                    type: currentQ.type,
+                    mediaUrl: currentQ.mediaUrl
+                };
+                
+                // Enviamos la pregunta SOLO al que acaba de entrar
+                socket.emit('new_question', questionData);
+            }
+        }
     })
 
     socket.on('disconnect', () => {
-        delete players[socket.id]
-        // Avisar a los jugadores de quien abandono la partida
+        console.log("Usuario desconectado:", socket.id);
         io.to('game_room').emit('update_players', Object.values(players))
     });
 

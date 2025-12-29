@@ -1,13 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 
-// Conectar Backend
 const socket = io('http://192.168.1.42:3000');
 
 function App() {
   const [isConnected, setIsConnected] = useState(socket.connected);
-  const [inside, setInside] = useState(false);
-  const [nameGroup, setNameGroup] = useState("");
+  const [inside, setInside] = useState(() => {
+    return !!localStorage.getItem("savedGroupName");
+  });
+  const [nameGroup, setNameGroup] = useState(() => {
+    return localStorage.getItem("savedGroupName") || "";
+  });
   const [gameState, setGameState] = useState("LOBBY");
   const [optionsAnswers, setOptionsAnswers] = useState(null);
   const [hasAnswered, setHasAnswered] = useState(false);
@@ -16,11 +19,46 @@ function App() {
   const [correctAnswer, setCorrectAnswer] = useState(null);
   const [scoreGroup, setScoreGroup] = useState(0)
 
+  const wakeLockRef = useRef(null);
+  
+  const requestWakeLock = async () => {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLockRef.current = await navigator.wakeLock.request('screen');
+        console.log('Pantalla bloqueada para no apagarse 💡');
+      }
+    } catch (err) {
+      console.log('El navegador no soporta WakeLock o hubo error:', err);
+    }
+  };
+
   useEffect(() => {
-    // Escuchar eventos de conexión del socket
+    if (inside) {
+      requestWakeLock();
+    }
+    const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible' && inside) {
+            requestWakeLock();
+        }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }
+  }, [inside]);
+
+  useEffect(() => {
+    // Evento de Conexión y Reconexión Automática
     socket.on('connect', () => {
       setIsConnected(true);
       console.log("Conectado al servidor con ID:", socket.id);
+
+      const savedName = localStorage.getItem("savedGroupName");
+      if (savedName) {
+          console.log("🔄 Reconexión automática detectada para:", savedName);
+          socket.emit('join_game', { name: savedName });
+          setInside(true); 
+      }
     });
 
     socket.on('disconnect', () => {
@@ -37,66 +75,89 @@ function App() {
       setAnswerStatus(null);
       setMyAnswer(null);
       setCorrectAnswer(null);
+
+      if (navigator.vibrate) navigator.vibrate(100);
     })
 
     socket.on('answer_result', (data) => {
       if(data.correct){
         setAnswerStatus('CORRECT')
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
       }else{
         setAnswerStatus('INCORRECT')
+        if (navigator.vibrate) navigator.vibrate(400); 
       }
       setCorrectAnswer(data.correctIndex)
     })
 
     socket.on('update_players', (data) =>{
         const myData = data.find(player => player.id === socket.id)
-            if(myData){
-                setScoreGroup(myData.score)
+        if(myData){
+            setScoreGroup(myData.score)
+            
+            if (myData.hasAnswered) {
+                setHasAnswered(true);
             }
-        })
+        }
+    })
 
-    // Limpieza al cerrar el componente
+    // Limpieza de listeners al desmontar
     return () => {
       socket.off('connect');
       socket.off('disconnect');
       socket.off('game_state');
       socket.off('new_question');
+      socket.off('answer_result'); 
       socket.off('update_players')
     };
-  }, []);
+  }, []); 
+
+  // --- FUNCIONES DEL USUARIO ---
 
   function enterGame(){
+    if(!nameGroup.trim()) {
+        alert("Por favor, escribe un nombre.");
+        return;
+    }
+    
+    localStorage.setItem("savedGroupName", nameGroup);
     
     socket.emit('join_game', { name: nameGroup })
     setInside(true);
+    requestWakeLock(); 
+  }
+
+  function exitGame() {
+      localStorage.removeItem("savedGroupName");
+      setInside(false);
+      setNameGroup("");
+      window.location.reload(); 
   }
 
   function submitAnswer(i){
+    if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback
+
     socket.emit('submit_answer', { answer: i })
     setHasAnswered(true);
     setMyAnswer(i);
   } 
 
   const getButtonColor = (index) => {
-    // 1. Si no hemos respondido, color normal (azul/gris)
     if (answerStatus === null) return 'blue'; 
-
-    // 2. Si este botón es el CORRECTO, siempre verde
     if (index === correctAnswer) return 'green';
-
-    // 3. Si este botón es el que yo toqué Y fallé, rojo
     if (index === myAnswer && answerStatus === 'INCORRECT') return 'red';
-
-    // 4. El resto de botones se quedan grises o normales
     return 'gray';
   }
 
+  // --- RENDERIZADO ---
+
   if(gameState === 'GAME_OVER'){
     return(
-      <div >
+      <div>
         <h1>¡Juego Terminado! 🏁</h1>
         <p>Mira la pantalla grande para ver al ganador.</p>
         <h3>Tu puntaje final: {scoreGroup}</h3>
+        <button onClick={exitGame} style={{marginTop: '20px'}}>Salir</button>
       </div>
     )
   }
