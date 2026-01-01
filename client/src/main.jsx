@@ -1,17 +1,19 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import './index.css'
+import './styles/index.css'
 import App from './App.jsx'
-import HostView from './HostView.jsx'
-import AdminView from './AdminView.jsx'
-import AdminGuard from './AdminGuard.jsx'
+import HostView from './pages/HostView.jsx'
+import AdminView from './pages/AdminView.jsx'
+import AdminGuard from './guards/AdminGuard.jsx'
+import Landing from './pages/Landing.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
     <Routes>
-      <Route path="/" element={<App />} />    
+      <Route path="/" element={<Landing />} />  
+      <Route path="/play" element={<App />} />  
       <Route path="/admin" element={
         <AdminGuard> 
           <AdminView /> 
