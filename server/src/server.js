@@ -1,4 +1,5 @@
 require('dotenv').config()
+console.log("La clave es:", process.env.ADMIN_PASSWORD);
 const express = require('express')
 const http = require('http');
 const { Server } = require('socket.io')
@@ -16,6 +17,16 @@ const app = express() // Inicializar express
 app.use(cors()); // Permite la conexion desde el frontend
 app.use(express.json());
 const server = http.createServer(app); // Creamos el servidor HTTP a partir de Express
+
+app.post('/api/login', (req, res) => {
+    const { password } = req.body; 
+
+    if (password === process.env.ADMIN_PASSWORD) {
+        return res.json({ success: true, message: "Acceso concedido" });
+    } else {
+        return res.status(401).json({ success: false, message: "Contraseña incorrecta" });
+    }
+});
 
 const io = new Server(server, {
     cors: {
@@ -99,7 +110,7 @@ io.on("connection", (socket) => {
                 name : groupId,
                 score : oldData.score,
                 id : socket.id,
-                hasAnswered: false,
+                hasAnswered: oldData.hasAnswered,
             };
         }else{
             players[socket.id] = {
@@ -199,7 +210,6 @@ io.on("connection", (socket) => {
 });
 
 app.use('/api/questions', questionRoutes)
-
 server.listen(port, () => {
     console.log(`Servidor corriendo en el puerto ${port}`)
 })
