@@ -4,10 +4,10 @@ const express = require('express')
 const http = require('http');
 const { Server } = require('socket.io')
 const cors = require('cors');
-const { sequelize } = require('../config/db');
-const { sincro } = require('../config/sync')
-const Question = require('../models/Questions')
-const questionRoutes = require('../routes/questionRoutes')
+const { sequelize } = require('./config/db');
+const { sincro } = require('./config/sync')
+const Question = require('./models/Questions')
+const questionRoutes = require('./routes/questionRoutes')
 
 // Sincronizaicon de tablas
 sincro();
