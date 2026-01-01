@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 
-const socket = io('http://192.168.1.42:3000');
+const socket = io('http://192.168.1.12:3000');
 
 function App() {
   const [isConnected, setIsConnected] = useState(socket.connected);
