@@ -7,7 +7,7 @@ const cors = require('cors');
 const { sequelize } = require('./config/db');
 const { sincro } = require('./config/sync')
 const Question = require('./models/Questions')
-const questionRoutes = require('./routes/questionRoutes')
+const questionRoutes = require('./routes/questionRoutes');
 
 // Sincronizaicon de tablas
 sincro();
@@ -152,17 +152,18 @@ io.on("connection", (socket) => {
     });
 
     socket.on('reset_game', () => {
-        gameState = "LOBBY"
-        currentQuestionIndex = 0;
-
-        // Reiniciar puntajes de todos los grupos
-        for (const id in players) {
-            players[id].score = 0;
-            players[id].hasAnswered = false;
+        console.log("🧹 Realizando HARD RESET completo...");
+        for (const key in players) {
+        delete players[key];
         }
 
-        io.to('game_room').emit('game_state', gameState)
-        io.to('game_room').emit('update_players', Object.values(players))
+        groups = []; 
+        gameState = "LOBBY";
+        currentQuestionIndex = 0;
+
+        io.emit('game_state', gameState);
+        io.emit('update_players', []); 
+        io.emit('force_refresh');
     })
     
     socket.on('submit_answer', (data) => {
