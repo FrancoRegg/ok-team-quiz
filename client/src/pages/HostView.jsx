@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import QRCode from "react-qr-code";
+import '../styles/HostView.css'
 
 const socket = io('http://192.168.1.12:3000');
 
@@ -34,13 +35,13 @@ function HostView() {
 
     if(gameState === 'LOBBY'){
         return(
-            <div>
+            <div className="host-container">
                 <h1>Pantalla Proyectada</h1>
                 <div>
-                    <h1>¡Únete al Quiz!</h1>
+                    <h1 className="big-title">¡Únete al Quiz!</h1>
                 
                     {/* ZONA DEL CÓDIGO QR */}
-                    <div>
+                    <div className="qr-frame">
                         {joinUrl && (
                             <QRCode 
                                 value={joinUrl} 
@@ -49,17 +50,20 @@ function HostView() {
                         )}
                     </div>
                 </div>
-                <h3>Escanea o entra en: <span>{joinUrl}</span></h3>
+                <h3 className="sub-title">Escanea o entra en: 
+                    <span className="url-highlight">{joinUrl}</span>
+                </h3>
                 
                 <hr/>
 
                 <h3>Esperando Jugadores...</h3>
-                <ul>
+                <ul className="players-grid">
                     {groups.filter(grupo => grupo.name !== 'HOST').map((value)=>(
-                        <li key={value.id}>{value.name}</li>
+                        <li className="player-chip" key={value.id}>{value.name}</li>
                     ))}
                 </ul>
                 <button 
+                    className="btn-primary"
                     onClick={()=>{socket.emit('start_game')}}>
                         Empezar Juego
                 </button>
@@ -75,26 +79,35 @@ function HostView() {
         const winner = sortedGroups[0];
 
         return(
-            <div>
-            <h1>Juego Terminado</h1>
+            <div className="host-container">
+                <h1 className="big-title">Juego Terminado</h1>
                 {winner && (
-                    <div>
-                        <h2>🏆 GANADOR:</h2>
-                        <h1>{winner.name}</h1>
+                    <div className="qr-frame">
+                        <h2 className="sub-title">🏆 GANADOR:</h2>
+                        <h1 className="big-title">{winner.name}</h1>
                         <h3>Con {winner.score} puntos</h3>
                     </div>
                 )}
 
-                <div>
-                     <h3>Tabla Final:</h3>
-                     <ul>
+                <div className="ranking-table-container">
+                    <h3 className="sub-title" style={{marginTop: '20px'}}>Tabla Final</h3>
+                    <ul className="ranking-list" style={{padding: 0, listStyle: 'none', margin: 0}}>
                         {sortedGroups.map((p, i) => (
-                            <li key={p.id}>{i+1}. {p.name} - {p.score}</li>
+                            <li key={p.id} className="ranking-row-item">
+                                <span className="rank-name">
+                                    {i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : `${i+1}. `}
+                                    {p.name}
+                                </span>
+                                <span className="rank-score">{p.score} pts</span>
+                            </li>
                         ))}
-                     </ul>
+                    </ul>
                 </div>
 
-                <button onClick={()=>{socket.emit('reset_game')}}>
+                <button 
+                    className="btn-primary" 
+                    onClick={()=>{socket.emit('reset_game')}}
+                    >
                     Nueva Partida 🔄
                 </button>
             </div>
