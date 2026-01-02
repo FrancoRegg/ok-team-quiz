@@ -1,4 +1,5 @@
 import { useState } from "react"
+import '../styles/Admin.css'
 
 function AdminView() {
 
@@ -54,71 +55,100 @@ function AdminView() {
 
         }catch(error){
             console.error("Error de red:", error);
-            alert("No se pudo conectar con el servidor. Revisa que esté encendido.");
-            }
-        
+            alert("No se pudo conectar con el servidor.");
+        }
         
     }
 
     return(
-        <div>
-            <h1>Panel de Administracion</h1>
-            <div>
-                <label>
-                    Añade una pregunta:
-                    <input 
-                        type="text" 
-                        value={title} 
-                        onChange={(e) => setTitle(e.target.value)} />
+        <div className="admin-container">
+            <h1 className="admin-title">Panel de Administración</h1>
+            
+            {/* TÍTULO DE LA PREGUNTA */}
+            <div className="form-group">
+                <label className="form-label">
+                    Título de la Pregunta:
                 </label>
+                <input 
+                    className="form-input"
+                    type="text" 
+                    placeholder="Ej: ¿En qué año se fundó OKTeam?"
+                    value={title} 
+                    onChange={(e) => setTitle(e.target.value)} 
+                />
             </div>
-            {options.map((opt, i)=>(
-                <div key={i}>
-                    <input 
-                        type="text" 
-                        value={opt} 
-                        onChange={(e) => handleOptionChange(i, e.target.value)}/>
+
+            {/* ZONA DE OPCIONES */}
+            <div className="form-group">
+                <label className="form-label">Opciones de Respuesta:</label>
+                <div className="options-list">
+                    {options.map((opt, i)=>(
+                        <div key={i} className="option-row">
+                            {/* Radio Button para marcar la correcta */}
+                            <input 
+                                className="radio-check"
+                                type="radio" 
+                                name="correctAnswer" 
+                                title="Marcar como correcta"
+                                checked={correctIndex === i}
+                                onChange={() => setCorrectIndex(i)}
+                            />
+                            
+                            {/* Input de texto de la opción */}
+                            <input 
+                                className="form-input"
+                                style={{border: 'none', background: 'transparent'}} // Pequeño ajuste inline para que se integre
+                                type="text" 
+                                placeholder={`Opción ${i+1}`}
+                                value={opt} 
+                                onChange={(e) => handleOptionChange(i, e.target.value)}
+                            />
+
+                            {/* Botón Borrar */}
+                            <button className="btn-delete" onClick={() => deleteOption(i)}>
+                                ✕
+                            </button>
+                        </div>
+                    ))}
                     
-                    <input 
-                        type="radio" 
-                        name="correctAnswer" 
-                        checked={correctIndex === i}
-                        onChange={() => setCorrectIndex(i)}/>
-                    <button onClick={() => deleteOption(i)}>Borrar opcion</button>
+                    <button className="btn-add" onClick={addOption}>
+                        + Agregar otra opción
+                    </button>
                 </div>
-            ))}
-            <button onClick={addOption}>
-                Agrega otra opcion
-            </button>
-            <div>
-                <label>
-                    Tipo de dato: 
+            </div>
+
+            {/* ZONA MULTIMEDIA */}
+            <div className="form-group" style={{display: 'flex', gap: '10px'}}>
+                <div style={{flex: 1}}>
+                    <label className="form-label">Tipo:</label>
                     <select 
-                        defaultValue={"TEXT"}
+                        className="form-select"
                         value={type}
                         onChange={(e) => setType(e.target.value)}>
-                            <option value="TEXT">Texto</option>
-                            <option value="IMAGE">Imagen</option>
-                            <option value="VIDEO">Video</option>
+                        <option value="TEXT">Solo Texto</option>
+                        <option value="IMAGE">Imagen</option>
+                        <option value="VIDEO">Video</option>
                     </select>
-                </label>
-                    {type !== 'TEXT' && (
-                        <label>
-                            Enlace de archivo ({type}):
-                            <input 
-                                type="text" 
-                                value={mediaUrl} 
-                                onChange={(e) => setMediaUrl(e.target.value)}/>
-                        </label>
-                    )}
+                </div>
+
+                {type !== 'TEXT' && (
+                    <div style={{flex: 2}}>
+                        <label className="form-label">Enlace (URL):</label>
+                        <input 
+                            className="form-input"
+                            type="text" 
+                            placeholder="http://..."
+                            value={mediaUrl} 
+                            onChange={(e) => setMediaUrl(e.target.value)}
+                        />
+                    </div>
+                )}
             </div>
-            <div>
-                <button 
-                    onClick={handleSubmit}
-                >
-                    💾 Guardar Pregunta
-                </button>
-            </div>
+
+            {/* BOTÓN GUARDAR */}
+            <button className="btn-save" onClick={handleSubmit}>
+                💾 Guardar Pregunta
+            </button>
         </div>
     )
 }
