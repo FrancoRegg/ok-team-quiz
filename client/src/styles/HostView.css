@@ -1,0 +1,172 @@
+.host-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    text-align: center;
+    font-family: var(--font-stack);
+}
+
+.big-title {
+    font-size: 4rem; /* Gigante para proyector */
+    color: var(--primary-blue);
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.sub-title {
+    font-size: 2rem;
+    color: var(--text-main);
+    margin-bottom: 30px;
+}
+
+.url-highlight {
+    color: var(--primary-blue);
+    font-weight: bold;
+    background: white;
+    padding: 5px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* --- EL QR --- */
+.qr-frame {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    display: inline-block;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15); /* Sombra flotante */
+    margin: 20px 0;
+}
+
+/* --- JUGADORES (Nube de etiquetas) --- */
+/* Quitamos los puntos de la lista y la hacemos flexible */
+.players-grid {
+    list-style: none; /* Adiós puntitos */
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap; /* Si no caben, bajan a la siguiente linea */
+    justify-content: center; /* Centrados */
+    gap: 15px; /* Espacio entre ellos */
+    margin-top: 30px;
+}
+
+/* Cada jugador es una "pastilla" */
+.player-chip {
+    background: white;
+    color: var(--text-main);
+    padding: 10px 25px;
+    border-radius: 50px; /* Bordes totalmente redondos */
+    font-size: 1.5rem;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    border: 2px solid transparent;
+    animation: popIn 0.3s ease-out; /* Una pequeña animación al entrar */
+}
+
+/* Animación opcional para cuando entra uno nuevo */
+@keyframes popIn {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+}
+
+.waiting-text {
+    font-size: 1.2rem;
+    color: #888;
+    margin-top: 40px;
+    font-style: italic;
+}
+
+/* --- ESTRUCTURA DE LA TABLA --- */
+.ranking-table-container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    overflow: hidden; /* Para recortar las esquinas si la tabla se sale */
+    margin: 30px auto;
+    max-width: 800px; /* Que no se estire hasta el infinito */
+}
+
+.ranking-table {
+    width: 100%;
+    border-collapse: collapse; /* Importante: quita espacios dobles entre celdas */
+    text-align: left;
+}
+
+/* --- CABECERA DE LA TABLA (Si la tuvieras, aunque ahora no usas <thead>) --- */
+.ranking-table th {
+    background: var(--primary-blue);
+    color: white;
+    padding: 15px;
+    font-size: 1.2rem;
+}
+
+/* --- CELDAS NORMALES --- */
+.ranking-table td {
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0; /* Línea separadora sutil */
+    color: var(--text-main);
+    font-size: 1.5rem; /* Letra grande para proyector */
+}
+
+/* --- FILAS --- */
+.ranking-row-item {
+    display: flex;
+    justify-content: space-between; /* Nombre a la izquierda, puntos a la derecha */
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    font-size: 1.5rem;
+}
+
+/* --- DESTACAR AL GANADOR (Top 1) 🏆 --- */
+/* Usamos :first-child para seleccionar al primero de la lista */
+.ranking-list .ranking-row-item:first-child {
+    background-color: #fff8e1; /* Un fondo dorado muy suave */
+    font-weight: bold;
+    font-size: 1.8rem; /* Un poco más grande */
+    border-left: 5px solid var(--accent-orange); /* Una barra lateral naranja */
+}
+
+@media (max-width: 768px) {
+    
+    /* Reducimos los márgenes generales */
+    .host-container {
+        margin: 20px auto;
+        width: 90%; /* Que ocupe casi todo el ancho */
+    }
+
+    /* Reducimos el título gigante */
+    .big-title {
+        font-size: 2rem; /* De 4rem baja a 2rem */
+    }
+
+    .sub-title {
+        font-size: 1.2rem;
+    }
+
+    /* El QR se hace más pequeñito */
+    .qr-frame {
+        padding: 15px;
+        margin: 10px 0;
+    }
+    
+    /* En el código QR dentro del componente, tendrás que ajustar el size 
+       o usar CSS para limitarlo, pero el contenedor ya se adapta aquí */
+
+    /* Ajustamos la tabla de ranking */
+    .ranking-row-item {
+        font-size: 1rem; /* Letra más legible en móvil */
+        padding: 10px;
+    }
+
+    /* Ajustamos las burbujas de los jugadores */
+    .player-chip {
+        font-size: 1rem;
+        padding: 8px 15px;
+    }
+    
+    /* Botones más fáciles de pulsar con el dedo */
+    .btn-primary {
+        width: 100%; /* Botón ancho completo */
+        padding: 15px;
+    }
+}
