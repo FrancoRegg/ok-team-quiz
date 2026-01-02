@@ -60,10 +60,21 @@ function AdminView() {
         
     }
 
+    const handleLogout = () => {
+        if(window.confirm("¿Seguro que quieres cerrar sesión?")){
+            localStorage.removeItem("admin_token"); // Borra la llave
+            window.location.reload(); // Recarga para que el Guard nos eche
+        }
+    }
+
     return(
         <div className="admin-container">
-            <h1 className="admin-title">Panel de Administración</h1>
-            
+            <div className="header-row">
+                <h1 className="admin-title" style={{margin: 0}}>Panel Admin</h1>
+                <button className="btn-logout" onClick={handleLogout}>
+                    Cerrar Sesión 🔒
+                </button>
+            </div>
             {/* TÍTULO DE LA PREGUNTA */}
             <div className="form-group">
                 <label className="form-label">
