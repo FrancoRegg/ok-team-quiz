@@ -115,52 +115,66 @@ function HostView() {
     }
 
     return(
-        <div>
-            <h1>Pantalla Proyectada</h1>
-                <div>
-                    <h1>{currentQuestion?.title}</h1>
-                    {currentQuestion?.mediaUrl && (
-                        <div>
-                            {currentQuestion.type === 'IMAGE' ? (
-                                <img 
-                                    src={currentQuestion.mediaUrl} 
-                                    alt="Pregunta" 
-                                />
-                            ) : currentQuestion.type === 'VIDEO' ? (
-                                <video 
-                                    src={currentQuestion.mediaUrl} 
-                                    controls 
-                                    autoPlay 
-                                />
-                            ) : null}
-                        </div>
-                    )}
-                    <div>
-                        <ul>
-                            {groups
-                                .filter(grupo => grupo.name !== 'HOST')
-                                .sort((a, b) => b.score - a.score)
-                                .map((value, i) => (
-                                <li key={value.id}>
-                                    {value.name}: {value.score}
-                                </li>
-                            ))}
-                        </ul>
+        <div className="host-container">
+            <div className="game-phase-layout">
+                <h1 className="question-title">{currentQuestion?.title}</h1>
+
+                {currentQuestion?.mediaUrl && (
+                    <div className="media-frame">
+                        {currentQuestion.type === 'IMAGE' ? (
+                            <img 
+                                src={currentQuestion.mediaUrl} 
+                                alt="Pregunta" 
+                                className="question-media"
+                            />
+                        ) : currentQuestion.type === 'VIDEO' ? (
+                            <video 
+                                src={currentQuestion.mediaUrl} 
+                                controls 
+                                autoPlay 
+                                className="question-media"
+                            />
+                        ) : null}
                     </div>
-                    <div>
-                        <button
-                            onClick={()=>{socket.emit('start_game')}}>
-                            Siguiente Pregunta
-                        </button>
-                        <button 
-                            onClick={()=>{socket.emit('reset_game')}}>
-                            Resetear Juego
-                        </button>
-                    </div>
+                )}
+
+                <div className="live-stats-bar">
+                    <span className="stat-label">Líderes ahora:</span>
+                    {groups
+                        .filter(g => g.name !== 'HOST')
+                        .sort((a, b) => b.score - a.score)
+                        .slice(0, 3) 
+                        .map((grupo, index) => (
+                            <div key={grupo.id} className={`top-player-chip ${index === 0 ? 'leader' : ''}`}>
+                                <span>{index === 0 ? '🥇' : index + 1 + '.'}</span>
+                                <span>{grupo.name}</span>
+                                <strong>{grupo.score}</strong>
+                            </div>
+                        ))
+                    }
                 </div>
+
+                <div className="admin-controls">
+                    <button 
+                        className="btn-primary"
+                        onClick={()=>{socket.emit('start_game')}}>
+                        Siguiente Pregunta ➡
+                    </button>
+                    
+                    <button 
+                        className="btn-secondary"
+                        onClick={()=>{
+                            if(window.confirm("¿Seguro que quieres reiniciar todo?")) {
+                                socket.emit('reset_game');
+                            }
+                        }}>
+                        Reiniciar 🔄
+                    </button>
+                </div>
+
+            </div>
         </div>
-        
     );
-};
+}
 
 export default HostView;
