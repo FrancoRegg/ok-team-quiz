@@ -6,7 +6,7 @@
 }
 
 .big-title {
-    font-size: 4rem; /* Gigante para proyector */
+    font-size: 4rem; 
     color: var(--primary-blue);
     margin-bottom: 20px;
     text-transform: uppercase;
@@ -33,36 +33,33 @@
     padding: 30px;
     border-radius: 20px;
     display: inline-block;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.15); /* Sombra flotante */
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15); 
     margin: 20px 0;
 }
 
-/* --- JUGADORES (Nube de etiquetas) --- */
-/* Quitamos los puntos de la lista y la hacemos flexible */
+/* --- JUGADORES --- */
 .players-grid {
-    list-style: none; /* Adiós puntitos */
+    list-style: none;
     padding: 0;
     display: flex;
-    flex-wrap: wrap; /* Si no caben, bajan a la siguiente linea */
-    justify-content: center; /* Centrados */
-    gap: 15px; /* Espacio entre ellos */
+    flex-wrap: wrap; 
+    justify-content: center; 
+    gap: 15px;
     margin-top: 30px;
 }
 
-/* Cada jugador es una "pastilla" */
 .player-chip {
     background: white;
     color: var(--text-main);
     padding: 10px 25px;
-    border-radius: 50px; /* Bordes totalmente redondos */
+    border-radius: 50px; 
     font-size: 1.5rem;
     font-weight: bold;
     box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     border: 2px solid transparent;
-    animation: popIn 0.3s ease-out; /* Una pequeña animación al entrar */
+    animation: popIn 0.3s ease-out; 
 }
 
-/* Animación opcional para cuando entra uno nuevo */
 @keyframes popIn {
     0% { transform: scale(0); }
     100% { transform: scale(1); }
@@ -80,18 +77,18 @@
     background: white;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    overflow: hidden; /* Para recortar las esquinas si la tabla se sale */
+    overflow: hidden; 
     margin: 30px auto;
-    max-width: 800px; /* Que no se estire hasta el infinito */
+    max-width: 800px; 
 }
 
 .ranking-table {
     width: 100%;
-    border-collapse: collapse; /* Importante: quita espacios dobles entre celdas */
+    border-collapse: collapse; 
     text-align: left;
 }
 
-/* --- CABECERA DE LA TABLA (Si la tuvieras, aunque ahora no usas <thead>) --- */
+/* --- CABECERA DE LA TABLA --- */
 .ranking-table th {
     background: var(--primary-blue);
     color: white;
@@ -102,15 +99,15 @@
 /* --- CELDAS NORMALES --- */
 .ranking-table td {
     padding: 20px;
-    border-bottom: 1px solid #f0f0f0; /* Línea separadora sutil */
+    border-bottom: 1px solid #f0f0f0; 
     color: var(--text-main);
-    font-size: 1.5rem; /* Letra grande para proyector */
+    font-size: 1.5rem; 
 }
 
 /* --- FILAS --- */
 .ranking-row-item {
     display: flex;
-    justify-content: space-between; /* Nombre a la izquierda, puntos a la derecha */
+    justify-content: space-between; 
     align-items: center;
     padding: 15px 20px;
     border-bottom: 1px solid #eee;
@@ -118,12 +115,11 @@
 }
 
 /* --- DESTACAR AL GANADOR (Top 1) 🏆 --- */
-/* Usamos :first-child para seleccionar al primero de la lista */
 .ranking-list .ranking-row-item:first-child {
-    background-color: #fff8e1; /* Un fondo dorado muy suave */
+    background-color: #fff8e1; 
     font-weight: bold;
-    font-size: 1.8rem; /* Un poco más grande */
-    border-left: 5px solid var(--accent-orange); /* Una barra lateral naranja */
+    font-size: 1.8rem; 
+    border-left: 5px solid var(--accent-orange); 
 }
 
 .game-phase-layout {
@@ -133,7 +129,7 @@
     gap: 20px;
 }
 
-/* El Título de la pregunta */
+/* --- El Título de la pregunta --- */
 .question-title {
     font-size: 3rem;
     color: var(--primary-blue);
@@ -141,13 +137,13 @@
     line-height: 1.2;
 }
 
-/* El Marco del Video/Imagen */
+/* --- El Marco del Video/Imagen --- */
 .media-frame {
-    background-color: #000; /* Fondo negro cine */
+    background-color: #000; 
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.2); /* Sombra profunda */
-    max-height: 400px; /* Altura máxima controlada */
+    box-shadow: 0 15px 40px rgba(0,0,0,0.2); 
+    max-height: 400px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -157,15 +153,15 @@
 .question-media {
     max-height: 400px;
     max-width: 100%;
-    object-fit: contain; /* Para que la imagen no se deforme */
+    object-fit: contain; 
 }
 
-/* --- BARRA DE LÍDERES EN VIVO (Horizontal) --- */
+/* --- BARRA DE LÍDERES EN VIVO --- */
 .live-stats-bar {
     width: 100%;
     background: white;
     padding: 15px 30px;
-    border-radius: 50px; /* Forma de píldora alargada */
+    border-radius: 50px; 
     box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     display: flex;
     justify-content: center;
@@ -182,7 +178,6 @@
     margin-right: 10px;
 }
 
-/* Chips de los mejores jugadores */
 .top-player-chip {
     background: #f4f7f6;
     border: 1px solid #ddd;
@@ -195,7 +190,7 @@
 }
 
 .top-player-chip.leader {
-    background: #fff8e1; /* Dorado suave para el 1ro */
+    background: #fff8e1; 
     border-color: var(--accent-orange);
     color: var(--secondary-dark);
 }
@@ -204,14 +199,13 @@
 .admin-controls {
     margin-top: 30px;
     padding-top: 20px;
-    border-top: 1px solid rgba(0,0,0,0.1); /* Línea separadora */
+    border-top: 1px solid rgba(0,0,0,0.1); 
     width: 100%;
     display: flex;
-    justify-content: center; /* Centrado perfecto */
-    gap: 20px; /* Espacio entre botones */
+    justify-content: center; 
+    gap: 20px; 
 }
 
-/* Botón secundario (para el Reset) para que no destaque tanto */
 .btn-secondary {
     background-color: transparent;
     border: 2px solid #ccc;
@@ -230,46 +224,36 @@
 }
 
 @media (max-width: 768px) {
-    
-    /* Reducimos los márgenes generales */
     .host-container {
         margin: 20px auto;
-        width: 90%; /* Que ocupe casi todo el ancho */
+        width: 90%; 
     }
 
-    /* Reducimos el título gigante */
     .big-title {
-        font-size: 2rem; /* De 4rem baja a 2rem */
+        font-size: 2rem; 
     }
 
     .sub-title {
         font-size: 1.2rem;
     }
 
-    /* El QR se hace más pequeñito */
     .qr-frame {
         padding: 15px;
         margin: 10px 0;
     }
     
-    /* En el código QR dentro del componente, tendrás que ajustar el size 
-       o usar CSS para limitarlo, pero el contenedor ya se adapta aquí */
-
-    /* Ajustamos la tabla de ranking */
     .ranking-row-item {
-        font-size: 1rem; /* Letra más legible en móvil */
+        font-size: 1rem;
         padding: 10px;
     }
 
-    /* Ajustamos las burbujas de los jugadores */
     .player-chip {
         font-size: 1rem;
         padding: 8px 15px;
     }
     
-    /* Botones más fáciles de pulsar con el dedo */
     .btn-primary {
-        width: 100%; /* Botón ancho completo */
+        width: 100%; 
         padding: 15px;
     }
 }
