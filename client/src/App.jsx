@@ -72,6 +72,19 @@ function App() {
         }
     });
 
+    socket.on('force_refresh', () => {
+      // Borramos su nombre guardado
+      localStorage.removeItem("savedGroupName");
+
+      setInside(false);
+      setNameGroup("");
+      setScoreGroup(0);
+      setHasAnswered(false);
+      
+      // Recargamos la página forzosamente
+      window.location.reload();
+    })
+
     return () => {
       socket.off('connect');
       socket.off('disconnect');
@@ -79,6 +92,7 @@ function App() {
       socket.off('new_question');
       socket.off('answer_result'); 
       socket.off('update_players');
+      socket.off('force_refresh')
     };
   }, [inside]); 
 
