@@ -37,36 +37,53 @@ function AdminGuard({ children }){
         }
     }
 
-    return(
-        <div>
-            {isAuthenticated ? 
-                children : 
-                /* VISTA DE LOGIN */
-                <div className="guard-container">
-                    <div className="login-card">
-                        <div className="lock-icon">🔒</div>
-                        <h2 className="login-title">Acceso Restringido</h2>
-                        
-                        <p style={{color: '#666', marginBottom: '20px'}}>
-                            Introduce la clave de administrador de OKTeam
-                        </p>
+    // --- LÓGICA DE RECUPERACIÓN ---
+    const handleForgotPassword = () => {
+        alert(
+            "🔐 RECUPERACIÓN DE CONTRASEÑA\n\n" +
+            "Como esta es una aplicación local segura, la contraseña no se envía por email.\n\n" +
+            "PARA VER TU CONTRASEÑA:\n" +
+            "1. Ve a la carpeta del proyecto en tu PC Servidor.\n" +
+            "2. Abre el archivo llamado '.env' con el bloc de notas.\n" +
+            "3. Busca donde dice ADMIN_PASSWORD.\n\n" +
+            "También puedes verla en la pantalla negra (consola) al iniciar el servidor."
+        );
+    }
 
-                        <input 
-                            className="login-input"
-                            name="Password" 
-                            type="password" 
-                            placeholder="Contraseña..."
-                            value={password} 
-                            onChange={(e) => setPassword(e.target.value)}
-                            onKeyDown={handleKeyDown} 
-                        />
-                        
-                        <button className="btn-access" onClick={handleLogin}>
-                            Acceder al Panel ➡
-                        </button>
-                    </div>
+    // Si está autenticado, mostramos el Panel. Si no, el Login.
+    if (isAuthenticated) {
+        return children;
+    }
+
+    return(
+        <div className="guard-container">
+            <div className="login-card">
+                <div className="lock-icon">🔒</div>
+                
+                <h2 className="login-title">Acceso Restringido</h2>
+                <p className="login-subtitle">Panel de Control OK TEAM</p>
+
+                <input 
+                    className="login-input"
+                    name="Password" 
+                    type="password" 
+                    placeholder="Escribe la contraseña..."
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={handleKeyDown} 
+                />
+                
+                <button className="btn-access" onClick={handleLogin}>
+                    Acceder al Panel ➡
+                </button>
+
+                {/* Enlace de recuperación */}
+                <div className="forgot-section">
+                    <button className="btn-forgot" onClick={handleForgotPassword}>
+                        ¿Olvidaste la contraseña?
+                    </button>
                 </div>
-            }
+            </div>
         </div>
     )
 }

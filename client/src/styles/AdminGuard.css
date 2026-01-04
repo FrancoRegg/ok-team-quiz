@@ -1,75 +1,101 @@
+/* Contenedor principal: Centrado perfecto */
 .guard-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    background-color: var(--bg-color);
-    padding: 20px;
+    height: 100vh;
+    background-color: #f0f2f5;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* --- La tarjeta de login --- */
+/* Tarjeta de Login */
 .login-card {
     background: white;
     padding: 40px;
-    border-radius: 16px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.1); 
-    width: 100%;
-    max-width: 400px; 
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     text-align: center;
-    animation: fadeIn 0.5s ease-out;
+    width: 100%;
+    max-width: 400px; /* Ancho máximo para que no se estire en pantallas grandes */
+    border: 1px solid #e1e4e8;
 }
 
+/* Icono del candado */
 .lock-icon {
     font-size: 3rem;
-    margin-bottom: 20px;
-    display: block;
+    margin-bottom: 15px;
+    background-color: #e3f2fd;
+    width: 80px;
+    height: 80px;
+    line-height: 80px;
+    border-radius: 50%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .login-title {
-    color: var(--secondary-dark);
-    margin-bottom: 30px;
-    font-size: 1.5rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    color: #333;
+    margin-bottom: 10px;
 }
 
+.login-subtitle {
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 0.9rem;
+}
+
+/* Input de contraseña */
 .login-input {
     width: 100%;
-    padding: 15px;
+    padding: 12px 15px;
     margin-bottom: 20px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid #eee;
     border-radius: 8px;
-    font-size: 1.1rem;
-    text-align: center;
-    box-sizing: border-box; 
-    transition: all 0.2s;
+    font-size: 1rem;
+    box-sizing: border-box; /* Importante para que el padding no rompa el ancho */
+    transition: border-color 0.3s;
 }
 
 .login-input:focus {
-    border-color: var(--primary-blue);
+    border-color: var(--primary-blue, #007bff);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(0,159,227, 0.1);
 }
 
-/* --- Botón de acceso --- */
+/* Botón de Acceder */
 .btn-access {
     width: 100%;
-    padding: 15px;
-    background-color: var(--primary-blue);
+    padding: 12px;
+    background-color: #007bff; /* Azul estándar si no tienes var definida */
     color: white;
     border: none;
     border-radius: 8px;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.3s;
 }
 
 .btn-access:hover {
-    background-color: #0077A0; 
+    background-color: #0056b3;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+/* Botón de "Olvidé contraseña" (NUEVO) */
+.forgot-section {
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+.btn-forgot {
+    background: none;
+    border: none;
+    color: #888;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: color 0.3s;
+}
+
+.btn-forgot:hover {
+    color: #555;
 }
