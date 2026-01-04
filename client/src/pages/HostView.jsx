@@ -15,6 +15,21 @@ function HostView() {
         setJoinUrl(window.location.origin);
 
         socket.emit('join_game', {name:'HOST'})
+        
+        socket.on('server_check', (data) => {
+            const { gameId } = data;
+            console.log("🎟️ Host uniéndose con ticket:", gameId);
+            
+            // Nos unimos enviando el ID correcto
+            socket.emit('join_game', { 
+                name: 'HOST',
+                gameId: String(gameId)
+            });
+        });
+        if(socket.connected){
+           // Esto es opcional, pero ayuda en recargas rápidas en desarrollo
+        }
+
         socket.on('update_players', (data) =>{
             setGroups(data)
         })
@@ -22,16 +37,29 @@ function HostView() {
         socket.on('game_state', (data)=>{
             setGameState(data)
         })
+
         socket.on('new_question', (questionData)=>{
             setCurrentQuestion(questionData)
         })
+
         //Limpieza al cerrado el componente
         return () => {
+            socket.off('server_check');
             socket.off('update_players');
             socket.off('game_state');
             socket.off('new_question')
         }
     }, []);
+
+    const AdminButton = () => (
+        <button 
+            className="admin-access-btn"
+            onClick={() => window.open('/admin', '_blank')} 
+            title="Ir al Panel de Administración"
+        >
+            🔒
+        </button>
+    );
 
     if(gameState === 'LOBBY'){
         return(
@@ -67,6 +95,7 @@ function HostView() {
                     onClick={()=>{socket.emit('start_game')}}>
                         Empezar Juego
                 </button>
+                <AdminButton />
             </div>
         );
     }
@@ -110,6 +139,7 @@ function HostView() {
                     >
                     Nueva Partida 🔄
                 </button>
+                <AdminButton />
             </div>
         )
     }
@@ -171,8 +201,8 @@ function HostView() {
                         Reiniciar 🔄
                     </button>
                 </div>
-
             </div>
+            <AdminButton />
         </div>
     );
 }

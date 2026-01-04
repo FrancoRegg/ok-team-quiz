@@ -114,7 +114,7 @@
     font-size: 1.5rem;
 }
 
-/* --- DESTACAR AL GANADOR (Top 1) 🏆 --- */
+/* --- DESTACAR AL GANADOR (Top 1) --- */
 .ranking-list .ranking-row-item:first-child {
     background-color: #fff8e1; 
     font-weight: bold;
@@ -223,6 +223,37 @@
     background-color: #eee;
 }
 
+/* --- BOTÓN DE ACCESO AL ADMIN --- */
+.admin-access-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%; 
+    background-color: rgba(255, 255, 255, 0.2); 
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 9999;
+    opacity: 0.5; 
+    transition: all 0.3s ease;
+    
+    /* Centrar el icono */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Efecto al pasar el ratón: Se vuelve visible y crece */
+.admin-access-btn:hover {
+    opacity: 1;
+    background-color: white;
+    border-color: white;
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
+
 @media (max-width: 768px) {
     .host-container {
         margin: 20px auto;
@@ -255,5 +286,13 @@
     .btn-primary {
         width: 100%; 
         padding: 15px;
+    }
+
+    .admin-access-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+        bottom: 10px;
+        right: 10px;
     }
 }
