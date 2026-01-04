@@ -142,3 +142,131 @@
 .btn-logout:hover {
     background: #ffebee; 
 }
+
+/* --- LISTA DE PREGUNTAS --- */
+.divider {
+    margin: 40px 0;
+    border: 0;
+    border-top: 1px solid #eee;
+}
+
+.questions-title {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding-bottom: 50px;
+}
+
+.question-item {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.question-item:hover {
+    transform: translateX(5px);
+    border-color: var(--primary-blue);
+}
+
+.q-info strong {
+    display: block;
+    font-size: 1.1rem;
+    color: var(--secondary-dark);
+}
+
+.q-meta {
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 4px;
+}
+
+.q-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Botones de la lista */
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.btn-edit {
+    background: #e3f2fd;
+    color: var(--primary-blue);
+}
+.btn-edit:hover { background: #bbdefb; }
+
+.btn-delete-item {
+    background: #ffebee;
+    color: #d32f2f;
+}
+.btn-delete-item:hover { background: #ffcdd2; }
+
+/* --- UTILIDADES DE FORMULARIO --- */
+.form-row-multi {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+}
+
+.flex-1 { flex: 1; }
+.flex-2 { flex: 2; }
+
+.option-input-text {
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    flex: 1;
+    outline: none;
+    color: #333;
+}
+
+.option-input-text:focus {
+    border-bottom: 1px solid var(--primary-blue);
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.btn-save.editing {
+    background-color: #ff9800;
+}
+.btn-save.editing:hover {
+    background-color: #f57c00;
+}
+
+.btn-cancel {
+    background-color: #757575;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.btn-cancel:hover { background-color: #616161; }
