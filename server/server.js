@@ -4,7 +4,6 @@ const express = require('express')
 const http = require('http');
 const { Server } = require('socket.io')
 const cors = require('cors');
-const { sequelize } = require('./config/db');
 const { sincro } = require('./config/sync')
 const Question = require('./models/Questions')
 const questionRoutes = require('./routes/questionRoutes');
@@ -16,6 +15,7 @@ const port = process.env.PORT;
 const app = express() // Inicializar express
 app.use(cors()); // Permite la conexion desde el frontend
 app.use(express.json());
+
 const server = http.createServer(app); // Creamos el servidor HTTP a partir de Express
 
 app.post('/api/login', (req, res) => {
@@ -34,38 +34,37 @@ const io = new Server(server, {
         methods: ["GET", "POST"] 
     }
 });
-
-// Variable global para guardar las preguntas en memoria
+// --- VARIABLES GLOBALES DEL JUEGO ---
+const SERVER_RUN_ID = Date.now(); // Identificador único de esta sesión del servidor
+let GAME_SESSION_ID = Date.now(); // Identificador de esta sesión de la partida
 let questions = []; 
+const players = {}; 
+let gameState = 'LOBBY';
+let currentQuestionIndex = 0;
 
-// Función para cargar preguntas desde la BD
+// Cargar preguntas al inicio
 async function loadQuestions() {
     try {
         const questionsFromDB = await Question.findAll();
-        
         questions = questionsFromDB.map(q => q.toJSON());
-        console.log(`✅ ${questions.length} preguntas cargadas desde la Base de Datos.`);
+        console.log(`✅ ${questions.length} preguntas cargadas.`);
     } catch (error) {
         console.error("❌ Error al cargar preguntas:", error);
     }
 }
-
-// Ejecutamos la carga al iniciar
 loadQuestions();
 
-const players = {}
-let gameState = 'LOBBY'
-let currentQuestionIndex = 0;
-
+// --- ENVIAR SIGUIENTE PREGUNTA ---
 const sendNextQuestion = () =>{
+    // Si se acabaron las preguntas
     if (currentQuestionIndex >= questions.length){
         gameState = 'GAME_OVER' 
-
         io.to('game_room').emit('game_state', gameState)
         io.to('game_room').emit('update_players', Object.values(players))
         return;
     }
 
+    // Preparar nueva pregunta
     gameState = "QUESTION"
     const fullQuestion = questions[currentQuestionIndex]
 
@@ -76,35 +75,45 @@ const sendNextQuestion = () =>{
         mediaUrl: fullQuestion.mediaUrl 
     }
 
+    // Resetear estado de respuesta de los jugadores
     for(const id in players){
         players[id].hasAnswered = false;
     }
 
+    // Enviar a todos
     io.to('game_room').emit('game_state', gameState)
     io.to('game_room').emit('new_question', questionToSend)
-    
     
     currentQuestionIndex++;
 }
 
-// Escucha los eventos de conexion
+// --- SOCKETS ---
 io.on("connection", (socket) => {
     
+    // 1. Lo primero: Enviar ID del servidor para validar sesión
+    socket.emit('server_check', { 
+        serverId: SERVER_RUN_ID, 
+        gameId: GAME_SESSION_ID 
+    });
+
     socket.on('join_game', (data)=>{
         const groupId = data.name 
-        if (!groupId || groupId === ""){
-            console.log("No se permiten campos vacios")
-            return;
+        const clientGameId = data.gameId; 
+
+        if (!clientGameId || String(clientGameId) !== String(GAME_SESSION_ID)) {
+            console.log(`⛔ Bloqueado intento de acceso de ${groupId} con ticket caducado.`);
+            
+            socket.emit('force_refresh'); 
+            return; 
         }
+        if (!groupId || groupId === "") return;
         
         const existingPlayerId = Object.keys(players).find(key => players[key].name === groupId);
 
         if (existingPlayerId) {
-            console.log(`${groupId} se ha reconectado. Recuperando puntaje.`);
-            
+            console.log(`🔄 ${groupId} recuperado.`);
             const oldData = players[existingPlayerId];
-            
-            delete players[existingPlayerId];
+            delete players[existingPlayerId]; 
         
             players[socket.id] = {
                 name : groupId,
@@ -112,7 +121,7 @@ io.on("connection", (socket) => {
                 id : socket.id,
                 hasAnswered: oldData.hasAnswered,
             };
-        }else{
+        } else {
             players[socket.id] = {
                 name: groupId,
                 score: 0,
@@ -122,29 +131,32 @@ io.on("connection", (socket) => {
         }
 
         socket.join('game_room')
+        
+        // Actualizamos estado al recién llegado y a todos
         socket.emit('game_state', gameState)
         io.to('game_room').emit('update_players', Object.values(players))
 
+        // Si entran tarde y ya hay pregunta, se la enviamos
         if (gameState === 'QUESTION' && currentQuestionIndex > 0) {
             const currentQ = questions[currentQuestionIndex - 1]; 
-            
             if (currentQ) {
-                const questionData = {
+                socket.emit('new_question', {
                     title: currentQ.title,
                     options: currentQ.options,
                     type: currentQ.type,
                     mediaUrl: currentQ.mediaUrl
-                };
-                
-                // Enviamos la pregunta SOLO al que acaba de entrar
-                socket.emit('new_question', questionData);
+                });
             }
         }
     })
 
     socket.on('disconnect', () => {
-        console.log("Usuario desconectado:", socket.id);
-        io.to('game_room').emit('update_players', Object.values(players))
+        // Opcional: Si quieres borrarlos al salir, descomenta esto. 
+        // Pero para reconexiones es mejor dejarlos en memoria un rato.
+        // delete players[socket.id];
+        
+        // Solo actualizamos la lista para que el host vea quién queda online (opcional)
+        // io.to('game_room').emit('update_players', Object.values(players))
     });
 
     socket.on('start_game', () => {
@@ -153,56 +165,50 @@ io.on("connection", (socket) => {
 
     socket.on('reset_game', () => {
         console.log("🧹 Realizando HARD RESET completo...");
+        GAME_SESSION_ID = Date.now();
+
+        // Vaciamos el objeto players manteniendo la referencia const
         for (const key in players) {
-        delete players[key];
+            delete players[key];
         }
 
-        groups = []; 
+        // Reiniciamos variables
         gameState = "LOBBY";
         currentQuestionIndex = 0;
 
+        // Avisamos a todos
         io.emit('game_state', gameState);
         io.emit('update_players', []); 
-        io.emit('force_refresh');
+        io.emit('force_refresh'); 
     })
     
     socket.on('submit_answer', (data) => {
         const player = players[socket.id]
-        // Validación por si el grupo se desconectó o no existe
-        if (!player) return; 
+        if (!player || player.hasAnswered) return; 
 
-        if (player.hasAnswered){
-            return;
-        }
         player.hasAnswered = true;
-
         const questionInPlay = questions[currentQuestionIndex - 1]; 
 
-        if (data.answer === questionInPlay.correctIndex){
-            player.score += 100;
-            socket.emit('answer_result', { 
-                correct : true,
-                correctIndex: questionInPlay.correctIndex
-            })
-        } else {
-            socket.emit('answer_result', { 
-                correct : false,
-                correctIndex: questionInPlay.correctIndex
-            })
-        }
+        // Calcular puntaje
+        const isCorrect = data.answer === questionInPlay.correctIndex;
+        if (isCorrect) player.score += 100;
+
+        // Enviar resultado individual
+        socket.emit('answer_result', { 
+            correct : isCorrect,
+            correctIndex: questionInPlay.correctIndex
+        })
         
-        // Envia lista actualizada de puntajes inmediatamente
+        // Actualizar Host
         io.to('game_room').emit('update_players', Object.values(players))
 
+        // --- LÓGICA DE AVANCE AUTOMÁTICO ---
         const allPlayers = Object.values(players).filter(p => p.name !== 'HOST');
         const totalPlayers = allPlayers.length;
-        
         const answersCount = allPlayers.filter(p => p.hasAnswered).length;
 
         if (totalPlayers > 0 && answersCount === totalPlayers) {
-            console.log("Todos han respondido. Avanzando en 3 segundos...");
-            
-            // Esperamos 3 segundos para que vean si acertaron o fallaron
+            console.log("🚀 Todos respondieron. Avanzando...");
             setTimeout(() => {
                 sendNextQuestion();
             }, 3000); 

@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
-import './styles/App.css'; // <--- 1. IMPORTANTE: Conectar el CSS
+import './styles/App.css';
 
 const socket = io('http://192.168.1.12:3000');
 
 function App() {
-  const [isConnected, setIsConnected] = useState(socket.connected);
   const [inside, setInside] = useState(() => !!localStorage.getItem("savedGroupName"));
   const [nameGroup, setNameGroup] = useState(() => localStorage.getItem("savedGroupName") || "");
+  const [isConnected, setIsConnected] = useState(socket.connected);
+  
   const [gameState, setGameState] = useState("LOBBY");
   const [optionsAnswers, setOptionsAnswers] = useState(null);
   const [hasAnswered, setHasAnswered] = useState(false);
@@ -30,75 +31,119 @@ function App() {
 
   useEffect(() => {
     if (inside) requestWakeLock();
+
+    const onConnect = () => {
+        setIsConnected(true);
+    };
+
+    const onDisconnect = () => setIsConnected(false);
+
+    const onServerCheck = (data) => {
+        const { serverId, gameId } = data;
+        
+        const incomingServerId = String(serverId);
+        const incomingGameId = String(gameId);
+        
+        const storedServerId = localStorage.getItem("server_run_id");
+        const storedGameId = localStorage.getItem("game_session_id");
+        const storedName = localStorage.getItem("savedGroupName");
+
+        if (storedServerId && storedServerId !== incomingServerId) {
+            console.log("⛔ Servidor reiniciado. Limpiando...");
+            localStorage.clear();
+            localStorage.setItem("server_run_id", incomingServerId);
+            localStorage.setItem("game_session_id", incomingGameId); 
+            window.location.reload();
+            return;
+        }
+
+        if (storedName) {
+            if (!storedGameId || storedGameId !== incomingGameId) {
+                console.log("⛔ Detectada sesión de partida anterior. Limpiando...");
+
+                localStorage.clear();
+                localStorage.setItem("server_run_id", incomingServerId);
+                localStorage.setItem("game_session_id", incomingGameId);
+                
+                window.location.reload();
+                return; 
+            }
+        }
+
+        localStorage.setItem("server_run_id", incomingServerId);
+        localStorage.setItem("game_session_id", incomingGameId);
+
+        if (storedName) {
+            console.log("✅ Sesión válida verificada. Reconectando:", storedName);
+            socket.emit('join_game', { 
+                name: storedName,
+                gameId: incomingGameId 
+            });
+            setInside(true);
+        }
+      };
+    const onForceRefresh = () => {
+        localStorage.removeItem("savedGroupName");
+        setInside(false);
+        setNameGroup("");
+        window.location.reload();
+    };
+
+    const onGameState = (state) => setGameState(state);
     
-    // Reconexión y lógica del socket (Tu código original intacto)
-    socket.on('connect', () => {
-      setIsConnected(true);
-      const savedName = localStorage.getItem("savedGroupName");
-      if (savedName) {
-          socket.emit('join_game', { name: savedName });
-          setInside(true); 
-      }
-    });
+    const onNewQuestion = (answers) => {
+        setOptionsAnswers(answers);
+        setHasAnswered(false);
+        setAnswerStatus(null);
+        setMyAnswer(null);
+        setCorrectAnswer(null);
+        if (navigator.vibrate) navigator.vibrate(100);
+    };
 
-    socket.on('disconnect', () => setIsConnected(false));
-    socket.on('game_state', (state) => setGameState(state));
+    const onAnswerResult = (data) => {
+        setCorrectAnswer(data.correctIndex);
+        if(data.correct){
+            setAnswerStatus('CORRECT');
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
+        } else {
+            setAnswerStatus('INCORRECT');
+            if (navigator.vibrate) navigator.vibrate(400); 
+        }
+    };
 
-    socket.on('new_question', (answers) => {
-      setOptionsAnswers(answers);
-      setHasAnswered(false);
-      setAnswerStatus(null);
-      setMyAnswer(null);
-      setCorrectAnswer(null);
-      if (navigator.vibrate) navigator.vibrate(100);
-    });
-
-    socket.on('answer_result', (data) => {
-      setCorrectAnswer(data.correctIndex);
-      if(data.correct){
-        setAnswerStatus('CORRECT');
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
-      }else{
-        setAnswerStatus('INCORRECT');
-        if (navigator.vibrate) navigator.vibrate(400); 
-      }
-    });
-
-    socket.on('update_players', (data) =>{
+    const onUpdatePlayers = (data) => {
         const myData = data.find(player => player.id === socket.id);
         if(myData){
             setScoreGroup(myData.score);
             if (myData.hasAnswered) setHasAnswered(true);
         }
-    });
+    };
 
-    socket.on('force_refresh', () => {
-      // Borramos su nombre guardado
-      localStorage.removeItem("savedGroupName");
-
-      setInside(false);
-      setNameGroup("");
-      setScoreGroup(0);
-      setHasAnswered(false);
-      
-      // Recargamos la página forzosamente
-      window.location.reload();
-    })
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    socket.on('server_check', onServerCheck);
+    socket.on('force_refresh', onForceRefresh);
+    socket.on('game_state', onGameState);
+    socket.on('new_question', onNewQuestion);
+    socket.on('answer_result', onAnswerResult);
+    socket.on('update_players', onUpdatePlayers);
 
     return () => {
-      socket.off('connect');
-      socket.off('disconnect');
-      socket.off('game_state');
-      socket.off('new_question');
-      socket.off('answer_result'); 
-      socket.off('update_players');
-      socket.off('force_refresh')
+        socket.off('connect', onConnect);
+        socket.off('disconnect', onDisconnect);
+        socket.off('server_check', onServerCheck);
+        socket.off('force_refresh', onForceRefresh);
+        socket.off('game_state', onGameState);
+        socket.off('new_question', onNewQuestion);
+        socket.off('answer_result', onAnswerResult);
+        socket.off('update_players', onUpdatePlayers);
     };
   }, [inside]); 
 
   // --- FUNCIONES ---
   function enterGame(){
     if(!nameGroup.trim()) { alert("Escribe un nombre"); return; }
+    
     localStorage.setItem("savedGroupName", nameGroup);
     socket.emit('join_game', { name: nameGroup });
     setInside(true);
@@ -119,27 +164,14 @@ function App() {
     setMyAnswer(i);
   } 
 
-  // --- LÓGICA DE ESTILOS CSS ---
-  // Esta función decide qué CLASE (color) lleva cada botón
   const getButtonClass = (index) => {
-    // 1. Si nadie ha respondido aún, color normal activo
     if (answerStatus === null && !hasAnswered) return 'active';
-
-    // 2. Si ya respondí pero espero resultado, deshabilito los que no toqué
-    if (answerStatus === null && hasAnswered) {
-        return index === myAnswer ? 'active' : 'disabled';
-    }
-
-    // 3. RESULTADO FINAL (Colores Semáforo)
-    if (index === correctAnswer) return 'correct'; // ¡El correcto siempre Verde!
-    if (index === myAnswer && answerStatus === 'INCORRECT') return 'incorrect'; // El mío rojo si fallé
-    
-    return 'disabled'; // Los demás grises
+    if (answerStatus === null && hasAnswered) return index === myAnswer ? 'active' : 'disabled';
+    if (index === correctAnswer) return 'correct';
+    if (index === myAnswer && answerStatus === 'INCORRECT') return 'incorrect';
+    return 'disabled';
   }
 
-  // --- RENDERIZADO ---
-
-  // VISTA: GAME OVER
   if(gameState === 'GAME_OVER'){
     return(
       <div className="mobile-container">
@@ -157,7 +189,6 @@ function App() {
     )
   }
 
-  // VISTA: LOGIN / ENTRADA
   if (!inside) {
     return (
       <div className="mobile-container">
@@ -173,7 +204,6 @@ function App() {
             <button className="btn-login" onClick={enterGame}> 
               ¡A Jugar! 🚀 
             </button>
-            
             <div className="status-footer">
                Estado: <span style={{ color: isConnected ? 'green' : 'red', fontWeight: 'bold' }}>
                   {isConnected ? 'Conectado' : 'Desconectado'}
@@ -184,18 +214,14 @@ function App() {
     );
   }
 
-  // VISTA: DENTRO DEL JUEGO
   return (
     <div className="mobile-container" style={{justifyContent: 'flex-start'}}>
-      
-      {/* HEADER FIJO */}
       <div className="app-header">
          <span className="player-info">👤 {nameGroup}</span>
          <span className="score-badge">{scoreGroup} pts</span>
       </div>
-      <div className="header-spacer"></div> {/* Empuja el contenido abajo */}
+      <div className="header-spacer"></div>
 
-      {/* CONTENIDO CAMBIANTE */}
       {gameState === 'LOBBY' ? (
          <div style={{marginTop: '50px'}}>
             <div className="pulse-text">⏳</div>
@@ -204,7 +230,6 @@ function App() {
             <div className="status-footer">Mira la pantalla grande</div>
          </div>
       ) : (
-         // ZONA DE PREGUNTAS
          <div style={{width: '100%', maxWidth: '500px'}}>
             {optionsAnswers?.options ? (
                <div>
@@ -213,15 +238,14 @@ function App() {
                     {optionsAnswers.options.map((answer, i) => (
                       <button
                         key={i} 
-                        disabled={hasAnswered && answerStatus === null} // Bloquea al pulsar
+                        disabled={hasAnswered && answerStatus === null}
                         onClick={() => submitAnswer(i)}
-                        className={`game-btn ${getButtonClass(i)}`} // <--- AQUÍ APLICAMOS LA CLASE
+                        className={`game-btn ${getButtonClass(i)}`}
                       >
                         {answer}
                       </button>
                     ))}
                   </div>
-                  
                   {hasAnswered && answerStatus === null && (
                      <p className="pulse-text" style={{fontSize: '1rem', color: '#888'}}>
                         Respuesta enviada... Esperando resultado 🤞
