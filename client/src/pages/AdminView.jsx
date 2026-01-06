@@ -15,7 +15,7 @@ function AdminView() {
 
     const fetchQuestions = async () => {
         try {
-            const response = await fetch('http://192.168.1.13:3000/api/questions');
+            const response = await fetch('/api/questions');
             const data = await response.json();
             setQuestionsList(data);
         } catch (error) {
@@ -61,7 +61,7 @@ function AdminView() {
     const handleDelete = async (id) => {
         if(!window.confirm("¿Estás seguro de borrar esta pregunta?")) return;
         try {
-            await fetch(`http://192.168.1.13:3000/api/questions/${id}`, {
+            await fetch(`/api/questions/${id}`, {
                 method: 'DELETE'
             });
             fetchQuestions(); 
@@ -88,11 +88,11 @@ function AdminView() {
         const questionData = { title, type, options, mediaUrl, correctIndex };
         
         try{
-            let url = 'http://192.168.1.13:3000/api/questions';
+            let url = '/api/questions';
             let method = 'POST';
 
             if (editingId) {
-                url = `http://192.168.1.13:3000/api/questions/${editingId}`;
+                url = `/api/questions/${editingId}`;
                 method = 'PUT';
             }
 

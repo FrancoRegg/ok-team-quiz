@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import QRCode from "react-qr-code";
 import '../styles/HostView.css'
 
-const socket = io('http://192.168.1.13:3000');
+const socket = io();
 
 function HostView() {
     const [groups, setGroups] = useState([])

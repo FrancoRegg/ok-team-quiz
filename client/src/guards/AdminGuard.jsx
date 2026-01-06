@@ -10,8 +10,7 @@ function AdminGuard({ children }){
 
     const handleLogin = async() => {
         try{
-            // OJO: Asegúrate de que esta IP es la correcta (.12 o .42 según tu config)
-            const resp = await fetch('http://192.168.1.12:3000/api/login', {
+            const resp = await fetch('/api/questions', {
                 method: "POST",
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: password })
