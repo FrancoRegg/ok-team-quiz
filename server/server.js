@@ -1,4 +1,5 @@
-require('dotenv').config()
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') })
 const express = require('express')
 const http = require('http');
 const { Server } = require('socket.io')
@@ -216,6 +217,13 @@ io.on("connection", (socket) => {
 });
 
 app.use('/api/questions', questionRoutes)
+
+// Servir los archivos estáticos del build de React
+app.use(express.static(path.join(__dirname, '../client/dist')));
+// Hacer que cualquier ruta no-API devuelva el index.html (para que funcione React Router)
+app.use((req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
 server.listen(port, () => {
     console.log(`Servidor corriendo en el puerto ${port}`)
 })

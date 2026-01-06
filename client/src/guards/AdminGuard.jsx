@@ -1,5 +1,5 @@
 import { useState } from "react";
-import '../styles/AdminGuard.css'; // <--- No olvides importar el CSS
+import '../styles/AdminGuard.css'; 
 
 function AdminGuard({ children }){
     const [ password, setPassword ] = useState("");
@@ -10,7 +10,7 @@ function AdminGuard({ children }){
 
     const handleLogin = async() => {
         try{
-            const resp = await fetch('/api/questions', {
+            const resp = await fetch('/api/login', {
                 method: "POST",
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: password })
