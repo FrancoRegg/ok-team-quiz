@@ -233,7 +233,7 @@ async function startServer() {
         console.log("⏳ Cargando preguntas...");
         await loadQuestions();
 
-        server.listen(port, () => {
+        server.listen(port, '0.0.0.0', () => {
             console.log(`✅ Servidor corriendo y listo en el puerto ${port}`)
         });
     } catch (error) {
