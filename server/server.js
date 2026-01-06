@@ -224,6 +224,21 @@ app.use(express.static(path.join(__dirname, '../client/dist')));
 app.use((req, res) => {
     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
-server.listen(port, () => {
-    console.log(`Servidor corriendo en el puerto ${port}`)
-})
+
+async function startServer() {
+    try {
+        console.log("⏳ Iniciando sincronización de base de datos...");
+        await sincro(); 
+        
+        console.log("⏳ Cargando preguntas...");
+        await loadQuestions();
+
+        server.listen(port, () => {
+            console.log(`✅ Servidor corriendo y listo en el puerto ${port}`)
+        });
+    } catch (error) {
+        console.error("❌ Error fatal al iniciar el servidor:", error);
+    }
+}
+
+startServer();
