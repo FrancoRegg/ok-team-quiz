@@ -35,7 +35,6 @@ Este proyecto utiliza una arquitectura **Cliente-Servidor (Monorepo)**:
 ### 2. Clonar e Instalar
 El proyecto tiene dependencias en la raíz, en el servidor y en el cliente.
 
-```bash
 # Clonar repositorio
 git clone <URL_DEL_REPO>
 cd OK-TEAM-QUIZ
@@ -47,10 +46,11 @@ npm install
 cd client
 npm install
 cd ..
-3. Configuración de Variables de Entorno (.env)
+
+### 3. Configuración de Variables de Entorno (.env)
 Crea un archivo .env en la carpeta raíz del proyecto con la siguiente estructura. Ajusta los valores según tu configuración local de PostgreSQL:
 
-Fragmento de código
+Fragmento de código...
 
 # Servidor
 PORT=3000
@@ -66,7 +66,7 @@ DB_PASSWORD=tu_password
 DB_HOST=localhost
 DB_DIALECT=postgres
 
-4. Ejecutar en Desarrollo
+### 4. Ejecutar en Desarrollo
 Para desarrollar, necesitas dos terminales abiertas:
 
 Terminal 1 (Backend):
