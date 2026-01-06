@@ -1,119 +1,138 @@
+<div align="center">
+
 # 🎮 OK TEAM Quiz App
 
-Sistema de trivial interactivo en tiempo real diseñado para eventos presenciales. Permite a un presentador (Host) gestionar preguntas en una pantalla grande mientras los participantes responden desde sus dispositivos móviles.
+**Sistema de trivial interactivo en tiempo real diseñado para eventos presenciales.**
+Permite a un presentador (Host) gestionar preguntas en una pantalla grande mientras los participantes responden desde sus dispositivos móviles.
 
-![Status](https://img.shields.io/badge/Status-Production%20Ready-green)
-![Stack](https://img.shields.io/badge/Stack-PERN%20%2B%20Socket.io-blue)
+![Status](https://img.shields.io/badge/Status-Production%20Ready-2ea44f?style=for-the-badge&logo=github)
+![Stack](https://img.shields.io/badge/Stack-PERN%20%2B%20Socket.io-3178c6?style=for-the-badge&logo=react)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+
+</div>
+
+---
+
+## 📋 Tabla de Contenidos
+
+1. [Características](#-características-principales)
+2. [Tecnologías](#-tecnologías)
+3. [Instalación y Configuración](#-instalación-y-configuración-local)
+4. [Despliegue](#-despliegue-producción)
+5. [Estructura del Proyecto](#-estructura-del-proyecto)
+6. [Manual de Uso](#-manual-de-uso-rápido)
+
+---
 
 ## ✨ Características Principales
 
-* **Tiempo Real:** Comunicación instantánea entre servidor y clientes usando `Socket.io`.
-* **Roles Diferenciados:**
-    * **Host:** Vista para proyectar en TV/Proyector. Genera código QR de acceso dinámico y muestra rankings en vivo.
-    * **Jugador:** Interfaz móvil optimizada para responder preguntas.
-    * **Admin:** Panel protegido para crear, leer, editar y borrar preguntas (CRUD completo) y gestionar la base de datos.
-* **Resiliencia:** Sistema de reconexión inteligente y manejo de sesiones para evitar desconexiones y "jugadores fantasma".
-* **Seguridad:** Panel de administración protegido con contraseña.
-* **Multimedia:** Soporte para preguntas con imágenes y videos.
+* **⚡ Tiempo Real:** Comunicación instantánea entre servidor y clientes usando `Socket.io` (WebSockets).
+* **👥 Roles Diferenciados:**
+    * **Host:** Vista diseñada para TV/Proyector. Genera código QR de acceso dinámico y muestra rankings en vivo.
+    * **Jugador:** Interfaz móvil (Mobile First) optimizada para responder preguntas rápidamente.
+    * **Admin:** Panel protegido para gestionar la base de datos (CRUD completo de preguntas).
+* **🛡️ Resiliencia:** Sistema de reconexión inteligente y manejo de sesiones para evitar "jugadores fantasma" ante caídas de red.
+* **🔒 Seguridad:** Panel de administración protegido con autenticación.
+* **📸 Multimedia:** Soporte nativo para preguntas que incluyen imágenes y videos.
+
+---
 
 ## 🛠️ Tecnologías
 
-Este proyecto utiliza una arquitectura **Cliente-Servidor (Monorepo)**:
+Este proyecto utiliza una arquitectura **Cliente-Servidor (Monorepo)** basada en el stack PERN:
 
-* **Backend:** Node.js, Express.
-* **Frontend:** React, Vite.
-* **Base de Datos:** PostgreSQL (con ORM Sequelize).
-* **Comunicación:** Socket.io (WebSockets).
-* **Estilos:** CSS3 nativo (Diseño Responsive).
+| Área | Tecnología | Descripción |
+| :--- | :--- | :--- |
+| **Backend** | Node.js + Express | Servidor REST y gestión de WebSockets. |
+| **Frontend** | React + Vite | SPA rápida y optimizada. |
+| **Base de Datos** | PostgreSQL | Persistencia de datos relacional (vía Sequelize ORM). |
+| **Comunicación** | Socket.io | Eventos bidireccionales en tiempo real. |
+| **Estilos** | CSS3 Nativo | Diseño totalmente Responsive y personalizado. |
+
+---
 
 ## 🚀 Instalación y Configuración Local
 
 ### 1. Requisitos Previos
-* Node.js (v18 o superior).
-* PostgreSQL instalado y corriendo localmente.
+* **Node.js** (v18 o superior).
+* **PostgreSQL** instalado y ejecutándose localmente.
 
 ### 2. Clonar e Instalar
-El proyecto tiene dependencias en la raíz, en el servidor y en el cliente.
+El proyecto tiene dependencias tanto en la raíz (para orquestación) como en las carpetas del cliente y servidor.
+```
+# 1. Clonar repositorio
 
-# Clonar repositorio
 git clone <URL_DEL_REPO>
 cd OK-TEAM-QUIZ
 
-# Instalar dependencias del Backend y generales
+# 2. Instalar dependencias del Backend y generales
+
 npm install
 
-# Instalar dependencias del Frontend
+# 3. Instalar dependencias del Frontend
+
 cd client
 npm install
 cd ..
+```
+### 3. Variables de Entorno (.env)
+Crea un archivo `.env` en la **raíz del proyecto** con la siguiente estructura.
 
-### 3. Configuración de Variables de Entorno (.env)
-Crea un archivo .env en la carpeta raíz del proyecto con la siguiente estructura. Ajusta los valores según tu configuración local de PostgreSQL:
+> ⚠️ **Nota:** Ajusta los valores de base de datos según tu configuración local de PostgreSQL.
 
-Fragmento de código...
-
-# Servidor
+```env
+# --- Servidor ---
 PORT=3000
 NODE_ENV=development
 
-# Seguridad (Contraseña para entrar al panel /admin)
-ADMIN_PASSWORD=contraseña
+# --- Seguridad ---
+# Contraseña para acceder a la ruta /admin
+ADMIN_PASSWORD=contraseña_segura
 
-# Base de Datos (PostgreSQL Local)
+# --- Base de Datos (PostgreSQL Local) ---
 DB_NAME=name_db
 DB_USER=postgres
 DB_PASSWORD=tu_password
 DB_HOST=localhost
 DB_DIALECT=postgres
-
+```
 ### 4. Ejecutar en Desarrollo
-Para desarrollar, necesitas dos terminales abiertas:
+Para desarrollar, necesitas dos terminales abiertas simultáneamente:
 
 Terminal 1 (Backend):
 
-Bash
-
+```
 node server/server.js
-# O si tienes nodemon: npm run dev
-
+# O si tienes nodemon instalado:
+npm run dev
+```
 Terminal 2 (Frontend):
 
-Bash
-
+```
 cd client
 npm run dev
+```
+## 📦 Despliegue (Producción)
 
-📦 Despliegue (Producción)
+El proyecto está optimizado para desplegarse en plataformas PaaS como **Railway** o **Render**.
 
-El proyecto está configurado para desplegarse fácilmente en plataformas en la nube como Railway o Render.
+### Estrategia de Build
+El archivo `package.json` en la raíz contiene un script de build (`postinstall` o `build`) que ejecuta las siguientes acciones automáticamente al desplegar:
+1.  Instala las dependencias.
+2.  Compila la aplicación React (`npm run build`) generando la carpeta `client/dist`.
+3.  El servidor Node.js sirve estos archivos estáticos automáticamente si la variable de entorno es `NODE_ENV=production`.
 
-Estrategia de Build
-El archivo package.json en la raíz contiene un script de build inteligente que:
+### Pasos (Ejemplo: Railway)
+1.  Conectar repositorio de GitHub a Railway.
+2.  Añadir el servicio de **PostgreSQL** dentro del proyecto.
+3.  Configurar las **Variables de Entorno**:
+    * `PORT`: 3000 (o dejar vacío si la plataforma lo asigna automáticamente).
+    * `DATABASE_URL`: (Se autoconfigura sola al añadir el plugin de Postgres).
+    * `ADMIN_PASSWORD`: Tu contraseña de administrador.
+    * `NODE_ENV`: `production`.
 
-Instala las dependencias del cliente.
-
-Compila la aplicación React (npm run build) generando la carpeta client/dist.
-
-El servidor Node.js está configurado para servir estos archivos estáticos automáticamente en producción.
-
-Pasos para Desplegar (Ej: Railway)
-
-Conectar repositorio de GitHub a Railway.
-
-Añadir el servicio de Base de Datos PostgreSQL.
-
-Configurar las Variables de Entorno en el panel del hosting:
-
-PORT: 3000 (o el que asigne el hosting).
-
-DATABASE_URL: (Generalmente se autoconfigura al añadir Postgres).
-
-ADMIN_PASSWORD: La contraseña deseada para el administrador.
-
-NODE_ENV: production.
-
-📂 Estructura del Proyecto
-
+## 📂 Estructura del Proyecto
+```
 OK-TEAM-QUIZ/
 ├── client/                 # Frontend React (Vite)
 │   ├── dist/               # Build de producción (generado al desplegar)
@@ -132,15 +151,23 @@ OK-TEAM-QUIZ/
 │
 ├── package.json            # Script raíz para orquestar deploy
 └── README.md               # Documentación
+```
+## 📖 Manual de Uso Rápido
 
-📖 Manual de Uso Rápido
+1.  **Iniciar Evento (Host):**
+    Abra la URL de la aplicación en la pantalla principal (TV/Proyector). El sistema detectará el dispositivo y entrará automáticamente como **HOST**.
 
-Iniciar Evento: Abrir la URL de la aplicación en la pantalla principal (TV/Proyector). Entrará automáticamente como HOST.
+2.  **Panel Admin:**
+    Haga clic en el icono discreto de candado 🔒 (esquina inferior derecha de la vista Host) o navegue manualmente a `/admin`. Ingrese la contraseña configurada en el archivo `.env`.
 
-Panel Admin: Hacer clic en el icono discreto de candado 🔒 (esquina inferior derecha del Host) o ir a /admin.
+3.  **Unirse (Jugadores):**
+    Los jugadores deben escanear el código QR proyectado o entrar a la URL mostrada en sus dispositivos móviles.
 
-Unirse: Los jugadores escanean el QR o entran a la URL mostrada en sus móviles.
+4.  **Jugar:**
+    El Host controla el flujo pulsando **"Siguiente Pregunta"**. El sistema avanza automáticamente cuando todos los jugadores activos han respondido o si el Host fuerza el avance manualmente.
 
-Jugar: El Host controla el flujo ("Siguiente Pregunta"). El sistema avanza automáticamente cuando todos los jugadores activos han respondido o el Host fuerza el avance.
+---
 
-Desarrollado para OK TEAM.
+<div align="center">
+  <sub>Desarrollado con ❤️ para OK TEAM</sub>
+</div>
