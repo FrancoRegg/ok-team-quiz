@@ -100,12 +100,12 @@ io.on("connection", (socket) => {
         const groupId = data.name 
         const clientGameId = data.gameId; 
 
-        if (!clientGameId || String(clientGameId) !== String(GAME_SESSION_ID)) {
-            console.log(`⛔ Bloqueado intento de acceso de ${groupId} con ticket caducado.`);
+        // if (!clientGameId || String(clientGameId) !== String(GAME_SESSION_ID)) {
+        //     console.log(`⛔ Bloqueado intento de acceso de ${groupId} con ticket caducado.`);
             
-            socket.emit('force_refresh'); 
-            return; 
-        }
+        //     socket.emit('force_refresh'); 
+        //     return; 
+        // }
         if (!groupId || groupId === "") return;
         
         const existingPlayerId = Object.keys(players).find(key => players[key].name === groupId);
