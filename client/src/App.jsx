@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 import './styles/App.css';
 
-const socket = io('http://192.168.1.12:3000');
+const socket = io('http://192.168.1.13:3000');
 
 function App() {
   const [inside, setInside] = useState(() => !!localStorage.getItem("savedGroupName"));

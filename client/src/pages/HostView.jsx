@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import QRCode from "react-qr-code";
 import '../styles/HostView.css'
 
-const socket = io('http://192.168.1.12:3000');
+const socket = io('http://192.168.1.13:3000');
 
 function HostView() {
     const [groups, setGroups] = useState([])
@@ -64,7 +64,6 @@ function HostView() {
     if(gameState === 'LOBBY'){
         return(
             <div className="host-container">
-                <h1>Pantalla Proyectada</h1>
                 <div>
                     <h1 className="big-title">¡Únete al Quiz!</h1>
                 

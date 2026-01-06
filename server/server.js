@@ -1,5 +1,4 @@
 require('dotenv').config()
-console.log("La clave es:", process.env.ADMIN_PASSWORD);
 const express = require('express')
 const http = require('http');
 const { Server } = require('socket.io')
