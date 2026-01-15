@@ -3,7 +3,12 @@ import io from 'socket.io-client';
 import QRCode from "react-qr-code";
 import '../styles/HostView.css'
 
-const socket = io();
+const socket = io(import.meta.env.VITE_SOCKET_URL || window.location.origin, {
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionAttempts: 5,
+  transports: ['websocket', 'polling']
+});
 
 function HostView() {
     const [groups, setGroups] = useState([])
