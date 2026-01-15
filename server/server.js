@@ -93,16 +93,32 @@ io.on("connection", (socket) => {
     });
 
     socket.on('join_game', (data)=>{
+        console.log("📥 Evento join_game recibido:", data);
         const groupId = data.name 
         const clientGameId = data.gameId; 
 
-        // if (!clientGameId || String(clientGameId) !== String(GAME_SESSION_ID)) {
-        //     console.log(`⛔ Bloqueado intento de acceso de ${groupId} con ticket caducado.`);
-            
-        //     socket.emit('force_refresh'); 
-        //     return; 
-        // }
-        if (!groupId || groupId === "") return;
+        if (!groupId || groupId.trim() === "") {
+            console.log(`⛔ Intento de conexión sin nombre`);
+            socket.emit('error', { message: 'Debes proporcionar un nombre de equipo' });
+            return;
+        }
+
+        if (groupId !== 'HOST') {
+            if (!clientGameId || String(clientGameId) !== String(GAME_SESSION_ID)) {
+                console.log(`⛔ Bloqueado: ${groupId} - Ticket caducado`);
+                console.log(`   - Tiene: ${clientGameId}`);
+                console.log(`   - Esperado: ${GAME_SESSION_ID}`);
+                
+                socket.emit('session_expired', { 
+                    message: 'La sesión ha expirado. Por favor, recarga la página.',
+                    currentGameId: GAME_SESSION_ID 
+                });
+                
+                socket.disconnect(true); 
+                return;
+            }
+        }
+        console.log(`✅ Validación pasada para: ${groupId}`);
         
         const existingPlayerId = Object.keys(players).find(key => players[key].name === groupId);
 
@@ -118,6 +134,7 @@ io.on("connection", (socket) => {
                 hasAnswered: oldData.hasAnswered,
             };
         } else {
+            console.log(`📝 Nuevo jugador: ${groupId}`);
             players[socket.id] = {
                 name: groupId,
                 score: 0,
