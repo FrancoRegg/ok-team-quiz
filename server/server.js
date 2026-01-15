@@ -63,6 +63,7 @@ const SERVER_RUN_ID = Date.now(); // Identificador único de esta sesión del se
 let GAME_SESSION_ID = Date.now(); // Identificador de esta sesión de la partida
 let questions = []; 
 const players = {}; 
+const playerTimeouts = {};
 let gameState = 'LOBBY';
 let currentQuestionIndex = 0;
 
@@ -152,6 +153,13 @@ io.on("connection", (socket) => {
         if (existingPlayerId) {
             console.log(`🔄 ${groupId} recuperado.`);
             const oldData = players[existingPlayerId];
+
+            if(playerTimeouts[existingPlayerId]){
+                clearTimeout(playerTimeouts[existingPlayerId]);
+                delete playerTimeouts[existingPlayerId];
+                console.log(`⏰ Timeout cancelado para ${groupId} (reconectado a tiempo)`);
+            }
+
             delete players[existingPlayerId]; 
         
             players[socket.id] = {
@@ -191,12 +199,28 @@ io.on("connection", (socket) => {
     })
 
     socket.on('disconnect', () => {
-        // Opcional: Si quieres borrarlos al salir, descomenta esto. 
-        // Pero para reconexiones es mejor dejarlos en memoria un rato.
-        // delete players[socket.id];
+        const player = players[socket.id]
+        if(!player) return;
+
+        if(player.name === 'HOST'){
+            console.log(`🔌 HOST desconectado (mantenido en memoria)`);
+            return;
+        }
+
+        console.log(`⏳ ${player.name} desconectado. Esperando para eliminar...`);
+    
+        playerTimeouts[socket.id] = setTimeout(() => {
+        console.log(`🗑️ ${player.name} eliminado (timeout cumplido)`);
         
-        // Solo actualizamos la lista para que el host vea quién queda online (opcional)
-        // io.to('game_room').emit('update_players', Object.values(players))
+        // Eliminar del objeto players
+        delete players[socket.id];
+        
+        // Eliminar el timeout del registro
+        delete playerTimeouts[socket.id];
+        
+        // Notificar al host que la lista cambió
+        io.to('game_room').emit('update_players', Object.values(players));
+        }, 100000)
     });
 
     socket.on('start_game', () => {
