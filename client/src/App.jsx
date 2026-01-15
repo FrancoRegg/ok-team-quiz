@@ -2,7 +2,12 @@ import { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 import './styles/App.css';
 
-const socket = io();
+const socket = io(import.meta.env.VITE_SOCKET_URL || window.location.origin, {
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionAttempts: 5,
+  transports: ['websocket', 'polling']
+});
 
 function App() {
   const [inside, setInside] = useState(() => !!localStorage.getItem("savedGroupName"));
@@ -39,49 +44,72 @@ function App() {
     const onDisconnect = () => setIsConnected(false);
 
     const onServerCheck = (data) => {
-        const { serverId, gameId } = data;
-        
-        const incomingServerId = String(serverId);
-        const incomingGameId = String(gameId);
-        
-        const storedServerId = localStorage.getItem("server_run_id");
-        const storedGameId = localStorage.getItem("game_session_id");
-        const storedName = localStorage.getItem("savedGroupName");
+      const { serverId, gameId } = data;
+    
+      console.log("🔔 server_check recibido:", { serverId, gameId });
+      
+      const incomingServerId = String(serverId);
+      const incomingGameId = String(gameId);
+      
+      const storedServerId = localStorage.getItem("server_run_id");
+      const storedGameId = localStorage.getItem("game_session_id");
+      const storedName = localStorage.getItem("savedGroupName");
 
-        if (storedServerId && storedServerId !== incomingServerId) {
-            console.log("⛔ Servidor reiniciado. Limpiando...");
-            localStorage.clear();
-            localStorage.setItem("server_run_id", incomingServerId);
-            localStorage.setItem("game_session_id", incomingGameId); 
-            window.location.reload();
-            return;
-        }
-
-        if (storedName) {
-            if (!storedGameId || storedGameId !== incomingGameId) {
-                console.log("⛔ Detectada sesión de partida anterior. Limpiando...");
-
-                localStorage.clear();
-                localStorage.setItem("server_run_id", incomingServerId);
-                localStorage.setItem("game_session_id", incomingGameId);
-                
-                window.location.reload();
-                return; 
-            }
-        }
-
+      // CASO 1: Primera vez que se conecta (no hay nada guardado)
+      if (!storedServerId || !storedGameId) {
+        console.log("📝 Primera conexión, guardando IDs...");
         localStorage.setItem("server_run_id", incomingServerId);
         localStorage.setItem("game_session_id", incomingGameId);
+        return;
+      }
 
+      // CASO 2: El servidor se reinició (cambió serverId)
+      if (storedServerId !== incomingServerId) {
+        console.log("🔄 Servidor reiniciado, actualizando IDs...");
+        localStorage.setItem("server_run_id", incomingServerId);
+        localStorage.setItem("game_session_id", incomingGameId);
+        
+        // Si había nombre guardado, limpiarlo (nueva sesión)
         if (storedName) {
-            console.log("✅ Sesión válida verificada. Reconectando:", storedName);
-            socket.emit('join_game', { 
-                name: storedName,
-                gameId: incomingGameId 
-            });
-            setInside(true);
+            console.log("🧹 Limpiando nombre guardado (servidor reiniciado)");
+            localStorage.removeItem("savedGroupName");
+            setInside(false);
+            setNameGroup("");
+            alert("El servidor se reinició. Por favor, vuelve a unirte.");
         }
-      };
+        return;
+      }
+
+      // CASO 3: La partida se reseteó (gameId cambió, pero serverId no) 
+      if (storedGameId !== incomingGameId) {
+          console.log("🎮 Partida reseteada (gameId cambió)");
+          console.log("   - Guardado:", storedGameId);
+          console.log("   - Recibido:", incomingGameId);
+          
+          localStorage.setItem("game_session_id", incomingGameId);
+          
+          // Si había nombre guardado, limpiarlo
+          if (storedName) {
+              console.log("🧹 Limpiando nombre guardado (partida reseteada)");
+              localStorage.removeItem("savedGroupName");
+              setInside(false);
+              setNameGroup("");
+              alert("La partida se reinició. Por favor, vuelve a unirte.");
+          }
+          return;
+      }
+
+      // CASO 4: Reconexión normal (mismo serverId y gameId)
+      if (storedName) {
+          console.log("🔄 Reconectando con gameId guardado:", storedGameId);
+          socket.emit('join_game', { 
+              name: storedName,
+              gameId: storedGameId
+          });
+          setInside(true);
+      }
+    };
+
     const onForceRefresh = () => {
         localStorage.removeItem("savedGroupName");
         setInside(false);
@@ -119,6 +147,21 @@ function App() {
         }
     };
 
+    const onSessionExpired = (data) => {
+      console.log('⛔ Sesión expirada:', data.message);
+      
+      if (data.currentGameId) {
+      localStorage.setItem("game_session_id", String(data.currentGameId));
+      }
+      
+      localStorage.removeItem("savedGroupName");
+      
+      setInside(false);
+      setNameGroup("");
+      
+      alert(data.message || 'La partida se reinició. Debes volver a unirte.');
+    };
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('server_check', onServerCheck);
@@ -127,6 +170,7 @@ function App() {
     socket.on('new_question', onNewQuestion);
     socket.on('answer_result', onAnswerResult);
     socket.on('update_players', onUpdatePlayers);
+    socket.on('session_expired', onSessionExpired);
 
     return () => {
         socket.off('connect', onConnect);
@@ -137,15 +181,28 @@ function App() {
         socket.off('new_question', onNewQuestion);
         socket.off('answer_result', onAnswerResult);
         socket.off('update_players', onUpdatePlayers);
+        socket.off('session_expired', onSessionExpired);
     };
   }, [inside]); 
 
   // --- FUNCIONES ---
   function enterGame(){
-    if(!nameGroup.trim()) { alert("Escribe un nombre"); return; }
+    if(!nameGroup.trim()) { 
+        alert("Escribe un nombre"); 
+        return; 
+    }
+    const currentGameId = localStorage.getItem("game_session_id");
+    console.log("🎟️ Intentando unirse con:");
+    console.log("  - Nombre:", nameGroup);
+    console.log("  - GameId:", currentGameId);
     
     localStorage.setItem("savedGroupName", nameGroup);
-    socket.emit('join_game', { name: nameGroup });
+    
+    socket.emit('join_game', { 
+        name: nameGroup,
+        gameId: currentGameId  
+    });
+    
     setInside(true);
     requestWakeLock(); 
   }
