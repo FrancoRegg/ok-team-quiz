@@ -10,8 +10,34 @@ const questionRoutes = require('./routes/questionRoutes');
  
 const port = process.env.PORT;
 const app = express() // Inicializar express
-app.use(cors()); // Permite la conexion desde el frontend
 app.use(express.json());
+
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+    ? [
+        process.env.CLIENT_URL || 'https://ok-team-quiz-production.up.railway.app', // URL de producción
+      ] 
+    : [
+        'http://localhost:5173',      // Vite en desarrollo
+        'http://localhost:3000',      // Si frontend y backend en mismo puerto
+        'http://192.168.1.14:5173',   // Tu red local (REEMPLAZA con tu IP)
+      ];
+
+console.log("🔒 CORS configurado para:", allowedOrigins);
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Permitir requests sin origin (como Postman, curl, o mismo dominio)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            console.log("⛔ CORS bloqueó origen:", origin);
+            callback(new Error('No permitido por CORS'));
+        }
+    },
+    credentials: true, // Permite cookies/autenticación
+})); 
 
 const server = http.createServer(app); // Creamos el servidor HTTP a partir de Express
 
@@ -27,8 +53,9 @@ app.post('/api/login', (req, res) => {
 
 const io = new Server(server, {
     cors: {
-        origin: "*", // Esta es la URL donde correrá React
-        methods: ["GET", "POST"] 
+        origin: allowedOrigins,
+        methods: ["GET", "POST"],
+        credentials: true, 
     }
 });
 // --- VARIABLES GLOBALES DEL JUEGO ---
