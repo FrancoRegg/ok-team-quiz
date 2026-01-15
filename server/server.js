@@ -7,9 +7,6 @@ const cors = require('cors');
 const { sincro } = require('./config/sync')
 const Question = require('./models/Questions')
 const questionRoutes = require('./routes/questionRoutes');
-
-// Sincronizaicon de tablas
-sincro();
  
 const port = process.env.PORT;
 const app = express() // Inicializar express
@@ -52,7 +49,6 @@ async function loadQuestions() {
         console.error("❌ Error al cargar preguntas:", error);
     }
 }
-loadQuestions();
 
 // --- ENVIAR SIGUIENTE PREGUNTA ---
 const sendNextQuestion = () =>{
