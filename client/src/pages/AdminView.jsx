@@ -13,9 +13,10 @@ function AdminView() {
     const [ questionsList, setQuestionsList ] = useState([]) 
     const [ editingId, setEditingId ] = useState(null) 
 
+    const API_URL = import.meta.env.VITE_API_URL || '';
     const fetchQuestions = async () => {
         try {
-            const response = await fetch('/api/questions');
+            const response = await fetch(`${API_URL}/api/questions`);
             const data = await response.json();
             setQuestionsList(data);
         } catch (error) {
@@ -61,7 +62,7 @@ function AdminView() {
     const handleDelete = async (id) => {
         if(!window.confirm("¿Estás seguro de borrar esta pregunta?")) return;
         try {
-            await fetch(`/api/questions/${id}`, {
+            await fetch(`${API_URL}/api/questions/${id}`, {
                 method: 'DELETE'
             });
             fetchQuestions(); 
@@ -88,7 +89,8 @@ function AdminView() {
         const questionData = { title, type, options, mediaUrl, correctIndex };
         
         try{
-            let url = '/api/questions';
+
+            let url = `/api/questions`;
             let method = 'POST';
 
             if (editingId) {
@@ -96,7 +98,7 @@ function AdminView() {
                 method = 'PUT';
             }
 
-            const response = await fetch(url, {
+            const response = await fetch(`${API_URL}${url}`, {
                 method: method,
                 body: JSON.stringify(questionData),
                 headers:{ 'Content-Type': 'application/json' }
