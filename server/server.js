@@ -7,7 +7,6 @@ const cors = require('cors');
 const { sincro } = require('./config/sync')
 const Question = require('./models/Questions')
 const questionRoutes = require('./routes/questionRoutes');
-const { console } = require('inspector');
  
 const port = process.env.PORT;
 const app = express() // Inicializar express
@@ -345,6 +344,16 @@ io.on("connection", (socket) => {
             });
         }
     })
+});
+
+app.post('/api/login', (req, res) => {
+    const { password } = req.body; 
+
+    if (password === process.env.ADMIN_PASSWORD) {
+        return res.json({ success: true, message: "Acceso concedido" });
+    } else {
+        return res.status(401).json({ success: false, message: "Contraseña incorrecta" });
+    }
 });
 
 app.use('/api/questions', questionRoutes)
