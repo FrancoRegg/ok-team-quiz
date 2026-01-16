@@ -79,7 +79,13 @@ async function loadQuestions() {
 }
 
 // --- ENVIAR SIGUIENTE PREGUNTA ---
-const sendNextQuestion = () =>{
+const sendNextQuestion = async () =>{
+    // Si es la primera pregunta, recaga desde BD
+    if (currentQuestionIndex === 0) {
+        await loadQuestions();
+        console.log("🔄 Preguntas recargadas desde BD")
+    }
+
     // Si se acabaron las preguntas
     if (currentQuestionIndex >= questions.length){
         gameState = 'GAME_OVER' 
@@ -242,10 +248,10 @@ io.on("connection", (socket) => {
         }
     });
 
-    socket.on('start_game', () => {
+    socket.on('start_game', async () => {
         try{
             console.log('🎮 Evento start_game recibido');
-            sendNextQuestion()
+            await sendNextQuestion()
         } catch (error){
             console.error('❌ Error en start_game:', error.message);
             io.to('game_room').emit('error', { 
@@ -254,7 +260,7 @@ io.on("connection", (socket) => {
         }
     });
 
-    socket.on('reset_game', () => {
+    socket.on('reset_game', async () => {
         try{
             console.log("🧹 Realizando HARD RESET completo...");
             GAME_SESSION_ID = Date.now();
@@ -273,6 +279,9 @@ io.on("connection", (socket) => {
             // Reiniciamos variables
             gameState = "LOBBY";
             currentQuestionIndex = 0;
+
+            await loadQuestions();
+            console.log("🔄 Preguntas recargadas");
 
             // Avisamos a todos
             io.emit('game_state', gameState);
