@@ -16,11 +16,15 @@ function AdminGuard({ children }){
                 method: "POST",
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: password })
-            })
-            const data = await resp.json()
-            if (data.success){
-                localStorage.setItem("admin_token", "true");
+            });
+
+            const data = await resp.json();
+            if (data.success && data.token){
+                localStorage.setItem("admin_token", data.token);
                 setIsAuthenticated(true);
+                console.log('✅ Token guardado');
+            }else if (data.success && !data.token){
+                alert("⚠️ Login exitoso pero no se recibió token");
             }else{
                 alert("⛔ Contraseña incorrecta");
                 setPassword(""); // Limpiamos el campo si falla
