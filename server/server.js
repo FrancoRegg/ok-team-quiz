@@ -7,6 +7,7 @@ const cors = require('cors');
 const { sincro } = require('./config/sync')
 const Question = require('./models/Questions')
 const questionRoutes = require('./routes/questionRoutes');
+const crypto = require('crypto');
  
 const port = process.env.PORT;
 const app = express() // Inicializar express
@@ -41,16 +42,6 @@ app.use(cors({
 
 const server = http.createServer(app); // Creamos el servidor HTTP a partir de Express
 
-app.post('/api/login', (req, res) => {
-    const { password } = req.body; 
-
-    if (password === process.env.ADMIN_PASSWORD) {
-        return res.json({ success: true, message: "Acceso concedido" });
-    } else {
-        return res.status(401).json({ success: false, message: "Contraseña incorrecta" });
-    }
-});
-
 const io = new Server(server, {
     cors: {
         origin: allowedOrigins,
@@ -66,6 +57,8 @@ const players = {};
 const playerTimeouts = {};
 let gameState = 'LOBBY';
 let currentQuestionIndex = 0;
+
+let VALID_ADMIN_TOKEN = null;
 
 // Cargar preguntas al inicio
 async function loadQuestions() {
@@ -355,17 +348,63 @@ io.on("connection", (socket) => {
     })
 });
 
+const authenticateAdmin = (req, res, next) => {
+    console.log('🔍 authenticateAdmin - Validando request a:', req.path);
+    
+    const authHeader = req.headers.authorization;
+    
+    console.log('   - Authorization header:', authHeader ? authHeader.substring(0, 20) + '...' : 'NO PRESENTE');
+    console.log('   - VALID_ADMIN_TOKEN:', VALID_ADMIN_TOKEN ? VALID_ADMIN_TOKEN.substring(0, 10) + '...' : 'NO EXISTE');
+    
+    if (!authHeader) {
+        console.log('⛔ Request sin token de autorización');
+        return res.status(401).json({ 
+            error: 'No autorizado - Token requerido' 
+        });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    
+    console.log('   - Token extraído:', token ? token.substring(0, 10) + '...' : 'VACÍO');
+    
+    if (!token || token !== VALID_ADMIN_TOKEN) {
+        console.log('⛔ Token inválido o expirado');
+        return res.status(403).json({ 
+            error: 'No autorizado - Token inválido' 
+        });
+    }
+    
+    console.log('✅ Token válido, acceso permitido');
+    next();
+};
+
 app.post('/api/login', (req, res) => {
     const { password } = req.body; 
 
     if (password === process.env.ADMIN_PASSWORD) {
-        return res.json({ success: true, message: "Acceso concedido" });
+
+        // Generar token aleatorio de 32 bytes en hexadecimal
+        const token = crypto.randomBytes(32).toString('hex');
+
+        //Guardar el token el memoria del server
+        VALID_ADMIN_TOKEN = token;
+        console.log('✅ Admin autenticado, token generado');
+
+        return res.json({ 
+            success: true, 
+            message: "Acceso concedido",
+            token: token
+        });
     } else {
-        return res.status(401).json({ success: false, message: "Contraseña incorrecta" });
+        return res.status(401).json({ 
+            success: false, 
+            message: "Contraseña incorrecta" 
+        });
     }
 });
 
-app.use('/api/questions', questionRoutes)
+
+app.use('/api/questions', authenticateAdmin ,questionRoutes)
 
 // Servir los archivos estáticos del build de React
 app.use(express.static(path.join(__dirname, '../client/dist')));
