@@ -7,31 +7,46 @@ const cors = require('cors');
 const { sincro } = require('./config/sync')
 const Question = require('./models/Questions')
 const questionRoutes = require('./routes/questionRoutes');
-
-// Sincronizaicon de tablas
-sincro();
+const crypto = require('crypto');
  
 const port = process.env.PORT;
 const app = express() // Inicializar express
-app.use(cors()); // Permite la conexion desde el frontend
 app.use(express.json());
+
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+    ? [
+        process.env.CLIENT_URL || 'https://ok-team-quiz-production.up.railway.app', // URL de producción
+      ] 
+    : [
+        'http://localhost:5173',      // Vite en desarrollo
+        'http://localhost:3000',      // Si frontend y backend en mismo puerto
+        'http://192.168.1.14:5173',   // Tu red local (REEMPLAZA con tu IP)
+      ];
+
+console.log("🔒 CORS configurado para:", allowedOrigins);
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Permitir requests sin origin (como Postman, curl, o mismo dominio)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            console.log("⛔ CORS bloqueó origen:", origin);
+            callback(new Error('No permitido por CORS'));
+        }
+    },
+    credentials: true, // Permite cookies/autenticación
+})); 
 
 const server = http.createServer(app); // Creamos el servidor HTTP a partir de Express
 
-app.post('/api/login', (req, res) => {
-    const { password } = req.body; 
-
-    if (password === process.env.ADMIN_PASSWORD) {
-        return res.json({ success: true, message: "Acceso concedido" });
-    } else {
-        return res.status(401).json({ success: false, message: "Contraseña incorrecta" });
-    }
-});
-
 const io = new Server(server, {
     cors: {
-        origin: "*", // Esta es la URL donde correrá React
-        methods: ["GET", "POST"] 
+        origin: allowedOrigins,
+        methods: ["GET", "POST"],
+        credentials: true, 
     }
 });
 // --- VARIABLES GLOBALES DEL JUEGO ---
@@ -39,8 +54,11 @@ const SERVER_RUN_ID = Date.now(); // Identificador único de esta sesión del se
 let GAME_SESSION_ID = Date.now(); // Identificador de esta sesión de la partida
 let questions = []; 
 const players = {}; 
+const playerTimeouts = {};
 let gameState = 'LOBBY';
 let currentQuestionIndex = 0;
+
+let VALID_ADMIN_TOKEN = null;
 
 // Cargar preguntas al inicio
 async function loadQuestions() {
@@ -52,10 +70,15 @@ async function loadQuestions() {
         console.error("❌ Error al cargar preguntas:", error);
     }
 }
-loadQuestions();
 
 // --- ENVIAR SIGUIENTE PREGUNTA ---
-const sendNextQuestion = () =>{
+const sendNextQuestion = async () =>{
+    // Si es la primera pregunta, recaga desde BD
+    if (currentQuestionIndex === 0) {
+        await loadQuestions();
+        console.log("🔄 Preguntas recargadas desde BD")
+    }
+
     // Si se acabaron las preguntas
     if (currentQuestionIndex >= questions.length){
         gameState = 'GAME_OVER' 
@@ -96,127 +119,292 @@ io.on("connection", (socket) => {
         gameId: GAME_SESSION_ID 
     });
 
-    socket.on('join_game', (data)=>{
-        const groupId = data.name 
-        const clientGameId = data.gameId; 
+    socket.on('join_game', (data) => {
+        try{
+            console.log("📥 Evento join_game recibido:", data);
 
-        // if (!clientGameId || String(clientGameId) !== String(GAME_SESSION_ID)) {
-        //     console.log(`⛔ Bloqueado intento de acceso de ${groupId} con ticket caducado.`);
-            
-        //     socket.emit('force_refresh'); 
-        //     return; 
-        // }
-        if (!groupId || groupId === "") return;
-        
-        const existingPlayerId = Object.keys(players).find(key => players[key].name === groupId);
-
-        if (existingPlayerId) {
-            console.log(`🔄 ${groupId} recuperado.`);
-            const oldData = players[existingPlayerId];
-            delete players[existingPlayerId]; 
-        
-            players[socket.id] = {
-                name : groupId,
-                score : oldData.score,
-                id : socket.id,
-                hasAnswered: oldData.hasAnswered,
-            };
-        } else {
-            players[socket.id] = {
-                name: groupId,
-                score: 0,
-                id: socket.id,
-                hasAnswered: false
-            };
-        }
-
-        socket.join('game_room')
-        
-        // Actualizamos estado al recién llegado y a todos
-        socket.emit('game_state', gameState)
-        io.to('game_room').emit('update_players', Object.values(players))
-
-        // Si entran tarde y ya hay pregunta, se la enviamos
-        if (gameState === 'QUESTION' && currentQuestionIndex > 0) {
-            const currentQ = questions[currentQuestionIndex - 1]; 
-            if (currentQ) {
-                socket.emit('new_question', {
-                    title: currentQ.title,
-                    options: currentQ.options,
-                    type: currentQ.type,
-                    mediaUrl: currentQ.mediaUrl
-                });
+            if(!data){
+                throw new Error('Datos no proporcionados') 
             }
+
+            const groupId = data.name 
+            const clientGameId = data.gameId; 
+
+            // Validacion 1: Nombre obligatorio
+            if (!groupId || groupId.trim() === "") {
+                console.log(`⛔ Intento de conexión sin nombre`);
+                socket.emit('error', { message: 'Debes proporcionar un nombre de equipo' });
+                return;
+            }
+
+            // Validacion 2: Ticket de sesion, excepto para el host
+            if (groupId !== 'HOST') {
+                if (!clientGameId || String(clientGameId) !== String(GAME_SESSION_ID)) {
+                    console.log(`⛔ Bloqueado: ${groupId} - Ticket caducado`);
+                    console.log(`   - Tiene: ${clientGameId}`);
+                    console.log(`   - Esperado: ${GAME_SESSION_ID}`);
+                    
+                    socket.emit('session_expired', { 
+                        message: 'La sesión ha expirado. Por favor, recarga la página.',
+                        currentGameId: GAME_SESSION_ID 
+                    });
+                    
+                    socket.disconnect(true); 
+                    return;
+                }
+            }
+            console.log(`✅ Validación pasada para: ${groupId}`);
+            
+            const existingPlayerId = Object.keys(players).find(key => players[key].name === groupId);
+
+            if (existingPlayerId) {
+                console.log(`🔄 ${groupId} recuperado.`);
+                const oldData = players[existingPlayerId];
+
+                // Cancelacion del timeout si existe grupo
+                if(playerTimeouts[existingPlayerId]){
+                    clearTimeout(playerTimeouts[existingPlayerId]);
+                    delete playerTimeouts[existingPlayerId];
+                    console.log(`⏰ Timeout cancelado para ${groupId} (reconectado a tiempo)`);
+                }
+
+                delete players[existingPlayerId]; 
+            
+                players[socket.id] = {
+                    name : groupId,
+                    score : oldData.score,
+                    id : socket.id,
+                    hasAnswered: oldData.hasAnswered,
+                };
+            } else {
+                console.log(`📝 Nuevo jugador: ${groupId}`);
+                players[socket.id] = {
+                    name: groupId,
+                    score: 0,
+                    id: socket.id,
+                    hasAnswered: false
+                };
+            }
+
+            socket.join('game_room')
+            
+            // Actualizamos estado al recién llegado y a todos
+            socket.emit('game_state', gameState)
+            io.to('game_room').emit('update_players', Object.values(players))
+
+            // Si entran tarde y ya hay pregunta, se la enviamos
+            if (gameState === 'QUESTION' && currentQuestionIndex > 0) {
+                const currentQ = questions[currentQuestionIndex - 1]; 
+                if (currentQ) {
+                    socket.emit('new_question', {
+                        title: currentQ.title,
+                        options: currentQ.options,
+                        type: currentQ.type,
+                        mediaUrl: currentQ.mediaUrl
+                    });
+                }
+            }
+        } catch (error){
+            console.error('❌ Error en join_game:', error.message)
+            socket.emit('error', {
+                message: 'Error al unirse al juego. Intenta recargar la página.'
+            });
         }
-    })
+    });
 
     socket.on('disconnect', () => {
-        // Opcional: Si quieres borrarlos al salir, descomenta esto. 
-        // Pero para reconexiones es mejor dejarlos en memoria un rato.
-        // delete players[socket.id];
+        try{
+            const player = players[socket.id]
+            if(!player) return;
+
+            if(player.name === 'HOST'){
+                console.log(`🔌 HOST desconectado (mantenido en memoria)`);
+                return;
+            }
+
+            console.log(`⏳ ${player.name} desconectado. Esperando 30s para eliminar...`);
         
-        // Solo actualizamos la lista para que el host vea quién queda online (opcional)
-        // io.to('game_room').emit('update_players', Object.values(players))
-    });
-
-    socket.on('start_game', () => {
-        sendNextQuestion()
-    });
-
-    socket.on('reset_game', () => {
-        console.log("🧹 Realizando HARD RESET completo...");
-        GAME_SESSION_ID = Date.now();
-
-        // Vaciamos el objeto players manteniendo la referencia const
-        for (const key in players) {
-            delete players[key];
+            playerTimeouts[socket.id] = setTimeout(() => {
+            console.log(`🗑️ ${player.name} eliminado, se cumplio el tiempo.`);
+            
+            // Eliminar del objeto players
+            delete players[socket.id];
+            
+            // Eliminar el timeout del registro
+            delete playerTimeouts[socket.id];
+            
+            // Notificar al host que la lista cambió
+            io.to('game_room').emit('update_players', Object.values(players));
+            }, 30000)
+        } catch (error){
+            console.error('❌ Error en disconnect:', error.message)
         }
+    });
 
-        // Reiniciamos variables
-        gameState = "LOBBY";
-        currentQuestionIndex = 0;
+    socket.on('start_game', async () => {
+        try{
+            console.log('🎮 Evento start_game recibido');
+            await sendNextQuestion()
+        } catch (error){
+            console.error('❌ Error en start_game:', error.message);
+            io.to('game_room').emit('error', { 
+                message: 'Error al iniciar el juego'
+            });
+        }
+    });
 
-        // Avisamos a todos
-        io.emit('game_state', gameState);
-        io.emit('update_players', []); 
-        io.emit('force_refresh'); 
+    socket.on('reset_game', async () => {
+        try{
+            console.log("🧹 Realizando HARD RESET completo...");
+            GAME_SESSION_ID = Date.now();
+
+            // Limpiar todos los timeouts pendientes
+            for (const key in playerTimeouts){
+                clearTimeout(playerTimeouts[key]);
+                delete playerTimeouts[key];
+            }
+
+            // Vaciamos players
+            for (const key in players) {
+                delete players[key];
+            }
+
+            // Reiniciamos variables
+            gameState = "LOBBY";
+            currentQuestionIndex = 0;
+
+            await loadQuestions();
+            console.log("🔄 Preguntas recargadas");
+
+            // Avisamos a todos
+            io.emit('game_state', gameState);
+            io.emit('update_players', []); 
+            io.emit('force_refresh'); 
+
+        } catch (error){
+            console.error('❌ Error en reset_game:', error.message);
+            io.to('game_room').emit('error', { 
+                message: 'Error al reiniciar el juego' 
+            });
+        }
     })
     
     socket.on('submit_answer', (data) => {
-        const player = players[socket.id]
-        if (!player || player.hasAnswered) return; 
+        try{
+            // Validacion de datos
+            if(!data || data.answer === undefined){
+                throw new Error('Respuesta no proporcionada.')
+            }
 
-        player.hasAnswered = true;
-        const questionInPlay = questions[currentQuestionIndex - 1]; 
+            const player = players[socket.id]
 
-        // Calcular puntaje
-        const isCorrect = data.answer === questionInPlay.correctIndex;
-        if (isCorrect) player.score += 100;
+            if (!player){
+                console.log('⚠️ Intento de respuesta de jugador no registrado');
+                return
+            }  
 
-        // Enviar resultado individual
-        socket.emit('answer_result', { 
-            correct : isCorrect,
-            correctIndex: questionInPlay.correctIndex
-        })
-        
-        // Actualizar Host
-        io.to('game_room').emit('update_players', Object.values(players))
+            if(player.hasAnswered){
+                console.log(`⚠️ ${player.name} ya respondió esta pregunta`);
+                return;
+            }
 
-        // --- LÓGICA DE AVANCE AUTOMÁTICO ---
-        const allPlayers = Object.values(players).filter(p => p.name !== 'HOST');
-        const totalPlayers = allPlayers.length;
-        const answersCount = allPlayers.filter(p => p.hasAnswered).length;
+            player.hasAnswered = true;
+            const questionInPlay = questions[currentQuestionIndex - 1]; 
 
-        if (totalPlayers > 0 && answersCount === totalPlayers) {
-            console.log("🚀 Todos respondieron. Avanzando...");
-            setTimeout(() => {
-                sendNextQuestion();
-            }, 3000); 
+            if(!questionInPlay){
+                throw new Error('No hay pregunta activa');
+            }
+
+            // Calcular puntaje
+            const isCorrect = data.answer === questionInPlay.correctIndex;
+            if (isCorrect) player.score += 100;
+
+            // Enviar resultado individual
+            socket.emit('answer_result', { 
+                correct : isCorrect,
+                correctIndex: questionInPlay.correctIndex
+            })
+            
+            // Actualizar Host
+            io.to('game_room').emit('update_players', Object.values(players))
+
+            // --- LÓGICA DE AVANCE AUTOMÁTICO ---
+            const allPlayers = Object.values(players).filter(p => p.name !== 'HOST');
+            const totalPlayers = allPlayers.length;
+            const answersCount = allPlayers.filter(p => p.hasAnswered).length;
+
+            if (totalPlayers > 0 && answersCount === totalPlayers) {
+                console.log("🚀 Todos respondieron. Avanzando...");
+                setTimeout(() => {
+                    sendNextQuestion();
+                }, 3000); 
+            }
+        } catch (error){
+            console.error('❌ Error en submit_answer:', error.message);
+            socket.emit('error', { 
+                message: 'Error al procesar tu respuesta. Intenta de nuevo.' 
+            });
         }
     })
 });
 
-app.use('/api/questions', questionRoutes)
+const authenticateAdmin = (req, res, next) => {
+    console.log('🔍 authenticateAdmin - Validando request a:', req.path);
+    
+    const authHeader = req.headers.authorization;
+    
+    console.log('   - Authorization header:', authHeader ? authHeader.substring(0, 20) + '...' : 'NO PRESENTE');
+    console.log('   - VALID_ADMIN_TOKEN:', VALID_ADMIN_TOKEN ? VALID_ADMIN_TOKEN.substring(0, 10) + '...' : 'NO EXISTE');
+    
+    if (!authHeader) {
+        console.log('⛔ Request sin token de autorización');
+        return res.status(401).json({ 
+            error: 'No autorizado - Token requerido' 
+        });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    
+    console.log('   - Token extraído:', token ? token.substring(0, 10) + '...' : 'VACÍO');
+    
+    if (!token || token !== VALID_ADMIN_TOKEN) {
+        console.log('⛔ Token inválido o expirado');
+        return res.status(403).json({ 
+            error: 'No autorizado - Token inválido' 
+        });
+    }
+    
+    console.log('✅ Token válido, acceso permitido');
+    next();
+};
+
+app.post('/api/login', (req, res) => {
+    const { password } = req.body; 
+
+    if (password === process.env.ADMIN_PASSWORD) {
+
+        // Generar token aleatorio de 32 bytes en hexadecimal
+        const token = crypto.randomBytes(32).toString('hex');
+
+        //Guardar el token el memoria del server
+        VALID_ADMIN_TOKEN = token;
+        console.log('✅ Admin autenticado, token generado');
+
+        return res.json({ 
+            success: true, 
+            message: "Acceso concedido",
+            token: token
+        });
+    } else {
+        return res.status(401).json({ 
+            success: false, 
+            message: "Contraseña incorrecta" 
+        });
+    }
+});
+
+
+app.use('/api/questions', authenticateAdmin ,questionRoutes)
 
 // Servir los archivos estáticos del build de React
 app.use(express.static(path.join(__dirname, '../client/dist')));

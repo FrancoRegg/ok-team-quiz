@@ -13,9 +13,43 @@ function AdminView() {
     const [ questionsList, setQuestionsList ] = useState([]) 
     const [ editingId, setEditingId ] = useState(null) 
 
+    const API_URL = import.meta.env.VITE_API_URL || '';
+
+    const fetchWithAuth = async (url, options = {}) => {
+        const token = localStorage.getItem('admin_token');
+        
+        if (!token) {
+            console.log('⛔ fetchWithAuth: No hay token');
+            alert('⛔ No estás autenticado');
+            localStorage.removeItem('admin_token');
+            window.location.reload();
+            throw new Error('No token available');
+        };
+
+        console.log('🔐 fetchWithAuth: Enviando token:', token.substring(0, 10) + '...');
+        
+        return fetch(url, {
+            ...options,
+            headers: {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+    };
+
     const fetchQuestions = async () => {
         try {
-            const response = await fetch('/api/questions');
+            console.log('📥 Cargando preguntas...');
+            const response = await fetchWithAuth(`${API_URL}/api/questions`);
+
+            if (response.status === 401 || response.status === 403) {
+                alert('⛔ Sesión expirada. Por favor, inicia sesión de nuevo.');
+                localStorage.removeItem('admin_token');
+                window.location.reload();
+                return;
+            }
+
             const data = await response.json();
             setQuestionsList(data);
         } catch (error) {
@@ -61,11 +95,19 @@ function AdminView() {
     const handleDelete = async (id) => {
         if(!window.confirm("¿Estás seguro de borrar esta pregunta?")) return;
         try {
-            await fetch(`/api/questions/${id}`, {
+            const response = await fetch(`${API_URL}/api/questions/${id}`, {
                 method: 'DELETE'
             });
+            if (response.status === 401 || response.status === 403) {
+                alert('⛔ Sesión expirada');
+                localStorage.removeItem('admin_token');
+                window.location.reload();
+                return;
+            }
+
             fetchQuestions(); 
         } catch (error) {
+            console.error("Error al borrar:", error);
             alert("Error al borrar");
         }
     }
@@ -88,7 +130,8 @@ function AdminView() {
         const questionData = { title, type, options, mediaUrl, correctIndex };
         
         try{
-            let url = '/api/questions';
+
+            let url = `/api/questions`;
             let method = 'POST';
 
             if (editingId) {
@@ -96,11 +139,18 @@ function AdminView() {
                 method = 'PUT';
             }
 
-            const response = await fetch(url, {
+            const response = await fetch(`${API_URL}${url}`, {
                 method: method,
                 body: JSON.stringify(questionData),
                 headers:{ 'Content-Type': 'application/json' }
             });
+
+            if (response.status === 401 || response.status === 403) {
+                alert('⛔ Sesión expirada');
+                localStorage.removeItem('admin_token');
+                window.location.reload();
+                return;
+            }      
 
             if(response.ok){
                 alert(editingId ? "¡Pregunta actualizada! ✏️" : "¡Pregunta guardada! 🎉");

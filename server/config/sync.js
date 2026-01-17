@@ -1,12 +1,13 @@
 const { sequelize } = require('./db');
-const { Question } = require('../models/Questions')
 
 async function sincro (){
-try{
-    await sequelize.sync();
-    console.log('Tablas sincronizadas correctamente');
-}catch(error){
-    console.error('Error al sincronizar las tablas', error);    
-}};
+    try{
+        await sequelize.sync({alter: true});
+        console.log('✅ Base de datos sincronizada, ALTER MODE');
+    }catch(error){
+        console.error('❌ Error al sincronizar BD', error);
+        throw error;    
+    }
+};
 
 module.exports = { sincro }; 
