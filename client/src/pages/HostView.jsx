@@ -1,22 +1,24 @@
 import { useEffect, useState } from 'react';
-import io from 'socket.io-client';
+import { useSocket } from '../hooks/useSocket';
 import QRCode from "react-qr-code";
 import '../styles/HostView.css'
 
-const socket = io(import.meta.env.VITE_SOCKET_URL || window.location.origin, {
-  reconnection: true,
-  reconnectionDelay: 1000,
-  reconnectionAttempts: 5,
-  transports: ['websocket', 'polling']
-});
-
 function HostView() {
-    const [groups, setGroups] = useState([])
-    const [gameState, setGameState] = useState("LOBBY")
-    const [currentQuestion, setCurrentQuestion] = useState(null)
+    const { socket } = useSocket();
+
+    const [groups, setGroups] = useState([]);
+    const [gameState, setGameState] = useState("LOBBY");
+    const [currentQuestion, setCurrentQuestion] = useState(null);
     const [joinUrl, setJoinUrl] = useState("");
 
     useEffect(() => {
+        if (!socket) {
+        console.log('⏳ Esperando socket...');
+        return;
+        }
+
+        console.log('✅ Socket disponible, inicializando HostView');
+
         setJoinUrl(window.location.origin);
 
         socket.emit('join_game', {name:'HOST'})
@@ -49,12 +51,14 @@ function HostView() {
 
         //Limpieza al cerrado el componente
         return () => {
-            socket.off('server_check');
-            socket.off('update_players');
-            socket.off('game_state');
-            socket.off('new_question')
+            if(socket){
+                socket.off('server_check');
+                socket.off('update_players');
+                socket.off('game_state');
+                socket.off('new_question')
+            }
         }
-    }, []);
+    }, [socket]);
 
     const AdminButton = () => (
         <button 

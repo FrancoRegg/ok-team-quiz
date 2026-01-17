@@ -1,19 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
-import io from 'socket.io-client';
+import { useSocket } from './hooks/useSocket';
 import './styles/App.css';
 
-const socket = io(import.meta.env.VITE_SOCKET_URL || window.location.origin, {
-  reconnection: true,
-  reconnectionDelay: 1000,
-  reconnectionAttempts: 5,
-  transports: ['websocket', 'polling']
-});
-
 function App() {
+  const {socket, isConnected} = useSocket();
+
   const [inside, setInside] = useState(() => !!localStorage.getItem("savedGroupName"));
   const [nameGroup, setNameGroup] = useState(() => localStorage.getItem("savedGroupName") || "");
-  const [isConnected, setIsConnected] = useState(socket.connected);
-  
+
   const [gameState, setGameState] = useState("LOBBY");
   const [optionsAnswers, setOptionsAnswers] = useState(null);
   const [hasAnswered, setHasAnswered] = useState(false);
@@ -35,13 +29,14 @@ function App() {
   };
 
   useEffect(() => {
+    if (!socket) {
+      console.log('⏳ App: Esperando socket...');
+      return;
+    }
+
+    console.log('✅ App: Socket disponible');
+
     if (inside) requestWakeLock();
-
-    const onConnect = () => {
-        setIsConnected(true);
-    };
-
-    const onDisconnect = () => setIsConnected(false);
 
     const onServerCheck = (data) => {
       const { serverId, gameId } = data;
@@ -162,8 +157,6 @@ function App() {
       alert(data.message || 'La partida se reinició. Debes volver a unirte.');
     };
 
-    socket.on('connect', onConnect);
-    socket.on('disconnect', onDisconnect);
     socket.on('server_check', onServerCheck);
     socket.on('force_refresh', onForceRefresh);
     socket.on('game_state', onGameState);
@@ -173,8 +166,8 @@ function App() {
     socket.on('session_expired', onSessionExpired);
 
     return () => {
-        socket.off('connect', onConnect);
-        socket.off('disconnect', onDisconnect);
+      releaseWakeLock();
+      if(socket) {
         socket.off('server_check', onServerCheck);
         socket.off('force_refresh', onForceRefresh);
         socket.off('game_state', onGameState);
@@ -182,14 +175,15 @@ function App() {
         socket.off('answer_result', onAnswerResult);
         socket.off('update_players', onUpdatePlayers);
         socket.off('session_expired', onSessionExpired);
+      }
     };
-  }, [inside]); 
+  }, [inside, socket]); 
 
   // --- FUNCIONES ---
   function enterGame(){
     if(!nameGroup.trim()) { 
-        alert("Escribe un nombre"); 
-        return; 
+      alert("Escribe un nombre"); 
+      return; 
     }
     const currentGameId = localStorage.getItem("game_session_id");
     console.log("🎟️ Intentando unirse con:");
@@ -199,8 +193,8 @@ function App() {
     localStorage.setItem("savedGroupName", nameGroup);
     
     socket.emit('join_game', { 
-        name: nameGroup,
-        gameId: currentGameId  
+      name: nameGroup,
+      gameId: currentGameId  
     });
     
     setInside(true);
@@ -208,10 +202,11 @@ function App() {
   }
 
   function exitGame() {
-      localStorage.removeItem("savedGroupName");
-      setInside(false);
-      setNameGroup("");
-      window.location.reload(); 
+    releaseWakeLock();
+    localStorage.removeItem("savedGroupName");
+    setInside(false);
+    setNameGroup("");
+    window.location.reload(); 
   }
 
   function submitAnswer(i){
