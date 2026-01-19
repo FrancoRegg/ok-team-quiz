@@ -240,14 +240,14 @@ io.on("connection", (socket) => {
         }
     });
 
-    socket.on('start_game', async () => {
+    socket.on('next_question', async () => {
         try{
-            console.log('🎮 Evento start_game recibido');
-            await sendNextQuestion()
+            console.log('➡️ Evento next_question recibido (avance manual)');
+            await sendNextQuestion();
         } catch (error){
-            console.error('❌ Error en start_game:', error.message);
+            console.error('❌ Error en next_question:', error.message);
             io.to('game_room').emit('error', { 
-                message: 'Error al iniciar el juego'
+                message: 'Error al avanzar pregunta'
             });
         }
     });
@@ -331,16 +331,16 @@ io.on("connection", (socket) => {
             io.to('game_room').emit('update_players', Object.values(players))
 
             // --- LÓGICA DE AVANCE AUTOMÁTICO ---
-            const allPlayers = Object.values(players).filter(p => p.name !== 'HOST');
-            const totalPlayers = allPlayers.length;
-            const answersCount = allPlayers.filter(p => p.hasAnswered).length;
+            // const allPlayers = Object.values(players).filter(p => p.name !== 'HOST');
+            // const totalPlayers = allPlayers.length;
+            // const answersCount = allPlayers.filter(p => p.hasAnswered).length;
 
-            if (totalPlayers > 0 && answersCount === totalPlayers) {
-                console.log("🚀 Todos respondieron. Avanzando...");
-                setTimeout(() => {
-                    sendNextQuestion();
-                }, 3000); 
-            }
+            // if (totalPlayers > 0 && answersCount === totalPlayers) {
+            //     console.log("🚀 Todos respondieron. Avanzando...");
+            //     setTimeout(() => {
+            //         sendNextQuestion();
+            //     }, 3000); 
+            // }
         } catch (error){
             console.error('❌ Error en submit_answer:', error.message);
             socket.emit('error', { 

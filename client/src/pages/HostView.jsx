@@ -100,7 +100,7 @@ function HostView() {
                 </ul>
                 <button 
                     className="btn-primary"
-                    onClick={()=>{socket.emit('start_game')}}>
+                    onClick={()=>{socket.emit('next_question')}}>
                         Empezar Juego
                 </button>
                 <AdminButton />
@@ -195,7 +195,7 @@ function HostView() {
                 <div className="admin-controls">
                     <button 
                         className="btn-primary"
-                        onClick={()=>{socket.emit('start_game')}}>
+                        onClick={()=>{socket.emit('next_question')}}>
                         Siguiente Pregunta ➡
                     </button>
                     
