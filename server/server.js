@@ -7,7 +7,7 @@ const cors = require('cors');
 const { sincro } = require('./config/sync')
 const Question = require('./models/Questions')
 const questionRoutes = require('./routes/questionRoutes');
-// const crypto = require('crypto');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
  
 const port = process.env.PORT;
