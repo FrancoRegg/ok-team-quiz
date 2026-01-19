@@ -7,7 +7,8 @@ const cors = require('cors');
 const { sincro } = require('./config/sync')
 const Question = require('./models/Questions')
 const questionRoutes = require('./routes/questionRoutes');
-const crypto = require('crypto');
+// const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
  
 const port = process.env.PORT;
 const app = express() // Inicializar express
@@ -57,8 +58,6 @@ const players = {};
 const playerTimeouts = {};
 let gameState = 'LOBBY';
 let currentQuestionIndex = 0;
-
-let VALID_ADMIN_TOKEN = null;
 
 // Cargar preguntas al inicio
 async function loadQuestions() {
@@ -353,9 +352,6 @@ const authenticateAdmin = (req, res, next) => {
     
     const authHeader = req.headers.authorization;
     
-    console.log('   - Authorization header:', authHeader ? authHeader.substring(0, 20) + '...' : 'NO PRESENTE');
-    console.log('   - VALID_ADMIN_TOKEN:', VALID_ADMIN_TOKEN ? VALID_ADMIN_TOKEN.substring(0, 10) + '...' : 'NO EXISTE');
-    
     if (!authHeader) {
         console.log('⛔ Request sin token de autorización');
         return res.status(401).json({ 
@@ -365,17 +361,29 @@ const authenticateAdmin = (req, res, next) => {
     
     const token = authHeader.split(' ')[1];
     
-    console.log('   - Token extraído:', token ? token.substring(0, 10) + '...' : 'VACÍO');
-    
-    if (!token || token !== VALID_ADMIN_TOKEN) {
-        console.log('⛔ Token inválido o expirado');
-        return res.status(403).json({ 
-            error: 'No autorizado - Token inválido' 
+    if (!token) {
+        console.log('⛔ Token vacío');
+        return res.status(401).json({ 
+            error: 'No autorizado - Token vacío' 
         });
     }
     
-    console.log('✅ Token válido, acceso permitido');
-    next();
+    // Verificar JWT
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
+        console.log('✅ JWT válido:', decoded);
+        
+        // Opcional: agregar info del token al request
+        req.user = decoded;
+        
+        next();
+    } catch (error) {
+        console.log('⛔ JWT inválido o expirado:', error.message);
+        return res.status(403).json({ 
+            error: 'No autorizado - Token inválido o expirado',
+            details: error.message
+        });
+    }
 };
 
 app.post('/api/login', (req, res) => {
@@ -383,11 +391,13 @@ app.post('/api/login', (req, res) => {
 
     if (password === process.env.ADMIN_PASSWORD) {
 
-        // Generar token aleatorio de 32 bytes en hexadecimal
-        const token = crypto.randomBytes(32).toString('hex');
+        // Genera JWT que expira en 24 horas
+        const token = jwt.sign(
+            { role: 'admin', timestamp: Date.now() },
+            process.env.JWT_SECRET || 'fallback-secret-key',
+            { expiresIn: '24h' }
+        );
 
-        //Guardar el token el memoria del server
-        VALID_ADMIN_TOKEN = token;
         console.log('✅ Admin autenticado, token generado');
 
         return res.json({ 
