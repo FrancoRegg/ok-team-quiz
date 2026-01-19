@@ -58,6 +58,7 @@ const players = {};
 const playerTimeouts = {};
 let gameState = 'LOBBY';
 let currentQuestionIndex = 0;
+let firstCorrectAnswer = null;
 
 // Cargar preguntas al inicio
 async function loadQuestions() {
@@ -101,6 +102,8 @@ const sendNextQuestion = async () =>{
     for(const id in players){
         players[id].hasAnswered = false;
     }
+
+    firstCorrectAnswer = null;
 
     // Enviar a todos
     io.to('game_room').emit('game_state', gameState)
@@ -272,6 +275,8 @@ io.on("connection", (socket) => {
             gameState = "LOBBY";
             currentQuestionIndex = 0;
 
+            firstCorrectAnswer = null;
+
             await loadQuestions();
             console.log("🔄 Preguntas recargadas");
 
@@ -316,13 +321,29 @@ io.on("connection", (socket) => {
 
             // Calcular puntaje
             const isCorrect = data.answer === questionInPlay.correctIndex;
-            if (isCorrect) player.score += 100;
 
-            const result = { correct: isCorrect}
+            // Si responde correcto primero
+            if (isCorrect) {
+
+                if (firstCorrectAnswer === null) {
+                    firstCorrectAnswer = socket.id;
+                    player.score += 100;
+                    console.log(`🥇 ${player.name} respondió primero: +100 puntos`);
+                } else {
+                    // Respuestas correctas subsecuentes
+                    player.score += 90;
+                    console.log(`✅ ${player.name} respondió correcto: +90 puntos`);
+                }
+            };
+
+            const result = { 
+                correct: isCorrect, 
+                wasFirst: isCorrect && firstCorrectAnswer === socket.id
+            };
 
             if(isCorrect){
                 result.correctIndex = questionInPlay.correctIndex;
-            }
+            };
 
             // Enviar resultado individual
             socket.emit('answer_result', result)
