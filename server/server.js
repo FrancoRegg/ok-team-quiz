@@ -318,11 +318,14 @@ io.on("connection", (socket) => {
             const isCorrect = data.answer === questionInPlay.correctIndex;
             if (isCorrect) player.score += 100;
 
+            const result = { correct: isCorrect}
+
+            if(isCorrect){
+                result.correctIndex = questionInPlay.correctIndex;
+            }
+
             // Enviar resultado individual
-            socket.emit('answer_result', { 
-                correct : isCorrect,
-                correctIndex: questionInPlay.correctIndex
-            })
+            socket.emit('answer_result', result)
             
             // Actualizar Host
             io.to('game_room').emit('update_players', Object.values(players))

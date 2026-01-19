@@ -28,6 +28,17 @@ function App() {
     }
   };
 
+  const releaseWakeLock = async () => {
+    try {
+      if (wakeLockRef.current) {
+        await wakeLockRef.current.release();
+        wakeLockRef.current = null;
+      }
+    } catch (err) {
+      console.log('Error releasing WakeLock:', err);
+    }
+  };
+
   useEffect(() => {
     if (!socket) {
       console.log('⏳ App: Esperando socket...');
@@ -124,14 +135,17 @@ function App() {
     };
 
     const onAnswerResult = (data) => {
+      if (data.correctIndex !== undefined) {
         setCorrectAnswer(data.correctIndex);
-        if(data.correct){
-            setAnswerStatus('CORRECT');
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
-        } else {
-            setAnswerStatus('INCORRECT');
-            if (navigator.vibrate) navigator.vibrate(400); 
-        }
+      }
+    
+      if(data.correct){
+        setAnswerStatus('CORRECT');
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
+      } else {
+        setAnswerStatus('INCORRECT');
+        if (navigator.vibrate) navigator.vibrate(400); 
+      }
     };
 
     const onUpdatePlayers = (data) => {
@@ -218,10 +232,19 @@ function App() {
 
   const getButtonClass = (index) => {
     if (answerStatus === null && !hasAnswered) return 'active';
-    if (answerStatus === null && hasAnswered) return index === myAnswer ? 'active' : 'disabled';
-    if (index === correctAnswer) return 'correct';
-    if (index === myAnswer && answerStatus === 'INCORRECT') return 'incorrect';
-    return 'disabled';
+
+    if (answerStatus === null && hasAnswered) {
+      return index === myAnswer ? 'active' : 'disabled'
+    };
+
+    if (answerStatus === 'CORRECT' && index === correctAnswer) {
+      return 'correct';
+    }
+
+    if (answerStatus === 'INCORRECT' && index === myAnswer) {
+      return 'incorrect';
+    }
+    return 'disable';
   }
 
   if(gameState === 'GAME_OVER'){
