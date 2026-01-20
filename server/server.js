@@ -87,8 +87,8 @@ const sendNextQuestion = async () =>{
         return;
     }
 
-    // Preparar nueva pregunta
-    gameState = "QUESTION"
+    // Preparar nueva pregunta con estado bloqueado 
+    gameState = "QUESTION_LOCKED"
     const fullQuestion = questions[currentQuestionIndex]
 
     const questionToSend = {
@@ -101,14 +101,18 @@ const sendNextQuestion = async () =>{
     // Resetear estado de respuesta de los jugadores
     for(const id in players){
         players[id].hasAnswered = false;
-    }
+    };
 
     firstCorrectAnswer = null;
 
     // Enviar a todos
-    io.to('game_room').emit('game_state', gameState)
-    io.to('game_room').emit('new_question', questionToSend)
-    
+    io.to('game_room').emit('game_state', gameState);
+
+    // Envia la pregunta solo al HOST
+    const hostSocket = Object.keys(players).find(id => players[id].name === 'HOST');
+    if (hostSocket) {
+        io.to(hostSocket).emit('new_question', questionToSend);
+    }
     currentQuestionIndex++;
 }
 
@@ -141,18 +145,26 @@ io.on("connection", (socket) => {
 
             // Validacion 2: Ticket de sesion, excepto para el host
             if (groupId !== 'HOST') {
-                if (!clientGameId || String(clientGameId) !== String(GAME_SESSION_ID)) {
-                    console.log(`⛔ Bloqueado: ${groupId} - Ticket caducado`);
-                    console.log(`   - Tiene: ${clientGameId}`);
-                    console.log(`   - Esperado: ${GAME_SESSION_ID}`);
-                    
-                    socket.emit('session_expired', { 
-                        message: 'La sesión ha expirado. Por favor, recarga la página.',
-                        currentGameId: GAME_SESSION_ID 
-                    });
-                    
-                    socket.disconnect(true); 
-                    return;
+                if (process.env.NODE_ENV === 'production') {
+                    // En producción: validar estrictamente
+                    if (!clientGameId || String(clientGameId) !== String(GAME_SESSION_ID)) {
+                        console.log(`⛔ Bloqueado: ${groupId} - Ticket caducado`);
+                        console.log(`   - Tiene: ${clientGameId}`);
+                        console.log(`   - Esperado: ${GAME_SESSION_ID}`);
+                        
+                        socket.emit('session_expired', { 
+                            message: 'La sesión ha expirado. Por favor, recarga la página.',
+                            currentGameId: GAME_SESSION_ID 
+                        });
+                        
+                        socket.disconnect(true); 
+                        return;
+                    }
+                } else {
+                    // En desarrollo: solo loguear, permitir conexión
+                    if (clientGameId && String(clientGameId) !== String(GAME_SESSION_ID)) {
+                        console.log(`⚠️ [DEV] GameId diferente para ${groupId}: ${clientGameId} vs ${GAME_SESSION_ID} (permitido en desarrollo)`);
+                    }
                 }
             }
             console.log(`✅ Validación pasada para: ${groupId}`);
@@ -255,6 +267,42 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on('activate_answers', () => {
+        try{
+            console.log('🟢 Activando respuestas...');
+            
+            if (gameState !== 'QUESTION_LOCKED') {
+                console.log('⚠️ Intento de activar respuestas en estado:', gameState);
+                return;
+            }
+            
+            gameState = 'QUESTION_ACTIVE';
+            
+            // Enviar la pregunta a TODOS los jugadores
+            const currentQ = questions[currentQuestionIndex - 1];
+            if (currentQ) {
+                const questionToSend = {
+                    title: currentQ.title,
+                    options: currentQ.options,
+                    type: currentQ.type,
+                    mediaUrl: currentQ.mediaUrl
+                };
+                
+                io.to('game_room').emit('new_question', questionToSend);
+            }
+            
+            // Notificar cambio de estado
+            io.to('game_room').emit('game_state', gameState);
+            
+            console.log('✅ Respuestas activadas y pregunta enviada a todos');
+        } catch (error){
+            console.error('❌ Error en activate_answers:', error.message);
+            io.to('game_room').emit('error', { 
+                message: 'Error al activar respuestas'
+            });
+        }
+    });
+
     socket.on('reset_game', async () => {
         try{
             console.log("🧹 Realizando HARD RESET completo...");
@@ -274,7 +322,6 @@ io.on("connection", (socket) => {
             // Reiniciamos variables
             gameState = "LOBBY";
             currentQuestionIndex = 0;
-
             firstCorrectAnswer = null;
 
             await loadQuestions();
@@ -291,7 +338,7 @@ io.on("connection", (socket) => {
                 message: 'Error al reiniciar el juego' 
             });
         }
-    })
+    });
     
     socket.on('submit_answer', (data) => {
         try{
@@ -304,8 +351,16 @@ io.on("connection", (socket) => {
 
             if (!player){
                 console.log('⚠️ Intento de respuesta de jugador no registrado');
-                return
+                return;
             }  
+
+            if (gameState !== 'QUESTION_ACTIVE') {
+                console.log(`⚠️ ${player.name} intentó responder pero el estado es: ${gameState}`);
+                socket.emit('error', { 
+                    message: 'Las respuestas aún no están activadas'
+                });
+                return;
+            }
 
             if(player.hasAnswered){
                 console.log(`⚠️ ${player.name} ya respondió esta pregunta`);

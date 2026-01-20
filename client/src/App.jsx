@@ -289,49 +289,96 @@ function App() {
     );
   }
 
+  // ✅ Estado QUESTION_LOCKED (esperando activación)
+  if(gameState === 'QUESTION_LOCKED'){
+    return (
+      <div className="mobile-container">
+        <div className="app-header">
+          <span className="player-info">👤 {nameGroup}</span>
+          <span className="score-badge">{scoreGroup} pts</span>
+        </div>
+        <div className="header-spacer"></div>
+        
+        <div className="waiting-state">
+          <div className="pulse-text">⏳</div>
+          <h2>Esperando pregunta...</h2>
+          <p className="waiting-message">
+            El anfitrión está leyendo la pregunta en la pantalla principal
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Estado LOBBY
+  if(gameState === 'LOBBY'){
+    return (
+      <div className="mobile-container">
+        <div className="app-header">
+          <span className="player-info">👤 {nameGroup}</span>
+          <span className="score-badge">{scoreGroup} pts</span>
+        </div>
+        <div className="header-spacer"></div>
+        
+        <div style={{marginTop: '50px'}}>
+          <div className="pulse-text">⏳</div>
+          <h2>Esperando al Host...</h2>
+          <p>¡Prepárate, va a empezar!</p>
+          <div className="status-footer">Mira la pantalla grande</div>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Estado QUESTION_ACTIVE (pueden responder)
+  if(gameState === 'QUESTION_ACTIVE'){
+    return (
+      <div className="mobile-container">
+        <div className="app-header">
+          <span className="player-info">👤 {nameGroup}</span>
+          <span className="score-badge">{scoreGroup} pts</span>
+        </div>
+        <div className="header-spacer"></div>
+
+        <div className="question-container">
+          {optionsAnswers?.options ? (
+            <div>
+              <h3 className="question-prompt">Elige una opción:</h3>
+              <div className="game-grid">
+                {optionsAnswers.options.map((answer, i) => (
+                  <button
+                    key={i} 
+                    disabled={hasAnswered && answerStatus === null}
+                    onClick={() => submitAnswer(i)}
+                    className={`game-btn ${getButtonClass(i)}`}
+                  >
+                    {answer}
+                  </button>
+                ))}
+              </div>
+              {hasAnswered && answerStatus === null && (
+                <p className="pulse-text waiting-result">
+                  Respuesta enviada... Esperando resultado 🤞
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="pulse-text">Cargando preguntas... 🔄</div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback (por si acaso)
   return (
-    <div className="mobile-container" style={{justifyContent: 'flex-start'}}>
+    <div className="mobile-container">
       <div className="app-header">
-         <span className="player-info">👤 {nameGroup}</span>
-         <span className="score-badge">{scoreGroup} pts</span>
+        <span className="player-info">👤 {nameGroup}</span>
+        <span className="score-badge">{scoreGroup} pts</span>
       </div>
       <div className="header-spacer"></div>
-
-      {gameState === 'LOBBY' ? (
-         <div style={{marginTop: '50px'}}>
-            <div className="pulse-text">⏳</div>
-            <h2>Esperando al Host...</h2>
-            <p>¡Prepárate, va a empezar!</p>
-            <div className="status-footer">Mira la pantalla grande</div>
-         </div>
-      ) : (
-         <div style={{width: '100%', maxWidth: '500px'}}>
-            {optionsAnswers?.options ? (
-               <div>
-                  <h3 style={{marginBottom: '20px'}}>Elige una opción:</h3>
-                  <div className="game-grid">
-                    {optionsAnswers.options.map((answer, i) => (
-                      <button
-                        key={i} 
-                        disabled={hasAnswered && answerStatus === null}
-                        onClick={() => submitAnswer(i)}
-                        className={`game-btn ${getButtonClass(i)}`}
-                      >
-                        {answer}
-                      </button>
-                    ))}
-                  </div>
-                  {hasAnswered && answerStatus === null && (
-                     <p className="pulse-text" style={{fontSize: '1rem', color: '#888'}}>
-                        Respuesta enviada... Esperando resultado 🤞
-                     </p>
-                  )}
-               </div>
-            ) : (
-               <div className="pulse-text">Cargando preguntas... 🔄</div>
-            )}
-         </div>
-      )}
+      <div className="pulse-text">Cargando...</div>
     </div>
   );
 }

@@ -191,14 +191,24 @@ function HostView() {
                         ))
                     }
                 </div>
-
+                
                 <div className="admin-controls">
-                    <button 
-                        className="btn-primary"
-                        onClick={()=>{socket.emit('next_question')}}>
-                        Siguiente Pregunta ➡
-                    </button>
-                    
+                    {gameState === 'QUESTION_LOCKED' && (
+                        <button 
+                            className="btn-activate"
+                            onClick={()=>{socket.emit('activate_answers')}}>
+                            🟢 Activar Respuestas
+                        </button>
+                    )}
+
+                    {gameState === 'QUESTION_ACTIVE' && (
+                        <button 
+                            className="btn-primary"
+                            onClick={()=>{socket.emit('next_question')}}>
+                            Siguiente Pregunta ➡
+                        </button>
+                    )}
+
                     <button 
                         className="btn-secondary"
                         onClick={()=>{
