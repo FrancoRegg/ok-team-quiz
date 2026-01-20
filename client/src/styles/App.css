@@ -180,3 +180,41 @@
   75% { transform: translateX(-5px); }
   100% { transform: translateX(0); }
 }
+
+/* --- Estado de espera (QUESTION_LOCKED) --- */
+.waiting-state {
+    text-align: center;
+    padding: 60px 20px;
+    margin-top: 50px;
+}
+
+.waiting-state h2 {
+    margin-top: 30px;
+    font-size: 1.8rem;
+    color: var(--text-primary);
+}
+
+.waiting-message {
+    color: #666;
+    font-size: 1.1rem;
+    margin-top: 15px;
+    line-height: 1.5;
+}
+
+/* --- Estado activo (QUESTION_ACTIVE) --- */
+.question-container {
+    width: 100%;
+    max-width: 500px;
+}
+
+.question-prompt {
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+    text-align: center;
+}
+
+.waiting-result {
+    font-size: 1rem;
+    color: #888;
+    margin-top: 20px;
+}

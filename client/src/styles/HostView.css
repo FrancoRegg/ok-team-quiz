@@ -254,6 +254,28 @@
     box-shadow: 0 0 15px rgba(0,0,0,0.3);
 }
 
+/* --- Botón Activar Respuestas --- */
+.btn-activate {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-activate:hover {
+    background: #45a049;
+    transform: scale(1.05);
+}
+
+.btn-activate:active {
+    transform: scale(0.98);
+}
+
 @media (max-width: 768px) {
     .host-container {
         margin: 20px auto;
