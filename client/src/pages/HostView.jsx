@@ -9,6 +9,7 @@ function HostView() {
     const [groups, setGroups] = useState([]);
     const [gameState, setGameState] = useState("LOBBY");
     const [currentQuestion, setCurrentQuestion] = useState(null);
+    const [correctAnswer, setCorrectAnswer] = useState(null);
     const [joinUrl, setJoinUrl] = useState("");
 
     useEffect(() => {
@@ -49,13 +50,18 @@ function HostView() {
             setCurrentQuestion(questionData)
         })
 
+        socket.on('show_correct_answer', (data)=>{
+            setCorrectAnswer(data)
+        })
+
         //Limpieza al cerrado el componente
         return () => {
             if(socket){
                 socket.off('server_check');
                 socket.off('update_players');
                 socket.off('game_state');
-                socket.off('new_question')
+                socket.off('new_question');
+                socket.off('show_correct_answer');
             }
         }
     }, [socket]);
@@ -175,6 +181,14 @@ function HostView() {
                         ) : null}
                     </div>
                 )}
+                {gameState === 'SHOW_ANSWER' && correctAnswer && (
+                    <div className="answer-reveal">
+                        <h2 className="answer-title">✅ Respuesta Correcta:</h2>
+                        <div className="correct-answer-display">
+                            {correctAnswer.correctOption}
+                        </div>
+                    </div>
+                )}
 
                 <div className="live-stats-bar">
                     <span className="stat-label">Líderes ahora:</span>
@@ -200,15 +214,23 @@ function HostView() {
                             🟢 Activar Respuestas
                         </button>
                     )}
-
+                    
                     {gameState === 'QUESTION_ACTIVE' && (
+                        <button 
+                            className="btn-primary"
+                            onClick={()=>{socket.emit('show_answer')}}>
+                            📺 Mostrar Respuesta Correcta
+                        </button>
+                    )}
+
+                    {gameState === 'SHOW_ANSWER' && (
                         <button 
                             className="btn-primary"
                             onClick={()=>{socket.emit('next_question')}}>
                             Siguiente Pregunta ➡
                         </button>
                     )}
-
+                    
                     <button 
                         className="btn-secondary"
                         onClick={()=>{

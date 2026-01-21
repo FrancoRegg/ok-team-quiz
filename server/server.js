@@ -59,6 +59,7 @@ const playerTimeouts = {};
 let gameState = 'LOBBY';
 let currentQuestionIndex = 0;
 let firstCorrectAnswer = null;
+let currentCorrectAnswer = null;
 
 // Cargar preguntas al inicio
 async function loadQuestions() {
@@ -104,6 +105,7 @@ const sendNextQuestion = async () =>{
     };
 
     firstCorrectAnswer = null;
+    currentCorrectAnswer = null;
 
     // Enviar a todos
     io.to('game_room').emit('game_state', gameState);
@@ -303,6 +305,44 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on('show_answer', () => {
+        try{
+            console.log('📺 Mostrando respuesta correcta...');
+            
+            if (gameState !== 'QUESTION_ACTIVE') {
+                console.log('⚠️ Intento de mostrar respuesta en estado:', gameState);
+                return;
+            }
+            
+            gameState = 'SHOW_ANSWER';
+            
+            // Obtener la pregunta actual
+            const currentQ = questions[currentQuestionIndex - 1];
+            if (currentQ) {
+                currentCorrectAnswer = currentQ.correctIndex;
+                
+                // Enviar la respuesta correcta al HOST
+                const hostSocket = Object.keys(players).find(id => players[id].name === 'HOST');
+                if (hostSocket) {
+                    io.to(hostSocket).emit('show_correct_answer', {
+                        correctIndex: currentQ.correctIndex,
+                        correctOption: currentQ.options[currentQ.correctIndex]
+                    });
+                }
+            }
+            
+            // Notificar cambio de estado
+            io.to('game_room').emit('game_state', gameState);
+            
+            console.log('✅ Respuesta correcta mostrada');
+        } catch (error){
+            console.error('❌ Error en show_answer:', error.message);
+            io.to('game_room').emit('error', { 
+                message: 'Error al mostrar respuesta'
+            });
+        }
+    });
+
     socket.on('reset_game', async () => {
         try{
             console.log("🧹 Realizando HARD RESET completo...");
@@ -323,6 +363,7 @@ io.on("connection", (socket) => {
             gameState = "LOBBY";
             currentQuestionIndex = 0;
             firstCorrectAnswer = null;
+            currentCorrectAnswer = null;
 
             await loadQuestions();
             console.log("🔄 Preguntas recargadas");
