@@ -276,6 +276,42 @@
     transform: scale(0.98);
 }
 
+/* --- Mostrar Respuesta Correcta --- */
+.answer-reveal {
+    margin: 30px 0;
+    text-align: center;
+    animation: fadeIn 0.5s ease-in;
+}
+
+.answer-title {
+    font-size: 1.8rem;
+    color: #4CAF50;
+    margin-bottom: 20px;
+}
+
+.correct-answer-display {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    padding: 30px 40px;
+    border-radius: 12px;
+    font-size: 2rem;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    margin: 0 auto;
+    max-width: 600px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 @media (max-width: 768px) {
     .host-container {
         margin: 20px auto;
