@@ -13,6 +13,9 @@ function AdminView() {
     const [ questionsList, setQuestionsList ] = useState([]) 
     const [ editingId, setEditingId ] = useState(null) 
 
+    //Control de tiempo
+    const [ timeLimit, setTimeLimit ] = useState(10)
+
     const API_URL = import.meta.env.VITE_API_URL || '';
 
     const fetchWithAuth = async (url, options = {}) => {
@@ -89,6 +92,7 @@ function AdminView() {
         setOptions(Array.isArray(question.options) ? question.options : JSON.parse(question.options));
         setMediaUrl(question.mediaUrl || "");
         setCorrectIndex(question.correctIndex);
+        setTimeLimit(question.timeLimit || 10);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -125,6 +129,7 @@ function AdminView() {
         setOptions(["", ""]);
         setMediaUrl("");
         setCorrectIndex(0);
+        setTimeLimit(10);
     }
 
     const handleSubmit = async() => {
@@ -133,7 +138,7 @@ function AdminView() {
             return;
         }
 
-        const questionData = { title, type, options, mediaUrl, correctIndex };
+        const questionData = { title, type, options, mediaUrl, correctIndex, timeLimit };
         
         try{
             let url = `/api/questions`;
@@ -188,7 +193,6 @@ function AdminView() {
                 </button>
             </div>
 
-            {/* --- FORMULARIO --- */}
             <div className="form-group">
                 <label className="form-label">Título de la Pregunta:</label>
                 <input 
@@ -245,6 +249,23 @@ function AdminView() {
                     </select>
                 </div>
 
+                <div className="form-group">
+                    <label className="form-label">⏱️ Tiempo límite (segundos):</label>
+                    <div className="time-limit-input">
+                        <input
+                            type="number"
+                            min="5"
+                            max="120"
+                            className="input-number"
+                            value={timeLimit}
+                            onChange={(e) => setTimeLimit(parseInt(e.target.value) || 10)}
+                        />
+                        <span className="input-hint">
+                            (entre 5 y 120 segundos)
+                        </span>
+                    </div>
+                </div>
+
                 {type !== 'TEXT' && (
                     <div className="flex-2">
                         <label className="form-label">Enlace (URL):</label>
@@ -259,7 +280,6 @@ function AdminView() {
                 )}
             </div>
 
-            {/* Botonera inferior */}
             <div className="button-group">
                 <button 
                     className={`btn-save ${editingId ? 'editing' : ''}`} 
@@ -275,7 +295,6 @@ function AdminView() {
                 )}
             </div>
 
-            {/* --- LISTADO DE PREGUNTAS --- */}
             <hr className="divider"/>
             
             <h2 className="questions-title">📚 Preguntas Guardadas ({questionsList.length})</h2>
