@@ -32,6 +32,15 @@ const Question = sequelize.define('Question', {
     correctIndex: {
         type: DataTypes.INTEGER,
         allowNull: false
+    },
+    timeLimit: {
+        type: DataTypes.INTEGER,
+        defaultValue: 10,
+        allowNull: false,
+        validate: {
+            min: 5,
+            max: 120
+        }
     }
 }, {
     tableName: 'questions',
