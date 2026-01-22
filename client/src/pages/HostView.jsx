@@ -10,6 +10,7 @@ function HostView() {
     const [gameState, setGameState] = useState("LOBBY");
     const [currentQuestion, setCurrentQuestion] = useState(null);
     const [correctAnswer, setCorrectAnswer] = useState(null);
+    const [timer, setTimer] = useState(null);
     const [joinUrl, setJoinUrl] = useState("");
 
     useEffect(() => {
@@ -54,6 +55,14 @@ function HostView() {
             setCorrectAnswer(data)
         })
 
+        socket.on('timer_update', (data)=>{
+            setTimer(data.remainingTime)
+        })
+
+        socket.on('timer_finished', ()=>{
+            setTimer(0)
+        })
+
         //Limpieza al cerrado el componente
         return () => {
             if(socket){
@@ -62,6 +71,8 @@ function HostView() {
                 socket.off('game_state');
                 socket.off('new_question');
                 socket.off('show_correct_answer');
+                socket.off('timer_update');
+                socket.off('timer_finished')
             }
         }
     }, [socket]);
@@ -187,6 +198,14 @@ function HostView() {
                         <div className="correct-answer-display">
                             {correctAnswer.correctOption}
                         </div>
+                    </div>
+                )}
+
+                {gameState === 'QUESTION_ACTIVE' && timer !== null && (
+                    <div className="timer-display">
+                        <span className="timer-icon">⏱️</span>
+                        <span className="timer-number">{timer}</span>
+                        <span className="timer-label">segundos</span>
                     </div>
                 )}
 
