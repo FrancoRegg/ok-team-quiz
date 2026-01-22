@@ -270,3 +270,23 @@
     transition: background 0.3s;
 }
 .btn-cancel:hover { background-color: #616161; }
+
+/* --- TIEMPO LIMITE --- */
+.time-limit-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.input-number {
+    width: 100px;
+    padding: 8px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.input-hint {
+    color: #666;
+    font-size: 0.9rem;
+}
