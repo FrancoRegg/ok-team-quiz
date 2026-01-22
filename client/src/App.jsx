@@ -15,6 +15,7 @@ function App() {
   const [myAnswer, setMyAnswer] = useState(null);       
   const [correctAnswer, setCorrectAnswer] = useState(null);
   const [scoreGroup, setScoreGroup] = useState(0);
+  const [timer, setTimer] = useState(null);
 
   const wakeLockRef = useRef(null);
   
@@ -134,6 +135,14 @@ function App() {
         if (navigator.vibrate) navigator.vibrate(100);
     };
 
+    const onTimerUpdate = (data) => {
+        setTimer(data.remainingTime);
+    };
+
+    const onTimerFinished = () => {
+        setTimer(0);
+    };
+
     const onAnswerResult = (data) => {
       if (data.correctIndex !== undefined) {
         setCorrectAnswer(data.correctIndex);
@@ -178,6 +187,8 @@ function App() {
     socket.on('answer_result', onAnswerResult);
     socket.on('update_players', onUpdatePlayers);
     socket.on('session_expired', onSessionExpired);
+    socket.on('timer_update', onTimerUpdate); 
+    socket.on('timer_finished', onTimerFinished);
 
     return () => {
       releaseWakeLock();
@@ -189,6 +200,8 @@ function App() {
         socket.off('answer_result', onAnswerResult);
         socket.off('update_players', onUpdatePlayers);
         socket.off('session_expired', onSessionExpired);
+        socket.off('timer_update', onTimerUpdate); 
+        socket.off('timer_finished', onTimerFinished);
       }
     };
   }, [inside, socket]); 
@@ -231,6 +244,8 @@ function App() {
   } 
 
   const getButtonClass = (index) => {
+    if (timer === 0) return 'disabled';
+
     if (answerStatus === null && !hasAnswered) return 'active';
 
     if (answerStatus === null && hasAnswered) {
@@ -289,7 +304,7 @@ function App() {
     );
   }
 
-  // ✅ Estado QUESTION_LOCKED (esperando activación)
+  // Esperando Activacion de Preguntas
   if(gameState === 'QUESTION_LOCKED'){
     return (
       <div className="mobile-container">
@@ -330,7 +345,7 @@ function App() {
     );
   }
 
-  // ✅ Estado QUESTION_ACTIVE (pueden responder)
+  // Preguntas Activadas
   if(gameState === 'QUESTION_ACTIVE'){
     return (
       <div className="mobile-container">
@@ -341,6 +356,14 @@ function App() {
         <div className="header-spacer"></div>
 
         <div className="question-container">
+
+          {timer !== null && (
+            <div className="mobile-timer">
+              <span className="mobile-timer-icon">⏱️</span>
+              <span className="mobile-timer-number">{timer}</span>
+            </div>
+          )}
+
           {optionsAnswers?.options ? (
             <div>
               <h3 className="question-prompt">Elige una opción:</h3>
@@ -348,7 +371,7 @@ function App() {
                 {optionsAnswers.options.map((answer, i) => (
                   <button
                     key={i} 
-                    disabled={hasAnswered && answerStatus === null}
+                    disabled={timer === 0 || (hasAnswered && answerStatus === null)}
                     onClick={() => submitAnswer(i)}
                     className={`game-btn ${getButtonClass(i)}`}
                   >
