@@ -11,6 +11,7 @@ function HostView() {
     const [currentQuestion, setCurrentQuestion] = useState(null);
     const [correctAnswer, setCorrectAnswer] = useState(null);
     const [timer, setTimer] = useState(null);
+    const [showResetModal, setShowResetModal] = useState(false);
     const [joinUrl, setJoinUrl] = useState("");
 
     useEffect(() => {
@@ -252,15 +253,61 @@ function HostView() {
                     
                     <button 
                         className="btn-secondary"
-                        onClick={()=>{
-                            if(window.confirm("¿Seguro que quieres reiniciar todo?")) {
-                                socket.emit('reset_game');
-                            }
-                        }}>
+                        onClick={() => setShowResetModal(true)}>
                         Reiniciar 🔄
                     </button>
                 </div>
             </div>
+
+            {showResetModal && (
+                <div className="modal-overlay" onClick={() => setShowResetModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>🔄 Reiniciar Partida</h2>
+                            <button className="modal-close" onClick={() => setShowResetModal(false)}>
+                                ✕
+                            </button>
+                        </div>
+                        
+                        <div className="modal-body">
+                            <p className="modal-question">¿Qué quieres hacer con los jugadores?</p>
+                            
+                            <div className="reset-options">
+                                <button 
+                                    className="reset-option-btn keep"
+                                    onClick={() => {
+                                        socket.emit('reset_game', { cleanPlayers: false });
+                                        setShowResetModal(false);
+                                    }}
+                                >
+                                    <span className="option-icon">🔄</span>
+                                    <div className="option-text">
+                                        <strong>Mantener jugadores</strong>
+                                        <small>Solo resetear preguntas (conservar puntos)</small>
+                                    </div>
+                                </button>
+                                
+                                <button 
+                                    className="reset-option-btn clean"
+                                    onClick={() => {
+                                        if (window.confirm('⚠️ ¿Seguro? Esto borrará TODOS los jugadores y puntos permanentemente.')) {
+                                            socket.emit('reset_game', { cleanPlayers: true });
+                                            setShowResetModal(false);
+                                        }
+                                    }}
+                                >
+                                    <span className="option-icon">🧹</span>
+                                    <div className="option-text">
+                                        <strong>Limpiar todo</strong>
+                                        <small>Borrar jugadores y empezar de cero</small>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )};
+
             <AdminButton />
         </div>
     );
