@@ -290,3 +290,203 @@
     color: #666;
     font-size: 0.9rem;
 }
+
+/* --- Gestión de Jugadores --- */
+.players-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.players-actions {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.btn-players {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-players:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+}
+
+.btn-clean-season {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-clean-season:hover {
+    background: #da190b;
+    transform: translateY(-2px);
+}
+
+.players-count {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+/* --- Modal --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 2px solid #eee;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px 10px;
+    color: #666;
+    transition: color 0.3s;
+}
+
+.modal-close:hover {
+    color: #f44336;
+}
+
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.no-players {
+    text-align: center;
+    color: #999;
+    padding: 40px;
+    font-size: 1.1rem;
+}
+
+.players-edit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* --- Item de Jugador (Editar) --- */
+.player-edit-item {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    background: #fafafa;
+}
+
+.player-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.player-info strong {
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.current-score {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.player-edit-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.score-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.score-input:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.new-score {
+    font-weight: bold;
+    color: #4CAF50;
+    min-width: 80px;
+}
+
+.btn-save-score {
+    background: #2196F3;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-save-score:hover:not(:disabled) {
+    background: #0b7dda;
+}
+
+.btn-save-score:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
