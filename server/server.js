@@ -6,7 +6,10 @@ const { Server } = require('socket.io')
 const cors = require('cors');
 const { sincro } = require('./config/sync')
 const Question = require('./models/Questions')
+const Player = require('./models/Players')
 const questionRoutes = require('./routes/questionRoutes');
+const playerRoutes = require('./routes/playerRoutes');
+const playerController = require('./controllers/player.controller');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
  
@@ -21,7 +24,7 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
     : [
         'http://localhost:5173',      // Vite en desarrollo
         'http://localhost:3000',      // Si frontend y backend en mismo puerto
-        'http://192.168.1.14:5173',   // Tu red local (REEMPLAZA con tu IP)
+        'http://192.168.1.14:5173',   // Tu red local 
       ];
 
 console.log("🔒 CORS configurado para:", allowedOrigins);
@@ -50,6 +53,9 @@ const io = new Server(server, {
         credentials: true, 
     }
 });
+
+playerController.setSocketIO(io);
+
 // --- VARIABLES GLOBALES DEL JUEGO ---
 const SERVER_RUN_ID = Date.now(); // Identificador único de esta sesión del servidor
 let GAME_SESSION_ID = Date.now(); // Identificador de esta sesión de la partida
@@ -62,6 +68,8 @@ let firstCorrectAnswer = null;
 // let currentCorrectAnswer = null;
 let timerInterval = null;
 let remainingTime = 0;
+
+module.exports.players = players;
 
 // Cargar preguntas al inicio
 async function loadQuestions() {
@@ -129,7 +137,7 @@ io.on("connection", (socket) => {
         gameId: GAME_SESSION_ID 
     });
 
-    socket.on('join_game', (data) => {
+    socket.on('join_game', async (data) => { 
         try{
             console.log("📥 Evento join_game recibido:", data);
 
@@ -140,17 +148,15 @@ io.on("connection", (socket) => {
             const groupId = data.name 
             const clientGameId = data.gameId; 
 
-            // Validacion 1: Nombre obligatorio
+            // Validar que ingrese nombre
             if (!groupId || groupId.trim() === "") {
                 console.log(`⛔ Intento de conexión sin nombre`);
                 socket.emit('error', { message: 'Debes proporcionar un nombre de equipo' });
                 return;
             }
 
-            // Validacion 2: Ticket de sesion, excepto para el host
             if (groupId !== 'HOST') {
                 if (process.env.NODE_ENV === 'production') {
-                    // En producción: validar estrictamente
                     if (!clientGameId || String(clientGameId) !== String(GAME_SESSION_ID)) {
                         console.log(`⛔ Bloqueado: ${groupId} - Ticket caducado`);
                         console.log(`   - Tiene: ${clientGameId}`);
@@ -165,7 +171,6 @@ io.on("connection", (socket) => {
                         return;
                     }
                 } else {
-                    // En desarrollo: solo loguear, permitir conexión
                     if (clientGameId && String(clientGameId) !== String(GAME_SESSION_ID)) {
                         console.log(`⚠️ [DEV] GameId diferente para ${groupId}: ${clientGameId} vs ${GAME_SESSION_ID} (permitido en desarrollo)`);
                     }
@@ -173,44 +178,67 @@ io.on("connection", (socket) => {
             }
             console.log(`✅ Validación pasada para: ${groupId}`);
             
+            // Buscar o crear jugador en base de datos
+            let dbPlayer;
+            if (groupId !== 'HOST') {
+                dbPlayer = await Player.findOne({ where: { name: groupId } });
+
+                if (!dbPlayer) {
+                    // Crear nuevo jugador en BD
+                    dbPlayer = await Player.create({
+                        name: groupId,
+                        score: 0,
+                        isConnected: true
+                    });
+                    console.log(`📝 Nuevo jugador creado en BD: ${groupId}`);
+                } else {
+                    // Actualizar jugador existente
+                    await dbPlayer.update({ isConnected: true });
+                    console.log(`🔄 ${groupId} reconectado desde BD - Score: ${dbPlayer.score}`);
+                }
+            }
+
+            // Buscar si ya existe en memoria
             const existingPlayerId = Object.keys(players).find(key => players[key].name === groupId);
 
             if (existingPlayerId) {
-                console.log(`🔄 ${groupId} recuperado.`);
-                const oldData = players[existingPlayerId];
-
-                // Cancelacion del timeout si existe grupo
+                console.log(`🔄 ${groupId} recuperado de memoria.`);
+                
+                // Cancelacion del timeout si existe
                 if(playerTimeouts[existingPlayerId]){
                     clearTimeout(playerTimeouts[existingPlayerId]);
                     delete playerTimeouts[existingPlayerId];
-                    console.log(`⏰ Timeout cancelado para ${groupId} (reconectado a tiempo)`);
+                    console.log(`⏰ Timeout cancelado para ${groupId}`);
                 }
 
                 delete players[existingPlayerId]; 
-            
-                players[socket.id] = {
-                    name : groupId,
-                    score : oldData.score,
-                    id : socket.id,
-                    hasAnswered: oldData.hasAnswered,
-                };
-            } else {
-                console.log(`📝 Nuevo jugador: ${groupId}`);
+            }
+
+            // Agregar a memoria con datos de BD o datos de HOST
+            if (groupId === 'HOST') {
                 players[socket.id] = {
                     name: groupId,
                     score: 0,
                     id: socket.id,
                     hasAnswered: false
                 };
+            } else {
+                players[socket.id] = {
+                    name: groupId,
+                    score: dbPlayer.score,  // Score desde BD
+                    id: socket.id,
+                    dbId: dbPlayer.id,      // ID de BD
+                    hasAnswered: false
+                };
             }
 
             socket.join('game_room')
             
-            // Actualizamos estado al recién llegado y a todos
+            // Actualizacion de estado al recién llegado y a todos
             socket.emit('game_state', gameState)
             io.to('game_room').emit('update_players', Object.values(players))
 
-            // Si entran tarde y ya hay pregunta, se la enviamos
+            // Se envian las preguntas si el jugador ingresa tarde
             if (gameState === 'QUESTION' && currentQuestionIndex > 0) {
                 const currentQ = questions[currentQuestionIndex - 1]; 
                 if (currentQ) {
@@ -242,10 +270,16 @@ io.on("connection", (socket) => {
 
             console.log(`⏳ ${player.name} desconectado. Esperando 30s para eliminar...`);
         
-            playerTimeouts[socket.id] = setTimeout(() => {
-            console.log(`🗑️ ${player.name} eliminado, se cumplio el tiempo.`);
+            playerTimeouts[socket.id] = setTimeout(async () => {
+            console.log(`🗑️ ${player.name} desconectado definitivamente.`);
             
-            // Eliminar del objeto players
+            // Marcar como desconectado en BD (NO eliminar)
+            await Player.update(
+                { isConnected: false },
+                { where: { name: player.name } }
+            );
+            
+            // Eliminar del objeto players (memoria)
             delete players[socket.id];
             
             // Eliminar el timeout del registro
@@ -253,7 +287,7 @@ io.on("connection", (socket) => {
             
             // Notificar al host que la lista cambió
             io.to('game_room').emit('update_players', Object.values(players));
-            }, 30000)
+        }, 30000)
         } catch (error){
             console.error('❌ Error en disconnect:', error.message)
         }
@@ -385,9 +419,12 @@ io.on("connection", (socket) => {
         }
     });
 
-    socket.on('reset_game', async () => {
+    socket.on('reset_game', async (data) => { 
         try{
-            console.log("🧹 Realizando HARD RESET completo...");
+            const cleanPlayers = data?.cleanPlayers || false;
+            
+            console.log(`🧹 Reiniciando juego - Limpiar jugadores: ${cleanPlayers}`);
+            
             GAME_SESSION_ID = Date.now();
 
             // Limpiar todos los timeouts pendientes
@@ -396,7 +433,20 @@ io.on("connection", (socket) => {
                 delete playerTimeouts[key];
             }
 
-            // Vaciamos players
+            if (cleanPlayers) {
+                // Borrar todos los jugadores de BD
+                await Player.destroy({ where: {} });
+                console.log('🧹 Jugadores eliminados de BD');
+            } else {
+                // Solo marcar como desconectados
+                await Player.update(
+                    { isConnected: false },
+                    { where: {} }
+                );
+                console.log('🔄 Jugadores mantenidos en BD (marcados como desconectados)');
+            }
+
+            // Vaciamos players de memoria
             for (const key in players) {
                 delete players[key];
             }
@@ -430,7 +480,7 @@ io.on("connection", (socket) => {
         }
     });
     
-    socket.on('submit_answer', (data) => {
+    socket.on('submit_answer', async (data) => {
         try{
             // Validacion de datos
             if(!data || data.answer === undefined){
@@ -479,7 +529,14 @@ io.on("connection", (socket) => {
                     player.score += 90;
                     console.log(`✅ ${player.name} respondió correcto: +90 puntos`);
                 }
-            };
+            }
+
+            if (player.dbId) {
+                await Player.update(
+                    { score: player.score },
+                    { where: { id: player.dbId } }
+                );
+            }
 
             const result = { 
                 correct: isCorrect, 
@@ -603,6 +660,7 @@ app.post('/api/login', (req, res) => {
 
 
 app.use('/api/questions', authenticateAdmin ,questionRoutes)
+app.use('/api/players', authenticateAdmin, playerRoutes)
 
 // Servir los archivos estáticos del build de React
 app.use(express.static(path.join(__dirname, '../client/dist')));
