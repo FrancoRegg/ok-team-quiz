@@ -459,6 +459,91 @@
     color: #666;
 }
 
+/* --- Botón Ver Ranking --- */
+.btn-ranking {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+}
+
+.btn-ranking:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* --- Modal Ranking --- */
+.ranking-modal {
+    max-width: 600px;
+}
+
+.ranking-full-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.ranking-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ranking-item:nth-child(1) {
+    background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+}
+
+.ranking-item:nth-child(2) {
+    background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
+}
+
+.ranking-item:nth-child(3) {
+    background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%);
+}
+
+.rank-position {
+    font-size: 1.8rem;
+    font-weight: bold;
+    min-width: 50px;
+    text-align: center;
+}
+
+.rank-player-name {
+    flex: 1;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.rank-player-score {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.no-players {
+    text-align: center;
+    color: #999;
+    padding: 60px 20px;
+    font-size: 1.2rem;
+}
 
 @keyframes fadeIn {
     from {
