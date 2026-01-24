@@ -12,6 +12,7 @@ function HostView() {
     const [correctAnswer, setCorrectAnswer] = useState(null);
     const [timer, setTimer] = useState(null);
     const [showResetModal, setShowResetModal] = useState(false);
+    const [showRankingModal, setShowRankingModal] = useState(false);
     const [joinUrl, setJoinUrl] = useState("");
 
     useEffect(() => {
@@ -88,13 +89,103 @@ function HostView() {
         </button>
     );
 
+    const ResetModal = () => (
+        showResetModal && (
+            <div className="modal-overlay" onClick={() => setShowResetModal(false)}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                        <h2>🔄 Reiniciar Partida</h2>
+                        <button className="modal-close" onClick={() => setShowResetModal(false)}>
+                            ✕
+                        </button>
+                    </div>
+                    
+                    <div className="modal-body">
+                        <p className="modal-question">¿Qué quieres hacer con los jugadores?</p>
+                        
+                        <div className="reset-options">
+                            <button 
+                                className="reset-option-btn keep"
+                                onClick={() => {
+                                    socket.emit('reset_game', { cleanPlayers: false });
+                                    setShowResetModal(false);
+                                }}
+                            >
+                                <span className="option-icon">🔄</span>
+                                <div className="option-text">
+                                    <strong>Mantener jugadores</strong>
+                                    <small>Solo resetear preguntas (conservar puntos)</small>
+                                </div>
+                            </button>
+                            
+                            <button 
+                                className="reset-option-btn clean"
+                                onClick={() => {
+                                    if (window.confirm('⚠️ ¿Seguro? Esto borrará TODOS los jugadores y puntos permanentemente.')) {
+                                        socket.emit('reset_game', { cleanPlayers: true });
+                                        setShowResetModal(false);
+                                    }
+                                }}
+                            >
+                                <span className="option-icon">🧹</span>
+                                <div className="option-text">
+                                    <strong>Limpiar todo</strong>
+                                    <small>Borrar jugadores y empezar de cero</small>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    );
+
+    const RankingModal = () => (
+        showRankingModal && (
+            <div className="modal-overlay" onClick={() => setShowRankingModal(false)}>
+                <div className="modal-content ranking-modal" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                        <h2>🏆 Tabla de Posiciones</h2>
+                        <button className="modal-close" onClick={() => setShowRankingModal(false)}>
+                            ✕
+                        </button>
+                    </div>
+                    
+                    <div className="modal-body">
+                        {groups.filter(g => g.name !== 'HOST').length === 0 ? (
+                            <p className="no-players">No hay jugadores registrados</p>
+                        ) : (
+                            <div className="ranking-full-list">
+                                {groups
+                                    .filter(g => g.name !== 'HOST')
+                                    .sort((a, b) => b.score - a.score)
+                                    .map((player, index) => (
+                                        <div key={player.id} className="ranking-item">
+                                            <span className="rank-position">
+                                                {index === 0 ? '🥇' : 
+                                                 index === 1 ? '🥈' : 
+                                                 index === 2 ? '🥉' : 
+                                                 `${index + 1}.`}
+                                            </span>
+                                            <span className="rank-player-name">{player.name}</span>
+                                            <span className="rank-player-score">{player.score} pts</span>
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )
+    );
+
     if(gameState === 'LOBBY'){
         return(
             <div className="host-container">
                 <div>
                     <h1 className="big-title">¡Únete al Quiz!</h1>
                 
-                    {/* ZONA DEL CÓDIGO QR */}
                     <div className="qr-frame">
                         {joinUrl && (
                             <QRCode 
@@ -110,7 +201,9 @@ function HostView() {
                 
                 <hr/>
 
-                <h3>Esperando Jugadores...</h3>
+                {groups.filter(g => g.name !== 'HOST').length === 0 && (
+                    <h3>Esperando Jugadores...</h3>
+                )}
                 <ul className="players-grid">
                     {groups.filter(grupo => grupo.name !== 'HOST').map((value)=>(
                         <li className="player-chip" key={value.id}>{value.name}</li>
@@ -122,6 +215,8 @@ function HostView() {
                         Empezar Juego
                 </button>
                 <AdminButton />
+                <ResetModal />
+                <RankingModal />
             </div>
         );
     }
@@ -161,11 +256,13 @@ function HostView() {
 
                 <button 
                     className="btn-primary" 
-                    onClick={()=>{socket.emit('reset_game')}}
+                    onClick={() => setShowResetModal(true)}
                     >
                     Nueva Partida 🔄
                 </button>
                 <AdminButton />
+                <ResetModal />
+                <RankingModal />
             </div>
         )
     }
@@ -250,6 +347,12 @@ function HostView() {
                             Siguiente Pregunta ➡
                         </button>
                     )}
+
+                    <button 
+                        className="btn-ranking"
+                        onClick={() => setShowRankingModal(true)}>
+                        📊 Ver Posiciones
+                    </button>
                     
                     <button 
                         className="btn-secondary"
@@ -259,56 +362,9 @@ function HostView() {
                 </div>
             </div>
 
-            {showResetModal && (
-                <div className="modal-overlay" onClick={() => setShowResetModal(false)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>🔄 Reiniciar Partida</h2>
-                            <button className="modal-close" onClick={() => setShowResetModal(false)}>
-                                ✕
-                            </button>
-                        </div>
-                        
-                        <div className="modal-body">
-                            <p className="modal-question">¿Qué quieres hacer con los jugadores?</p>
-                            
-                            <div className="reset-options">
-                                <button 
-                                    className="reset-option-btn keep"
-                                    onClick={() => {
-                                        socket.emit('reset_game', { cleanPlayers: false });
-                                        setShowResetModal(false);
-                                    }}
-                                >
-                                    <span className="option-icon">🔄</span>
-                                    <div className="option-text">
-                                        <strong>Mantener jugadores</strong>
-                                        <small>Solo resetear preguntas (conservar puntos)</small>
-                                    </div>
-                                </button>
-                                
-                                <button 
-                                    className="reset-option-btn clean"
-                                    onClick={() => {
-                                        if (window.confirm('⚠️ ¿Seguro? Esto borrará TODOS los jugadores y puntos permanentemente.')) {
-                                            socket.emit('reset_game', { cleanPlayers: true });
-                                            setShowResetModal(false);
-                                        }
-                                    }}
-                                >
-                                    <span className="option-icon">🧹</span>
-                                    <div className="option-text">
-                                        <strong>Limpiar todo</strong>
-                                        <small>Borrar jugadores y empezar de cero</small>
-                                    </div>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )};
-
             <AdminButton />
+            <ResetModal />
+            <RankingModal />
         </div>
     );
 }
