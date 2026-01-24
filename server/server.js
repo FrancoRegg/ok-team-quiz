@@ -580,8 +580,11 @@ io.on("connection", (socket) => {
                     remainingTime = 0;
                 }
                 
-                // Notificar que el timer se canceló
-                io.to('game_room').emit('timer_finished');
+                setTimeout(() => {
+                    // Notificar que el timer terminó
+                    io.to('game_room').emit('timer_finished');
+                    console.log("⏱️ Timer finished emitido después del delay");
+                }, 1500);
             }
         } catch (error){
             console.error('❌ Error en submit_answer:', error.message);
