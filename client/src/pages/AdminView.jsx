@@ -1,6 +1,48 @@
 import { useState, useEffect } from "react"
 import '../styles/Admin.css'
 
+const PlayerEditItem = ({ player, onEdit }) => {
+    const [scoreChange, setScoreChange] = useState(0);
+    
+    const handleSave = () => {
+        if (scoreChange === 0) return;
+        onEdit(player.id, scoreChange);
+        setScoreChange(0);
+    };
+    
+    const newScore = Math.max(0, player.score + scoreChange);
+    
+    return (
+        <div className="player-edit-item">
+            <div className="player-info">
+                <strong>{player.name}</strong>
+                <span className="current-score">Actual: {player.score} pts</span>
+            </div>
+            
+            <div className="player-edit-controls">
+                <input 
+                    type="number"
+                    className="score-input"
+                    placeholder="+100 o -50"
+                    value={scoreChange || ''}
+                    onChange={(e) => setScoreChange(parseInt(e.target.value) || 0)}
+                />
+                <span className="new-score">
+                    → {newScore} pts
+                </span>
+                <button 
+                    className="btn-save-score"
+                    onClick={handleSave}
+                    disabled={scoreChange === 0}
+                >
+                    Guardar
+                </button>
+            </div>
+        </div>
+    );
+}
+
+
 function AdminView() {
 
     const [ title, setTitle ] = useState("")
@@ -13,8 +55,13 @@ function AdminView() {
     const [ questionsList, setQuestionsList ] = useState([]) 
     const [ editingId, setEditingId ] = useState(null) 
 
-    //Control de tiempo
+    // Estado control de tiempo
     const [ timeLimit, setTimeLimit ] = useState(10)
+    
+    // Estados PLayers
+    const [ players, setPlayers ] = useState([])
+    const [ showPlayersModal, setShowPlayersModal ] = useState(false)
+
 
     const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -58,7 +105,72 @@ function AdminView() {
         } catch (error) {
             console.error("Error al cargar preguntas:", error);
         }
-    }
+    };
+
+    const fetchPlayers = async () => {
+        try {
+            console.log('📥 Cargando jugadores...');
+            const response = await fetchWithAuth(`${API_URL}/api/players`);
+
+            if (response.status === 401 || response.status === 403) {
+                alert('⛔ Sesión expirada. Por favor, inicia sesión de nuevo.');
+                localStorage.removeItem('admin_token');
+                window.location.reload();
+                return;
+            }
+
+            const data = await response.json();
+            setPlayers(data);
+        } catch (error) {
+            console.error("Error al cargar jugadores:", error);
+        }
+    };
+
+    const handleOpenPlayersModal = () => {
+        setShowPlayersModal(true);
+        fetchPlayers();
+    };
+
+    const handleEditScore = async (playerId, scoreChange) => {
+        try {
+            const response = await fetchWithAuth(`${API_URL}/api/players/${playerId}`, {
+                method: 'PUT',
+                body: JSON.stringify({ scoreChange })
+            });
+
+            if (response.ok) {
+                // Recargar lista de jugadores
+                await fetchPlayers();
+            } else {
+                alert('Error al editar puntuación');
+            }
+        } catch (error) {
+            console.error('Error al editar puntuación:', error);
+            alert('Error al editar puntuación');
+        }
+    };
+
+    const handleCleanSeason = async () => {
+        if (!window.confirm('⚠️ ¿Estás seguro? Esto borrará TODOS los jugadores y sus puntuaciones permanentemente.')) {
+            return;
+        }
+
+        try {
+            const response = await fetchWithAuth(`${API_URL}/api/players/clean-season`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                alert('✅ Temporada limpiada correctamente');
+                setPlayers([]);
+            } else {
+                alert('Error al limpiar temporada');
+            }
+        } catch (error) {
+            console.error('Error al limpiar temporada:', error);
+            alert('Error al limpiar temporada');
+        }
+    };
 
     useEffect(() => {
         fetchQuestions();
@@ -193,6 +305,24 @@ function AdminView() {
                 </button>
             </div>
 
+            {/* ✅ Sección de gestión de jugadores */}
+            <div className="players-section">
+                <h2 className="section-title">👥 Gestión de Jugadores</h2>
+                <div className="players-actions">
+                    <button className="btn-players" onClick={handleOpenPlayersModal}>
+                        ✏️ Editar Puntuaciones
+                    </button>
+                    <button className="btn-clean-season" onClick={handleCleanSeason}>
+                        🧹 Limpiar Temporada
+                    </button>
+                </div>
+                <p className="players-count">
+                    Jugadores registrados: <strong>{players.length}</strong>
+                </p>
+            </div>
+
+            <hr className="divider"/>
+
             <div className="form-group">
                 <label className="form-label">Título de la Pregunta:</label>
                 <input 
@@ -319,8 +449,38 @@ function AdminView() {
                     </div>
                 ))}
             </div>
+
+            {/* ✅ MODAL: Editar Puntuaciones (AGREGAR ESTO) */}
+            {showPlayersModal && (
+                <div className="modal-overlay" onClick={() => setShowPlayersModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>✏️ Editar Puntuaciones</h2>
+                            <button className="modal-close" onClick={() => setShowPlayersModal(false)}>
+                                ✕
+                            </button>
+                        </div>
+                        
+                        <div className="modal-body">
+                            {players.length === 0 ? (
+                                <p className="no-players">No hay jugadores registrados</p>
+                            ) : (
+                                <div className="players-edit-list">
+                                    {players.map(player => (
+                                        <PlayerEditItem 
+                                            key={player.id}
+                                            player={player}
+                                            onEdit={handleEditScore}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-    )
+    );
 }
 
 export default AdminView;
