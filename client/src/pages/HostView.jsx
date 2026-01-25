@@ -269,44 +269,87 @@ function HostView() {
 
     return(
         <div className="host-container">
+            <div className="secondary-buttons">
+                <button 
+                    className="btn-secondary-icon"
+                    data-tooltip="Ver Posiciones"
+                    onClick={() => setShowRankingModal(true)}>
+                    📊
+                </button>
+                <button 
+                    className="btn-secondary-icon"
+                    data-tooltip="Reiniciar"
+                    onClick={() => setShowResetModal(true)}>
+                    🔄
+                </button>
+            </div>
+
             <div className="game-phase-layout">
-                <h1 className="question-title">{currentQuestion?.title}</h1>
-
-                {currentQuestion?.mediaUrl && (
-                    <div className="media-frame">
-                        {currentQuestion.type === 'IMAGE' ? (
-                            <img 
-                                src={currentQuestion.mediaUrl} 
-                                alt="Pregunta" 
-                                className="question-media"
-                            />
-                        ) : currentQuestion.type === 'VIDEO' ? (
-                            <video 
-                                src={currentQuestion.mediaUrl} 
-                                controls 
-                                autoPlay 
-                                className="question-media"
-                            />
-                        ) : null}
-                    </div>
-                )}
-                {gameState === 'SHOW_ANSWER' && correctAnswer && (
-                    <div className="answer-reveal">
-                        <h2 className="answer-title">✅ Respuesta Correcta:</h2>
-                        <div className="correct-answer-display">
-                            {correctAnswer.correctOption}
+                <div className="question-card">
+                    <h1 className="question-title">{currentQuestion?.title}</h1>
+                    
+                    {currentQuestion?.mediaUrl && (
+                        <div className="media-frame">
+                            {currentQuestion.type === 'IMAGE' ? (
+                                <img 
+                                    src={currentQuestion.mediaUrl} 
+                                    alt="Pregunta" 
+                                    className="question-media"
+                                />
+                            ) : currentQuestion.type === 'VIDEO' ? (
+                                <video 
+                                    src={currentQuestion.mediaUrl} 
+                                    controls 
+                                    autoPlay 
+                                    className="question-media"
+                                />
+                            ) : null}
                         </div>
-                    </div>
-                )}
+                    )}
+                    
+                    {gameState === 'SHOW_ANSWER' && correctAnswer && (
+                        <div className="answer-reveal">
+                            <h2 className="answer-title">✅ Respuesta Correcta:</h2>
+                            <div className="correct-answer-display">
+                                {correctAnswer.correctOption}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {gameState === 'QUESTION_ACTIVE' && timer !== null && (
+                        <div className="timer-display">
+                            <span className="timer-icon">⏱️</span>
+                            <span className="timer-number">{timer}</span>
+                        </div>
+                    )}
+                </div>
 
-                {gameState === 'QUESTION_ACTIVE' && timer !== null && (
-                    <div className="timer-display">
-                        <span className="timer-icon">⏱️</span>
-                        <span className="timer-number">{timer}</span>
-                        <span className="timer-label">segundos</span>
-                    </div>
-                )}
+                <div className="main-action-buttons">
+                    {gameState === 'QUESTION_LOCKED' && (
+                        <button 
+                            className="btn-main-action activate"
+                            onClick={()=>{socket.emit('activate_answers')}}>
+                            🟢 Activar Respuestas
+                        </button>
+                    )}
+                    
+                    {gameState === 'QUESTION_ACTIVE' && (
+                        <button 
+                            className="btn-main-action show-answer"
+                            onClick={()=>{socket.emit('show_answer')}}>
+                            📺 Mostrar Respuesta
+                        </button>
+                    )}
 
+                    {gameState === 'SHOW_ANSWER' && (
+                        <button 
+                            className="btn-main-action next-question"
+                            onClick={()=>{socket.emit('next_question')}}>
+                            Siguiente Pregunta ➡
+                        </button>
+                    )}
+                </div>
+                
                 <div className="live-stats-bar">
                     <span className="stat-label">Líderes ahora:</span>
                     {groups
@@ -322,46 +365,8 @@ function HostView() {
                         ))
                     }
                 </div>
-                
-                <div className="admin-controls">
-                    {gameState === 'QUESTION_LOCKED' && (
-                        <button 
-                            className="btn-activate"
-                            onClick={()=>{socket.emit('activate_answers')}}>
-                            🟢 Activar Respuestas
-                        </button>
-                    )}
-                    
-                    {gameState === 'QUESTION_ACTIVE' && (
-                        <button 
-                            className="btn-primary"
-                            onClick={()=>{socket.emit('show_answer')}}>
-                            📺 Mostrar Respuesta Correcta
-                        </button>
-                    )}
-
-                    {gameState === 'SHOW_ANSWER' && (
-                        <button 
-                            className="btn-primary"
-                            onClick={()=>{socket.emit('next_question')}}>
-                            Siguiente Pregunta ➡
-                        </button>
-                    )}
-
-                    <button 
-                        className="btn-ranking"
-                        onClick={() => setShowRankingModal(true)}>
-                        📊 Ver Posiciones
-                    </button>
-                    
-                    <button 
-                        className="btn-secondary"
-                        onClick={() => setShowResetModal(true)}>
-                        Reiniciar 🔄
-                    </button>
-                </div>
             </div>
-
+            
             <AdminButton />
             <ResetModal />
             <RankingModal />
