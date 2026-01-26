@@ -31,8 +31,6 @@ const {
     getServerRunId,
     getGameSessionId,
     getQuestions,
-    getPlayers,
-    getPlayerTimeouts,
     getGameState,
     getCurrentQuestionIndex,
     getFirstCorrectAnswer,
@@ -51,13 +49,6 @@ const {
 
 // Constantes locales
 const SERVER_RUN_ID = getServerRunId();
-let GAME_SESSION_ID = getGameSessionId();
-let questions = getQuestions();
-let gameState = getGameState();
-let currentQuestionIndex = getCurrentQuestionIndex();
-let firstCorrectAnswer = getFirstCorrectAnswer();
-let timerInterval = getTimerInterval();
-let remainingTime = getRemainingTime();
 
 // Exportar players para playerController
 module.exports.players = players;
@@ -86,7 +77,6 @@ const sendNextQuestion = async () => {
     // Si se acabaron las preguntas
     if (getCurrentQuestionIndex() >= getQuestions().length){
         setGameState('GAME_OVER');
-        gameState = getGameState();
         
         io.to('game_room').emit('game_state', getGameState());  
         io.to('game_room').emit('update_players', Object.values(players));
@@ -95,7 +85,6 @@ const sendNextQuestion = async () => {
 
     // Preparar nueva pregunta con estado bloqueado 
     setGameState("QUESTION_LOCKED");
-    gameState = getGameState();
     
     const fullQuestion = getQuestions()[getCurrentQuestionIndex()];
 
@@ -112,7 +101,6 @@ const sendNextQuestion = async () => {
     };
 
     setFirstCorrectAnswer(null);
-    firstCorrectAnswer = null;
 
     // Enviar a todos
     io.to('game_room').emit('game_state', getGameState());
@@ -124,7 +112,6 @@ const sendNextQuestion = async () => {
     }
     
     setCurrentQuestionIndex(getCurrentQuestionIndex() + 1);
-    currentQuestionIndex = getCurrentQuestionIndex();
 }
 
 // --- SOCKETS ---
@@ -156,22 +143,22 @@ io.on("connection", (socket) => {
 
             if (groupId !== 'HOST') {
                 if (process.env.NODE_ENV === 'production') {
-                    if (!clientGameId || String(clientGameId) !== String(GAME_SESSION_ID)) {
+                    if (!clientGameId || String(clientGameId) !== String(getGameSessionId())) {
                         console.log(`⛔ Bloqueado: ${groupId} - Ticket caducado`);
                         console.log(`   - Tiene: ${clientGameId}`);
-                        console.log(`   - Esperado: ${GAME_SESSION_ID}`);
+                        console.log(`   - Esperado: ${getGameSessionId()}`);
                         
                         socket.emit('session_expired', { 
                             message: 'La sesión ha expirado. Por favor, recarga la página.',
-                            currentGameId: GAME_SESSION_ID 
+                            currentGameId: getGameSessionId() 
                         });
                         
                         socket.disconnect(true); 
                         return;
                     }
                 } else {
-                    if (clientGameId && String(clientGameId) !== String(GAME_SESSION_ID)) {
-                        console.log(`⚠️ [DEV] GameId diferente para ${groupId}: ${clientGameId} vs ${GAME_SESSION_ID} (permitido en desarrollo)`);
+                    if (clientGameId && String(clientGameId) !== String(getGameSessionId())) {
+                        console.log(`⚠️ [DEV] GameId diferente para ${groupId}: ${clientGameId} vs ${getGameSessionId()} (permitido en desarrollo)`);
                     }
                 }
             }
@@ -238,8 +225,8 @@ io.on("connection", (socket) => {
             io.to('game_room').emit('update_players', Object.values(players))
 
             // Se envian las preguntas si el jugador ingresa tarde
-            if (gameState === 'QUESTION' && currentQuestionIndex > 0) {
-                const currentQ = questions[currentQuestionIndex - 1]; 
+            if (getGameState() === 'QUESTION' && getCurrentQuestionIndex() > 0) {
+                const currentQ = getQuestions()[getCurrentQuestionIndex() - 1]; 
                 if (currentQ) {
                     socket.emit('new_question', {
                         title: currentQ.title,
@@ -305,76 +292,71 @@ io.on("connection", (socket) => {
     });
 
     socket.on('activate_answers', () => {
-            try{
-            console.log('🟢 Activando respuestas...');
+        try{
+        console.log('🟢 Activando respuestas...');
+        
+        if (getGameState() !== 'QUESTION_LOCKED') {
+            console.log('⚠️ Intento de activar respuestas en estado:', getGameState());
+            return;
+        }
+        
+        setGameState('QUESTION_ACTIVE');
+        
+        // Enviar la pregunta a TODOS los jugadores
+        const currentQ = getQuestions()[getCurrentQuestionIndex() - 1];
+        if (currentQ) {
+            const questionToSend = {
+                title: currentQ.title,
+                options: currentQ.options,
+                type: currentQ.type,
+                mediaUrl: currentQ.mediaUrl
+            };
             
-            if (getGameState() !== 'QUESTION_LOCKED') {
-                console.log('⚠️ Intento de activar respuestas en estado:', getGameState());
-                return;
+            io.to('game_room').emit('new_question', questionToSend);
+            
+            // Iniciar timer
+            setRemainingTime(currentQ.timeLimit || 10);
+            
+            // Emitir tiempo inicial a todos
+            io.to('game_room').emit('timer_update', { remainingTime: getRemainingTime() });
+            
+            // Iniciar cuenta regresiva
+            if (getTimerInterval()) {
+                clearInterval(getTimerInterval());
             }
             
-            setGameState('QUESTION_ACTIVE');
-            gameState = getGameState();
-            
-            // Enviar la pregunta a TODOS los jugadores
-            const currentQ = getQuestions()[getCurrentQuestionIndex() - 1];
-            if (currentQ) {
-                const questionToSend = {
-                    title: currentQ.title,
-                    options: currentQ.options,
-                    type: currentQ.type,
-                    mediaUrl: currentQ.mediaUrl
-                };
+            const interval = setInterval(() => {
+                setRemainingTime(getRemainingTime() - 1);
                 
-                io.to('game_room').emit('new_question', questionToSend);
-                
-                // Iniciar timer
-                setRemainingTime(currentQ.timeLimit || 10);
-                remainingTime = getRemainingTime();
-                
-                // Emitir tiempo inicial a todos
+                // Emitir actualización a todos
                 io.to('game_room').emit('timer_update', { remainingTime: getRemainingTime() });
                 
-                // Iniciar cuenta regresiva
-                if (getTimerInterval()) {
-                    clearInterval(getTimerInterval());
-                }
-                
-                const interval = setInterval(() => {
-                    setRemainingTime(getRemainingTime() - 1);
-                    remainingTime = getRemainingTime();
+                // Si llega a 0
+                if (getRemainingTime() <= 0) {
+                    clearInterval(interval);
+                    setTimerInterval(null);
                     
-                    // Emitir actualización a todos
-                    io.to('game_room').emit('timer_update', { remainingTime: getRemainingTime() });
+                    console.log('⏰ Tiempo agotado!');
                     
-                    // Si llega a 0
-                    if (getRemainingTime() <= 0) {
-                        clearInterval(interval);
-                        setTimerInterval(null);
-                        timerInterval = null;
-                        
-                        console.log('⏰ Tiempo agotado!');
-                        
-                        // Asignar 0 puntos a quien no respondió
-                        for (const id in players) {
-                            if (players[id].name !== 'HOST' && !players[id].hasAnswered) {
-                                console.log(`⏱️ ${players[id].name} no respondió a tiempo`);
-                            }
+                    // Asignar 0 puntos a quien no respondió
+                    for (const id in players) {
+                        if (players[id].name !== 'HOST' && !players[id].hasAnswered) {
+                            console.log(`⏱️ ${players[id].name} no respondió a tiempo`);
                         }
-                        
-                        // Emitir que se acabó el tiempo
-                        io.to('game_room').emit('timer_finished');
                     }
-                }, 1000);
-                
-                setTimerInterval(interval);
-                timerInterval = interval;
-            }
+                    
+                    // Emitir que se acabó el tiempo
+                    io.to('game_room').emit('timer_finished');
+                }
+            }, 1000);
             
-            // Notificar cambio de estado
-            io.to('game_room').emit('game_state', getGameState())
-            
-            console.log(`✅ Respuestas activadas con timer de ${getRemainingTime()}s`);
+            setTimerInterval(interval);
+        }
+        
+        // Notificar cambio de estado
+        io.to('game_room').emit('game_state', getGameState())
+        
+        console.log(`✅ Respuestas activadas con timer de ${getRemainingTime()}s`);
         } catch (error){
             console.error('❌ Error en activate_answers:', error.message);
             io.to('game_room').emit('error', { 
@@ -390,7 +372,6 @@ io.on("connection", (socket) => {
         if (getTimerInterval()) {
             clearInterval(getTimerInterval());
             setTimerInterval(null);
-            timerInterval = null;
             console.log('⏰ Timer cancelado al mostrar respuesta');
         }
         
@@ -400,7 +381,6 @@ io.on("connection", (socket) => {
         }
         
         setGameState('SHOW_ANSWER');
-        gameState = getGameState();
         
         // Obtener la pregunta actual
         const currentQ = getQuestions()[getCurrentQuestionIndex() - 1];
@@ -434,7 +414,6 @@ io.on("connection", (socket) => {
         console.log(`🧹 Reiniciando juego - Limpiar jugadores: ${cleanPlayers}`);
         
         setGameSessionId(Date.now());
-        GAME_SESSION_ID = getGameSessionId();
 
         // Limpiar todos los timeouts pendientes
         for (const key in playerTimeouts){
@@ -462,23 +441,18 @@ io.on("connection", (socket) => {
 
         // Reiniciamos variables
         setGameState("LOBBY");
-        gameState = getGameState();
         
         setCurrentQuestionIndex(0);
-        currentQuestionIndex = getCurrentQuestionIndex();
         
         setFirstCorrectAnswer(null);
-        firstCorrectAnswer = null;
 
         // Limpiar timer
         if (getTimerInterval()) {
             clearInterval(getTimerInterval());
             setTimerInterval(null);
-            timerInterval = null;
         }
         
         setRemainingTime(0);
-        remainingTime = getRemainingTime();
 
         await loadQuestions();
         console.log("🔄 Preguntas recargadas");
@@ -537,7 +511,6 @@ io.on("connection", (socket) => {
             if (isCorrect) {
                 if (getFirstCorrectAnswer() === null) {
                     setFirstCorrectAnswer(socket.id);
-                    firstCorrectAnswer = socket.id;
                     player.score += 100;
                     console.log(`🥇 ${player.name} respondió primero: +100 puntos`);
                 } else {
@@ -593,9 +566,7 @@ io.on("connection", (socket) => {
                 if (getTimerInterval()) {
                     clearInterval(getTimerInterval());
                     setTimerInterval(null);
-                    timerInterval = null;
                     setRemainingTime(0);
-                    remainingTime = 0;
                 }
                 
                 setTimeout(() => {
