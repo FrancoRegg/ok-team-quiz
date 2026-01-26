@@ -1,6 +1,6 @@
 const { sequelize } = require('./db');
 
-async function sincro (){
+async function dbSynchronization (){
     try{
         await sequelize.sync({ alter: true });
         console.log('✅ Base de datos sincronizada');
@@ -10,4 +10,4 @@ async function sincro (){
     }
 };
 
-module.exports = { sincro }; 
+module.exports = { dbSynchronization }; 
