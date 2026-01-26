@@ -18,7 +18,7 @@ const registerGameHandlers = (io, socket, sendNextQuestion) => {
     socket.on('next_question', async () => {
         try{
             console.log('➡️ Evento next_question recibido (avance manual)');
-            await sendNextQuestion();
+            await sendNextQuestion(io);
         } catch (error){
             console.error('❌ Error en next_question:', error.message);
             io.to('game_room').emit('error', { 
@@ -106,38 +106,38 @@ const registerGameHandlers = (io, socket, sendNextQuestion) => {
     // --- SHOW ANSWER ---
     socket.on('show_answer', () => {
         try{
-        console.log('📺 Mostrando respuesta correcta...');
+            console.log('📺 Mostrando respuesta correcta...');
 
-        if (getTimerInterval()) {
-            clearInterval(getTimerInterval());
-            setTimerInterval(null);
-            console.log('⏰ Timer cancelado al mostrar respuesta');
-        }
-        
-        if (getGameState() !== 'QUESTION_ACTIVE') {
-            console.log('⚠️ Intento de mostrar respuesta en estado:', getGameState());
-            return;
-        }
-        
-        setGameState('SHOW_ANSWER');
-        
-        // Obtener la pregunta actual
-        const currentQ = getQuestions()[getCurrentQuestionIndex() - 1];
-        if (currentQ) {
-            // Enviar la respuesta correcta al HOST
-            const hostSocket = Object.keys(players).find(id => players[id].name === 'HOST');
-            if (hostSocket) {
-                io.to(hostSocket).emit('show_correct_answer', {
-                    correctIndex: currentQ.correctIndex,
-                    correctOption: currentQ.options[currentQ.correctIndex]
-                });
+            if (getTimerInterval()) {
+                clearInterval(getTimerInterval());
+                setTimerInterval(null);
+                console.log('⏰ Timer cancelado al mostrar respuesta');
             }
-        }
-        
-        // Notificar cambio de estado
-        io.to('game_room').emit('game_state', getGameState());
-        
-        console.log('✅ Respuesta correcta mostrada');
+            
+            if (getGameState() !== 'QUESTION_ACTIVE') {
+                console.log('⚠️ Intento de mostrar respuesta en estado:', getGameState());
+                return;
+            }
+            
+            setGameState('SHOW_ANSWER');
+            
+            const currentQ = getQuestions()[getCurrentQuestionIndex() - 1];
+            
+            if (currentQ) {
+                const hostSocket = Object.keys(players).find(id => players[id].name === 'HOST');
+                
+                if (hostSocket) {
+                    io.to(hostSocket).emit('show_correct_answer', {
+                        correctIndex: currentQ.correctIndex,
+                        correctOption: currentQ.options[currentQ.correctIndex]
+                    });
+                } else {
+                    console.log('❌ HOST no encontrado en players');  // ← AGREGAR
+                }
+            }
+            
+            io.to('game_room').emit('game_state', getGameState());
+            console.log('✅ Respuesta correcta mostrada');
         } catch (error){
             console.error('❌ Error en show_answer:', error.message);
             io.to('game_room').emit('error', { 
