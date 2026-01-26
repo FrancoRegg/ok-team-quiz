@@ -1,81 +1,74 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') })
-const express = require('express')
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+const express = require('express');
 const http = require('http');
-const { Server } = require('socket.io')
-const cors = require('cors');
-const { sincro } = require('./config/sync')
-const Question = require('./models/Questions')
-const Player = require('./models/Players')
+const { dbSynchronization } = require('./config/sync');
+const { configureSocket } = require('./config/socket');
+const { configureCORS } = require('./config/cors');
+const gameStateModule = require('./utils/gameState')
+const Question = require('./models/Questions');
+const Player = require('./models/Players');
 const questionRoutes = require('./routes/questionRoutes');
 const playerRoutes = require('./routes/playerRoutes');
 const playerController = require('./controllers/player.controller');
-const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
  
 const port = process.env.PORT;
 const app = express() // Inicializar express
 app.use(express.json());
 
-const allowedOrigins = process.env.NODE_ENV === 'production' 
-    ? [
-        process.env.CLIENT_URL || 'https://ok-team-quiz-production.up.railway.app', // URL de producción
-      ] 
-    : [
-        'http://localhost:5173',      // Vite en desarrollo
-        'http://localhost:3000',      // Si frontend y backend en mismo puerto
-        'http://192.168.1.14:5173',   // Tu red local 
-      ];
-
-console.log("🔒 CORS configurado para:", allowedOrigins);
-
-app.use(cors({
-    origin: function (origin, callback) {
-        // Permitir requests sin origin (como Postman, curl, o mismo dominio)
-        if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            console.log("⛔ CORS bloqueó origen:", origin);
-            callback(new Error('No permitido por CORS'));
-        }
-    },
-    credentials: true, // Permite cookies/autenticación
-})); 
+const { corsMiddleware, allowedOrigins } = configureCORS(); 
+app.use(corsMiddleware);
 
 const server = http.createServer(app); // Creamos el servidor HTTP a partir de Express
 
-const io = new Server(server, {
-    cors: {
-        origin: allowedOrigins,
-        methods: ["GET", "POST"],
-        credentials: true, 
-    }
-});
+const io = configureSocket(server, allowedOrigins);
 
 playerController.setSocketIO(io);
 
-// --- VARIABLES GLOBALES DEL JUEGO ---
-const SERVER_RUN_ID = Date.now(); // Identificador único de esta sesión del servidor
-let GAME_SESSION_ID = Date.now(); // Identificador de esta sesión de la partida
-let questions = []; 
-const players = {}; 
-const playerTimeouts = {};
-let gameState = 'LOBBY';
-let currentQuestionIndex = 0;
-let firstCorrectAnswer = null;
-// let currentCorrectAnswer = null;
-let timerInterval = null;
-let remainingTime = 0;
+// ---> ESTADO DEL JUEGO (importado desde gameState) <---
+const {
+    getServerRunId,
+    getGameSessionId,
+    getQuestions,
+    getPlayers,
+    getPlayerTimeouts,
+    getGameState,
+    getCurrentQuestionIndex,
+    getFirstCorrectAnswer,
+    getTimerInterval,
+    getRemainingTime,
+    setGameSessionId,
+    setQuestions,
+    setGameState,
+    setCurrentQuestionIndex,
+    setFirstCorrectAnswer,
+    setTimerInterval,
+    setRemainingTime,
+    players,
+    playerTimeouts
+} = gameStateModule;
 
+// Constantes locales
+const SERVER_RUN_ID = getServerRunId();
+let GAME_SESSION_ID = getGameSessionId();
+let questions = getQuestions();
+let gameState = getGameState();
+let currentQuestionIndex = getCurrentQuestionIndex();
+let firstCorrectAnswer = getFirstCorrectAnswer();
+let timerInterval = getTimerInterval();
+let remainingTime = getRemainingTime();
+
+// Exportar players para playerController
 module.exports.players = players;
 
 // Cargar preguntas al inicio
-async function loadQuestions() {
+const loadQuestions = async() => {
     try {
         const questionsFromDB = await Question.findAll();
-        questions = questionsFromDB.map(q => q.toJSON());
+        const loadedQuestions = questionsFromDB.map(q => q.toJSON());
+        setQuestions(loadedQuestions);
+        questions = getQuestions(); // Actualiza variables locales
         console.log(`✅ ${questions.length} preguntas cargadas.`);
     } catch (error) {
         console.error("❌ Error al cargar preguntas:", error);
@@ -83,24 +76,28 @@ async function loadQuestions() {
 }
 
 // --- ENVIAR SIGUIENTE PREGUNTA ---
-const sendNextQuestion = async () =>{
+const sendNextQuestion = async () => {
     // Si es la primera pregunta, recaga desde BD
-    if (currentQuestionIndex === 0) {
+    if (getCurrentQuestionIndex() === 0) {
         await loadQuestions();
         console.log("🔄 Preguntas recargadas desde BD")
     }
 
     // Si se acabaron las preguntas
-    if (currentQuestionIndex >= questions.length){
-        gameState = 'GAME_OVER' 
-        io.to('game_room').emit('game_state', gameState)
-        io.to('game_room').emit('update_players', Object.values(players))
+    if (getCurrentQuestionIndex() >= getQuestions().length){
+        setGameState('GAME_OVER');
+        gameState = getGameState();
+        
+        io.to('game_room').emit('game_state', getGameState());  
+        io.to('game_room').emit('update_players', Object.values(players));
         return;
     }
 
     // Preparar nueva pregunta con estado bloqueado 
-    gameState = "QUESTION_LOCKED"
-    const fullQuestion = questions[currentQuestionIndex]
+    setGameState("QUESTION_LOCKED");
+    gameState = getGameState();
+    
+    const fullQuestion = getQuestions()[getCurrentQuestionIndex()];
 
     const questionToSend = {
         title: fullQuestion.title,
@@ -114,27 +111,29 @@ const sendNextQuestion = async () =>{
         players[id].hasAnswered = false;
     };
 
+    setFirstCorrectAnswer(null);
     firstCorrectAnswer = null;
-    // currentCorrectAnswer = null;
 
     // Enviar a todos
-    io.to('game_room').emit('game_state', gameState);
+    io.to('game_room').emit('game_state', getGameState());
 
     // Envia la pregunta solo al HOST
     const hostSocket = Object.keys(players).find(id => players[id].name === 'HOST');
     if (hostSocket) {
         io.to(hostSocket).emit('new_question', questionToSend);
     }
-    currentQuestionIndex++;
+    
+    setCurrentQuestionIndex(getCurrentQuestionIndex() + 1);
+    currentQuestionIndex = getCurrentQuestionIndex();
 }
 
 // --- SOCKETS ---
 io.on("connection", (socket) => {
     
-    // 1. Lo primero: Enviar ID del servidor para validar sesión
+    // Enviar ID del servidor para validar sesión
     socket.emit('server_check', { 
         serverId: SERVER_RUN_ID, 
-        gameId: GAME_SESSION_ID 
+        gameId: getGameSessionId() 
     });
 
     socket.on('join_game', async (data) => { 
@@ -235,7 +234,7 @@ io.on("connection", (socket) => {
             socket.join('game_room')
             
             // Actualizacion de estado al recién llegado y a todos
-            socket.emit('game_state', gameState)
+            socket.emit('game_state', getGameState());
             io.to('game_room').emit('update_players', Object.values(players))
 
             // Se envian las preguntas si el jugador ingresa tarde
@@ -306,18 +305,19 @@ io.on("connection", (socket) => {
     });
 
     socket.on('activate_answers', () => {
-        try{
+            try{
             console.log('🟢 Activando respuestas...');
             
-            if (gameState !== 'QUESTION_LOCKED') {
-                console.log('⚠️ Intento de activar respuestas en estado:', gameState);
+            if (getGameState() !== 'QUESTION_LOCKED') {
+                console.log('⚠️ Intento de activar respuestas en estado:', getGameState());
                 return;
             }
             
-            gameState = 'QUESTION_ACTIVE';
+            setGameState('QUESTION_ACTIVE');
+            gameState = getGameState();
             
             // Enviar la pregunta a TODOS los jugadores
-            const currentQ = questions[currentQuestionIndex - 1];
+            const currentQ = getQuestions()[getCurrentQuestionIndex() - 1];
             if (currentQ) {
                 const questionToSend = {
                     title: currentQ.title,
@@ -329,23 +329,28 @@ io.on("connection", (socket) => {
                 io.to('game_room').emit('new_question', questionToSend);
                 
                 // Iniciar timer
-                remainingTime = currentQ.timeLimit || 10;
+                setRemainingTime(currentQ.timeLimit || 10);
+                remainingTime = getRemainingTime();
                 
                 // Emitir tiempo inicial a todos
-                io.to('game_room').emit('timer_update', { remainingTime });
+                io.to('game_room').emit('timer_update', { remainingTime: getRemainingTime() });
                 
                 // Iniciar cuenta regresiva
-                if (timerInterval) clearInterval(timerInterval);
+                if (getTimerInterval()) {
+                    clearInterval(getTimerInterval());
+                }
                 
-                timerInterval = setInterval(() => {
-                    remainingTime--;
+                const interval = setInterval(() => {
+                    setRemainingTime(getRemainingTime() - 1);
+                    remainingTime = getRemainingTime();
                     
                     // Emitir actualización a todos
-                    io.to('game_room').emit('timer_update', { remainingTime });
+                    io.to('game_room').emit('timer_update', { remainingTime: getRemainingTime() });
                     
                     // Si llega a 0
-                    if (remainingTime <= 0) {
-                        clearInterval(timerInterval);
+                    if (getRemainingTime() <= 0) {
+                        clearInterval(interval);
+                        setTimerInterval(null);
                         timerInterval = null;
                         
                         console.log('⏰ Tiempo agotado!');
@@ -361,12 +366,15 @@ io.on("connection", (socket) => {
                         io.to('game_room').emit('timer_finished');
                     }
                 }, 1000);
+                
+                setTimerInterval(interval);
+                timerInterval = interval;
             }
             
             // Notificar cambio de estado
-            io.to('game_room').emit('game_state', gameState);
+            io.to('game_room').emit('game_state', getGameState())
             
-            console.log(`✅ Respuestas activadas con timer de ${remainingTime}s`);
+            console.log(`✅ Respuestas activadas con timer de ${getRemainingTime()}s`);
         } catch (error){
             console.error('❌ Error en activate_answers:', error.message);
             io.to('game_room').emit('error', { 
@@ -377,40 +385,40 @@ io.on("connection", (socket) => {
 
     socket.on('show_answer', () => {
         try{
-            console.log('📺 Mostrando respuesta correcta...');
+        console.log('📺 Mostrando respuesta correcta...');
 
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-                console.log('⏰ Timer cancelado al mostrar respuesta');
+        if (getTimerInterval()) {
+            clearInterval(getTimerInterval());
+            setTimerInterval(null);
+            timerInterval = null;
+            console.log('⏰ Timer cancelado al mostrar respuesta');
+        }
+        
+        if (getGameState() !== 'QUESTION_ACTIVE') {
+            console.log('⚠️ Intento de mostrar respuesta en estado:', getGameState());
+            return;
+        }
+        
+        setGameState('SHOW_ANSWER');
+        gameState = getGameState();
+        
+        // Obtener la pregunta actual
+        const currentQ = getQuestions()[getCurrentQuestionIndex() - 1];
+        if (currentQ) {
+            // Enviar la respuesta correcta al HOST
+            const hostSocket = Object.keys(players).find(id => players[id].name === 'HOST');
+            if (hostSocket) {
+                io.to(hostSocket).emit('show_correct_answer', {
+                    correctIndex: currentQ.correctIndex,
+                    correctOption: currentQ.options[currentQ.correctIndex]
+                });
             }
-            
-            if (gameState !== 'QUESTION_ACTIVE') {
-                console.log('⚠️ Intento de mostrar respuesta en estado:', gameState);
-                return;
-            }
-            
-            gameState = 'SHOW_ANSWER';
-            
-            // Obtener la pregunta actual
-            const currentQ = questions[currentQuestionIndex - 1];
-            if (currentQ) {
-                // currentCorrectAnswer = currentQ.correctIndex;
-                
-                // Enviar la respuesta correcta al HOST
-                const hostSocket = Object.keys(players).find(id => players[id].name === 'HOST');
-                if (hostSocket) {
-                    io.to(hostSocket).emit('show_correct_answer', {
-                        correctIndex: currentQ.correctIndex,
-                        correctOption: currentQ.options[currentQ.correctIndex]
-                    });
-                }
-            }
-            
-            // Notificar cambio de estado
-            io.to('game_room').emit('game_state', gameState);
-            
-            console.log('✅ Respuesta correcta mostrada');
+        }
+        
+        // Notificar cambio de estado
+        io.to('game_room').emit('game_state', getGameState());
+        
+        console.log('✅ Respuesta correcta mostrada');
         } catch (error){
             console.error('❌ Error en show_answer:', error.message);
             io.to('game_room').emit('error', { 
@@ -421,56 +429,64 @@ io.on("connection", (socket) => {
 
     socket.on('reset_game', async (data) => { 
         try{
-            const cleanPlayers = data?.cleanPlayers || false;
-            
-            console.log(`🧹 Reiniciando juego - Limpiar jugadores: ${cleanPlayers}`);
-            
-            GAME_SESSION_ID = Date.now();
+        const cleanPlayers = data?.cleanPlayers || false;
+        
+        console.log(`🧹 Reiniciando juego - Limpiar jugadores: ${cleanPlayers}`);
+        
+        setGameSessionId(Date.now());
+        GAME_SESSION_ID = getGameSessionId();
 
-            // Limpiar todos los timeouts pendientes
-            for (const key in playerTimeouts){
-                clearTimeout(playerTimeouts[key]);
-                delete playerTimeouts[key];
-            }
+        // Limpiar todos los timeouts pendientes
+        for (const key in playerTimeouts){
+            clearTimeout(playerTimeouts[key]);
+            delete playerTimeouts[key];
+        }
 
-            if (cleanPlayers) {
-                // Borrar todos los jugadores de BD
-                await Player.destroy({ where: {} });
-                console.log('🧹 Jugadores eliminados de BD');
-            } else {
-                // Solo marcar como desconectados
-                await Player.update(
-                    { isConnected: false },
-                    { where: {} }
-                );
-                console.log('🔄 Jugadores mantenidos en BD (marcados como desconectados)');
-            }
+        if (cleanPlayers) {
+            // Borrar todos los jugadores de BD
+            await Player.destroy({ where: {} });
+            console.log('🧹 Jugadores eliminados de BD');
+        } else {
+            // Solo marcar como desconectados
+            await Player.update(
+                { isConnected: false },
+                { where: {} }
+            );
+            console.log('🔄 Jugadores mantenidos en BD (marcados como desconectados)');
+        }
 
-            // Vaciamos players de memoria
-            for (const key in players) {
-                delete players[key];
-            }
+        // Vaciamos players de memoria
+        for (const key in players) {
+            delete players[key];
+        }
 
-            // Reiniciamos variables
-            gameState = "LOBBY";
-            currentQuestionIndex = 0;
-            firstCorrectAnswer = null;
-            // currentCorrectAnswer = null;
+        // Reiniciamos variables
+        setGameState("LOBBY");
+        gameState = getGameState();
+        
+        setCurrentQuestionIndex(0);
+        currentQuestionIndex = getCurrentQuestionIndex();
+        
+        setFirstCorrectAnswer(null);
+        firstCorrectAnswer = null;
 
-            // Limpiar timer
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
-            remainingTime = 0;
+        // Limpiar timer
+        if (getTimerInterval()) {
+            clearInterval(getTimerInterval());
+            setTimerInterval(null);
+            timerInterval = null;
+        }
+        
+        setRemainingTime(0);
+        remainingTime = getRemainingTime();
 
-            await loadQuestions();
-            console.log("🔄 Preguntas recargadas");
+        await loadQuestions();
+        console.log("🔄 Preguntas recargadas");
 
-            // Avisamos a todos
-            io.emit('game_state', gameState);
-            io.emit('update_players', []); 
-            io.emit('force_refresh'); 
+        // Avisamos a todos
+        io.emit('game_state', getGameState());
+        io.emit('update_players', []); 
+        io.emit('force_refresh'); 
 
         } catch (error){
             console.error('❌ Error en reset_game:', error.message);
@@ -494,8 +510,8 @@ io.on("connection", (socket) => {
                 return;
             }  
 
-            if (gameState !== 'QUESTION_ACTIVE') {
-                console.log(`⚠️ ${player.name} intentó responder pero el estado es: ${gameState}`);
+            if (getGameState() !== 'QUESTION_ACTIVE') {
+                console.log(`⚠️ ${player.name} intentó responder pero el estado es: ${getGameState()}`);
                 socket.emit('error', { 
                     message: 'Las respuestas aún no están activadas'
                 });
@@ -508,7 +524,7 @@ io.on("connection", (socket) => {
             }
 
             player.hasAnswered = true;
-            const questionInPlay = questions[currentQuestionIndex - 1]; 
+            const questionInPlay = getQuestions()[getCurrentQuestionIndex() - 1]; 
 
             if(!questionInPlay){
                 throw new Error('No hay pregunta activa');
@@ -519,8 +535,8 @@ io.on("connection", (socket) => {
 
             // Si responde correcto primero
             if (isCorrect) {
-
-                if (firstCorrectAnswer === null) {
+                if (getFirstCorrectAnswer() === null) {
+                    setFirstCorrectAnswer(socket.id);
                     firstCorrectAnswer = socket.id;
                     player.score += 100;
                     console.log(`🥇 ${player.name} respondió primero: +100 puntos`);
@@ -540,7 +556,7 @@ io.on("connection", (socket) => {
 
             const result = { 
                 correct: isCorrect, 
-                wasFirst: isCorrect && firstCorrectAnswer === socket.id
+                wasFirst: isCorrect && getFirstCorrectAnswer() === socket.id
             };
 
             if(isCorrect){
@@ -574,9 +590,11 @@ io.on("connection", (socket) => {
                 console.log("✅ Todos respondieron. Cancelando timer...");
                 
                 // Cancelar el timer
-                if (timerInterval) {
-                    clearInterval(timerInterval);
+                if (getTimerInterval()) {
+                    clearInterval(getTimerInterval());
+                    setTimerInterval(null);
                     timerInterval = null;
+                    setRemainingTime(0);
                     remainingTime = 0;
                 }
                 
@@ -675,7 +693,7 @@ app.use((req, res) => {
 async function startServer() {
     try {
         console.log("⏳ Iniciando sincronización de base de datos...");
-        await sincro(); 
+        await dbSynchronization(); 
         
         console.log("⏳ Cargando preguntas...");
         await loadQuestions();
