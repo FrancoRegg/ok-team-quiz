@@ -1,26 +1,32 @@
+// --- CORE DE NODE Y EXTERNOS ---
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const http = require('http');
+
+// --- CONFIGURACION --- 
 const { dbSynchronization } = require('./config/sync');
 const { configureSocket } = require('./config/socket');
 const { configureCORS } = require('./config/cors');
-const gameStateModule = require('./utils/gameState');
 
+// --- RUTAS ---
 const questionRoutes = require('./routes/questionRoutes');
 const playerRoutes = require('./routes/playerRoutes');
 const authRoutes = require('./routes/authRoutes');
 
+// --- CONTROLLERS Y MIDDLEWARE ---
 const playerController = require('./controllers/player.controller');
 const { authenticateAdmin } = require('./middleware/auth');
 
-// Handlers de socket
+// --- HANDLERS DE SOCKETS
 const { registerPlayerHandlers } = require('./sockets/playerHandlers');
 const { registerGameHandlers } = require('./sockets/gameHandlers');
 const { registerAnswerHandlers } = require('./sockets/answerHandlers');
 const { registerAdminHandlers } = require('./sockets/adminHandlers');
-// Logica de juego
-const { loadQuestions, sendNextQuestion } = require('./utils/gameLogics')
+
+// --- UTILIDADES ---
+const gameStateModule = require('./utils/gameState');
+const { loadQuestions, sendNextQuestion } = require('./utils/gameLogics');
  
 const port = process.env.PORT;
 const app = express() // Inicializar express
