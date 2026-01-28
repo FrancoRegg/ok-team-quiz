@@ -1,0 +1,13 @@
+.welcome-title {
+    color: var(--primary-blue);
+}
+
+.status-connected {
+    color: green;
+    font-weight: bold;
+}
+
+.status-disconnected {
+    color: red;
+    font-weight: bold;
+}
