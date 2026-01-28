@@ -10,9 +10,9 @@ function AdminGuard({ children }){
 
     const handleLogin = async() => {
         try{
-            const API_URL = import.meta.env.VITE_API_URL || '';
+            const API_URL = import.meta.env.VITE_SOCKET_URL || '';
 
-            const resp = await fetch(`${API_URL}/api/login`, {
+            const resp = await fetch(`${API_URL}/api/auth/login`, {
                 method: "POST",
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: password })

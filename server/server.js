@@ -5,13 +5,14 @@ const http = require('http');
 const { dbSynchronization } = require('./config/sync');
 const { configureSocket } = require('./config/socket');
 const { configureCORS } = require('./config/cors');
-const gameStateModule = require('./utils/gameState')
-const Question = require('./models/Questions');
-const Player = require('./models/Players');
+const gameStateModule = require('./utils/gameState');
+
 const questionRoutes = require('./routes/questionRoutes');
 const playerRoutes = require('./routes/playerRoutes');
+const authRoutes = require('./routes/authRoutes');
+
 const playerController = require('./controllers/player.controller');
-const jwt = require('jsonwebtoken');
+const { authenticateAdmin } = require('./middleware/auth');
 
 // Handlers de socket
 const { registerPlayerHandlers } = require('./sockets/playerHandlers');
@@ -48,90 +49,25 @@ const SERVER_RUN_ID = getServerRunId();
 module.exports.players = players;
 
 // --- SOCKETS ---
+console.log('🔧 Registrando listener de connection...');
 io.on("connection", (socket) => {
-
+    console.log('🔌 CONEXIÓN DETECTADA en server.js - Socket ID:', socket.id);
     socket.emit('server_check', { 
         serverId: SERVER_RUN_ID, 
         gameId: getGameSessionId() 
     })
-
+    console.log('✅ server_check enviado');
     // --- Handlers ---
+    console.log('🔧 Registrando handlers para socket:', socket.id);
     registerPlayerHandlers(io, socket);
     registerGameHandlers(io, socket, sendNextQuestion);
     registerAnswerHandlers(io, socket);
     registerAdminHandlers(io, socket, loadQuestions);
-    
+    console.log('✅ Handlers registrados para socket:', socket.id);
 });
+    console.log('✅ Listener de connection registrado');
 
-// ---------------------------------------------------------------------
-
-const authenticateAdmin = (req, res, next) => {
-    console.log('🔍 authenticateAdmin - Validando request a:', req.path);
-    
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader) {
-        console.log('⛔ Request sin token de autorización');
-        return res.status(401).json({ 
-            error: 'No autorizado - Token requerido' 
-        });
-    }
-    
-    const token = authHeader.split(' ')[1];
-    
-    if (!token) {
-        console.log('⛔ Token vacío');
-        return res.status(401).json({ 
-            error: 'No autorizado - Token vacío' 
-        });
-    }
-    
-    // Verificar JWT
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
-        console.log('✅ JWT válido:', decoded);
-        
-        // Opcional: agregar info del token al request
-        req.user = decoded;
-        
-        next();
-    } catch (error) {
-        console.log('⛔ JWT inválido o expirado:', error.message);
-        return res.status(403).json({ 
-            error: 'No autorizado - Token inválido o expirado',
-            details: error.message
-        });
-    }
-};
-
-app.post('/api/login', (req, res) => {
-    const { password } = req.body; 
-
-    if (password === process.env.ADMIN_PASSWORD) {
-
-        // Genera JWT que expira en 24 horas
-        const token = jwt.sign(
-            { role: 'admin', timestamp: Date.now() },
-            process.env.JWT_SECRET || 'fallback-secret-key',
-            { expiresIn: '24h' }
-        );
-
-        console.log('✅ Admin autenticado, token generado');
-
-        return res.json({ 
-            success: true, 
-            message: "Acceso concedido",
-            token: token
-        });
-    } else {
-        return res.status(401).json({ 
-            success: false, 
-            message: "Contraseña incorrecta" 
-        });
-    }
-});
-
-
+app.use('/api/auth', authRoutes)
 app.use('/api/questions', authenticateAdmin ,questionRoutes)
 app.use('/api/players', authenticateAdmin, playerRoutes)
 
