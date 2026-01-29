@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import io from 'socket.io-client';
 
-// Variable GLOBAL para mantener UNA SOLA instancia del socket
 let socketInstance = null; 
 
 export const useSocket = () => {
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
-        // Si no existe el socket, crearlo
         if (!socketInstance) {
             const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
             
@@ -22,7 +20,6 @@ export const useSocket = () => {
             });
         }
 
-        // Listeners para el estado de conexión
         const onConnect = () => {
             console.log('✅ Socket conectado:', socketInstance.id);
             setIsConnected(true);
@@ -33,14 +30,11 @@ export const useSocket = () => {
             setIsConnected(false);
         };
 
-        // Registrar listeners
         socketInstance.on('connect', onConnect);
         socketInstance.on('disconnect', onDisconnect);
 
-        // Establecer estado inicial
         setIsConnected(socketInstance.connected);
 
-        // Remover listeners (pero NO desconectar el socket)
         return () => {
             socketInstance.off('connect', onConnect);
             socketInstance.off('disconnect', onDisconnect);

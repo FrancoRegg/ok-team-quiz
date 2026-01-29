@@ -49,6 +49,13 @@ function App() {
       alert("Escribe un nombre"); 
       return; 
     }
+
+    // Validar que el socket existe y está conectado
+    if (!socket || !isConnected) {
+      alert("Conectando al servidor. Intenta de nuevo en un momento...");
+      console.error('❌ Socket no conectado al intentar unirse');
+      return;
+    }
     
     const currentGameId = localStorage.getItem("game_session_id");
     console.log("🎟️ Intentando unirse con:");
@@ -75,12 +82,19 @@ function App() {
   }
 
   const submitAnswer = (i) => {
+    // Validar socket antes de emitir
+    if (!socket || !isConnected) {
+      alert('Sin conexión. Tu respuesta no se envió.');
+      return;
+    }
+
     socket.emit('submit_answer', { answer: i });
     setHasAnswered(true);
     setMyAnswer(i);
   }
 
   // Renderizado condicional
+
   if (gameState === 'GAME_OVER') {
     return <GameOverScreen score={scoreGroup} onExitGame={exitGame} />;
   }
@@ -125,6 +139,7 @@ function App() {
     <div className="mobile-container">
       <div className="pulse-text">Cargando...</div>
     </div>
+
   );
 }
 
