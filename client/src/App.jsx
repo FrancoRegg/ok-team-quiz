@@ -1,5 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSocket } from './hooks/useSocket';
+import GameOverScreen from './components/screens/GameOverScreen';
+import LobbyScreen from './components/screens/LobbyScreen';
+import LoginScreen from './components/screens/LoginScreen';
+import QuestionScreen from './components/screens/QuestionScreen';
+import WaitingScreen from './components/screens/WaitingScreen';
 import './styles/App.css';
 
 function App() {
@@ -62,7 +67,7 @@ function App() {
       const storedGameId = localStorage.getItem("game_session_id");
       const storedName = localStorage.getItem("savedGroupName");
 
-      // CASO 1: Primera vez que se conecta (no hay nada guardado)
+      // Primera vez que se conecta
       if (!storedServerId || !storedGameId) {
         console.log("📝 Primera conexión, guardando IDs...");
         localStorage.setItem("server_run_id", incomingServerId);
@@ -70,13 +75,12 @@ function App() {
         return;
       }
 
-      // CASO 2: El servidor se reinició (cambió serverId)
+      // El servidor se reinició
       if (storedServerId !== incomingServerId) {
         console.log("🔄 Servidor reiniciado, actualizando IDs...");
         localStorage.setItem("server_run_id", incomingServerId);
         localStorage.setItem("game_session_id", incomingGameId);
         
-        // Si había nombre guardado, limpiarlo (nueva sesión)
         if (storedName) {
             console.log("🧹 Limpiando nombre guardado (servidor reiniciado)");
             localStorage.removeItem("savedGroupName");
@@ -87,7 +91,7 @@ function App() {
         return;
       }
 
-      // CASO 3: La partida se reseteó (gameId cambió, pero serverId no) 
+      // La partida se reseteó
       if (storedGameId !== incomingGameId) {
           console.log("🎮 Partida reseteada (gameId cambió)");
           console.log("   - Guardado:", storedGameId);
@@ -95,7 +99,6 @@ function App() {
           
           localStorage.setItem("game_session_id", incomingGameId);
           
-          // Si había nombre guardado, limpiarlo
           if (storedName) {
               console.log("🧹 Limpiando nombre guardado (partida reseteada)");
               localStorage.removeItem("savedGroupName");
@@ -106,7 +109,7 @@ function App() {
           return;
       }
 
-      // CASO 4: Reconexión normal (mismo serverId y gameId)
+      // Reconexión normal
       if (storedName) {
           console.log("🔄 Reconectando con gameId guardado:", storedGameId);
           socket.emit('join_game', { 
@@ -169,7 +172,7 @@ function App() {
       console.log('⛔ Sesión expirada:', data.message);
       
       if (data.currentGameId) {
-      localStorage.setItem("game_session_id", String(data.currentGameId));
+        localStorage.setItem("game_session_id", String(data.currentGameId));
       }
       
       localStorage.removeItem("savedGroupName");
@@ -237,170 +240,55 @@ function App() {
   }
 
   function submitAnswer(i){
-    if (navigator.vibrate) navigator.vibrate(50);
     socket.emit('submit_answer', { answer: i });
     setHasAnswered(true);
     setMyAnswer(i);
   } 
 
-  const getButtonClass = (index) => {
-    if (timer === 0) return 'disabled';
-
-    if (answerStatus === null && !hasAnswered) return 'active';
-
-    if (answerStatus === null && hasAnswered) {
-      return index === myAnswer ? 'active' : 'disabled'
-    };
-
-    if (answerStatus === 'CORRECT' && index === correctAnswer) {
-      return 'correct';
-    }
-
-    if (answerStatus === 'INCORRECT' && index === myAnswer) {
-      return 'incorrect';
-    }
-    return 'disable';
-  }
-
+  // --- RENDERIZADO CONDICIONAL ---
+  
   if(gameState === 'GAME_OVER'){
-    return(
-      <div className="mobile-container">
-        <div className="mobile-card">
-          <h1>🏁 Fin del Juego</h1>
-          <p>Mira la pantalla grande para ver el podio.</p>
-          <div className="score-badge" style={{fontSize: '2rem', margin: '20px auto'}}>
-            {scoreGroup} pts
-          </div>
-          <button className="btn-login" onClick={exitGame} style={{background: '#666'}}>
-            Salir
-          </button>
-        </div>
-      </div>
-    )
+    return <GameOverScreen score={scoreGroup} onExitGame={exitGame} />;
   }
 
   if (!inside) {
     return (
-      <div className="mobile-container">
-         <div className="mobile-card">
-            <h1 style={{color: 'var(--primary-blue)'}}>¡Bienvenido! 👋</h1>
-            <p>Ingresa el nombre de tu equipo</p>
-            <input 
-              className="mobile-input"
-              placeholder="Ej: Los Invencibles"
-              value={nameGroup} 
-              onChange={(e) => setNameGroup(e.target.value)} 
-            />
-            <button className="btn-login" onClick={enterGame}> 
-              ¡A Jugar! 🚀 
-            </button>
-            <div className="status-footer">
-               Estado: <span style={{ color: isConnected ? 'green' : 'red', fontWeight: 'bold' }}>
-                  {isConnected ? 'Conectado' : 'Desconectado'}
-               </span>
-            </div>
-         </div>
-      </div>
+      <LoginScreen 
+        nameGroup={nameGroup}
+        setNameGroup={setNameGroup}
+        onEnterGame={enterGame}
+        isConnected={isConnected}
+      />
     );
   }
 
-  // Esperando Activacion de Preguntas
   if(gameState === 'QUESTION_LOCKED'){
-    return (
-      <div className="mobile-container">
-        <div className="app-header">
-          <span className="player-info">👤 {nameGroup}</span>
-          <span className="score-badge">{scoreGroup} pts</span>
-        </div>
-        <div className="header-spacer"></div>
-        
-        <div className="waiting-state">
-          <div className="pulse-text">⏳</div>
-          <h2>Esperando pregunta...</h2>
-          <p className="waiting-message">
-            El anfitrión está leyendo la pregunta en la pantalla principal
-          </p>
-        </div>
-      </div>
-    );
+    return <WaitingScreen playerName={nameGroup} score={scoreGroup} />;
   }
 
-  // Estado LOBBY
   if(gameState === 'LOBBY'){
-    return (
-      <div className="mobile-container">
-        <div className="app-header">
-          <span className="player-info">👤 {nameGroup}</span>
-          <span className="score-badge">{scoreGroup} pts</span>
-        </div>
-        <div className="header-spacer"></div>
-        
-        <div style={{marginTop: '50px'}}>
-          <div className="pulse-text">⏳</div>
-          <h2>Esperando al Host...</h2>
-          <p>¡Prepárate, va a empezar!</p>
-          <div className="status-footer">Mira la pantalla grande</div>
-        </div>
-      </div>
-    );
+    return <LobbyScreen playerName={nameGroup} score={scoreGroup} />;
   }
 
-  // Preguntas Activadas
   if(gameState === 'QUESTION_ACTIVE'){
     return (
-      <div className="mobile-container">
-        <div className="app-header">
-          <span className="player-info">👤 {nameGroup}</span>
-          <span className="score-badge">{scoreGroup} pts</span>
-        </div>
-        <div className="header-spacer"></div>
-
-        <div className="question-container">
-
-          {timer !== null && (
-            <div className="mobile-timer">
-              <span className="mobile-timer-icon">⏱️</span>
-              <span className="mobile-timer-number">{timer}</span>
-            </div>
-          )}
-
-          {optionsAnswers?.options ? (
-            <div>
-              <h3 className="question-prompt">Elige una opción:</h3>
-              <div className="game-grid">
-                {optionsAnswers.options.map((answer, i) => (
-                  <button
-                    key={i} 
-                    disabled={timer === 0 || (hasAnswered && answerStatus === null)}
-                    onClick={() => submitAnswer(i)}
-                    className={`game-btn ${getButtonClass(i)}`}
-                  >
-                    {answer}
-                  </button>
-                ))}
-              </div>
-              {hasAnswered && answerStatus === null && (
-                <p className="pulse-text waiting-result">
-                  Respuesta enviada... Esperando resultado 🤞
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="pulse-text">Cargando preguntas... 🔄</div>
-          )}
-        </div>
-      </div>
+      <QuestionScreen 
+        playerName={nameGroup}
+        score={scoreGroup}
+        timer={timer}
+        optionsAnswers={optionsAnswers}
+        hasAnswered={hasAnswered}
+        answerStatus={answerStatus}
+        myAnswer={myAnswer}
+        correctAnswer={correctAnswer}
+        onSubmitAnswer={submitAnswer}
+      />
     );
   }
 
-  // Fallback (por si acaso)
+  // Fallback
   return (
     <div className="mobile-container">
-      <div className="app-header">
-        <span className="player-info">👤 {nameGroup}</span>
-        <span className="score-badge">{scoreGroup} pts</span>
-      </div>
-      <div className="header-spacer"></div>
       <div className="pulse-text">Cargando...</div>
     </div>
   );

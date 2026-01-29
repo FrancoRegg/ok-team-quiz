@@ -1,0 +1,19 @@
+/* --- Estado de espera (QUESTION_LOCKED) --- */
+.waiting-state {
+    text-align: center;
+    padding: 60px 20px;
+    margin-top: 50px;
+}
+
+.waiting-state h2 {
+    margin-top: 30px;
+    font-size: 1.8rem;
+    color: var(--text-primary);
+}
+
+.waiting-message {
+    color: #666;
+    font-size: 1.1rem;
+    margin-top: 15px;
+    line-height: 1.5;
+}

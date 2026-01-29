@@ -1,0 +1,19 @@
+.game-over-score {
+    font-size: 2rem;
+    margin: 20px auto;
+}
+
+.btn-exit {
+    background: #666;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-exit:hover {
+    background: #555;
+}
