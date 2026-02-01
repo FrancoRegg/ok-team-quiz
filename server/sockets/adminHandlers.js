@@ -46,7 +46,9 @@ const registerAdminHandlers = (io, socket, loadQuestions) => {
 
         // Vaciamos players de memoria
         for (const key in players) {
-            delete players[key];
+            if (players[key].name !== 'HOST'){
+                delete players[key];
+            }
         }
 
         // Reiniciamos variables

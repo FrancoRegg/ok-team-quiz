@@ -26,14 +26,16 @@ const loadQuestions = async() => {
 
 // --- ENVIAR SIGUIENTE PREGUNTA ---
 const sendNextQuestion = async (io) => {
+    
     // Si es la primera pregunta, recaga desde BD
     if (getCurrentQuestionIndex() === 0) {
         await loadQuestions();
-        console.log("🔄 Preguntas recargadas desde BD")
+        console.log("🔄 Preguntas recargadas desde BD");
     }
 
     // Si se acabaron las preguntas
     if (getCurrentQuestionIndex() >= getQuestions().length){
+        console.log('⚠️ No hay más preguntas. GAME_OVER');
         setGameState('GAME_OVER');
         
         io.to('game_room').emit('game_state', getGameState());  
@@ -50,7 +52,7 @@ const sendNextQuestion = async (io) => {
         title: fullQuestion.title,
         options: fullQuestion.options,
         type: fullQuestion.type,      
-        mediaUrl: fullQuestion.mediaUrl 
+        mediaUrl: fullQuestion.mediaUrl
     }
 
     // Resetear estado de respuesta de los jugadores
@@ -67,10 +69,13 @@ const sendNextQuestion = async (io) => {
     const hostSocket = Object.keys(players).find(id => players[id].name === 'HOST');
     if (hostSocket) {
         io.to(hostSocket).emit('new_question', questionToSend);
+        console.log('   ✅ Pregunta enviada al HOST');
+    } else {
+        console.log('   ❌ HOST no encontrado');
     }
     
     setCurrentQuestionIndex(getCurrentQuestionIndex() + 1);
-}
+};
 
 module.exports = {
     loadQuestions, 
