@@ -65,7 +65,7 @@ io.on("connection", (socket) => {
     })
     console.log('✅ server_check enviado');
     
-    // ✅ AGREGAR: Handler para re-enviar server_check si se pierde
+    // Handler para re-enviar server_check si se pierde
     socket.on('request_server_check', () => {
         console.log('🔄 Cliente pidió server_check manualmente');
         socket.emit('server_check', { 

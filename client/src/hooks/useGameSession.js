@@ -115,8 +115,7 @@ export const useGameSession = (socket, setInside, setNameGroup) => {
             setNameGroup("");
             window.location.reload();
         };
-
-        // ✅ NUEVO: Fallback si server_check no llega
+        
         const checkServerCheckReceived = setTimeout(() => {
             if (!serverCheckReceivedRef.current && socket.connected) {
                 console.log('⚠️ server_check no recibido después de 2s, pidiendo manualmente...');
