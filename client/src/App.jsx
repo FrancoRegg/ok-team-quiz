@@ -10,6 +10,7 @@ import LobbyScreen from './components/screens/LobbyScreen';
 import LoginScreen from './components/screens/LoginScreen';
 import QuestionScreen from './components/screens/QuestionScreen';
 import WaitingScreen from './components/screens/WaitingScreen';
+import ReconnectingScreen from './components/screens/ReconnectingScreen';
 
 import './styles/App.css';
 
@@ -28,9 +29,10 @@ function App() {
   const [correctAnswer, setCorrectAnswer] = useState(null);
   const [scoreGroup, setScoreGroup] = useState(0);
   const [timer, setTimer] = useState(null);
+  const [isValidating, setIsValidating] = useState(true); 
 
   // Hooks personalizados
-  useGameSession(socket, setInside, setNameGroup);
+  useGameSession(socket, setInside, setNameGroup, setIsValidating);
   
   useGameSocket(socket, {
     setGameState,
@@ -94,6 +96,9 @@ function App() {
   }
 
   // Renderizado condicional
+  if (isValidating) {
+    return <ReconnectingScreen />;
+  }
 
   if (gameState === 'GAME_OVER') {
     return <GameOverScreen score={scoreGroup} onExitGame={exitGame} />;

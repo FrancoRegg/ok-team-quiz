@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 
 // Validación y sincronización de sesión
 
-export const useGameSession = (socket, setInside, setNameGroup) => {
+export const useGameSession = (socket, setInside, setNameGroup, setIsValidating) => {
     
     const serverCheckReceivedRef = useRef(false);
     
@@ -28,6 +28,7 @@ export const useGameSession = (socket, setInside, setNameGroup) => {
                 console.log("📝 Primera conexión, guardando IDs...");
                 localStorage.setItem("server_run_id", incomingServerId);
                 localStorage.setItem("game_session_id", incomingGameId);
+                setIsValidating(false);
                 return;
             }
 
@@ -41,6 +42,7 @@ export const useGameSession = (socket, setInside, setNameGroup) => {
                 localStorage.removeItem("savedGroupName");
                 setInside(false);
                 setNameGroup("");
+                setIsValidating(false);
                 
                 if (storedName) {
                     alert("El servidor se reinició. Por favor, vuelve a unirte.");
@@ -64,6 +66,7 @@ export const useGameSession = (socket, setInside, setNameGroup) => {
                     });
                     
                     setInside(true);
+                    setIsValidating(false);
                 }
                 return;
             }
@@ -75,6 +78,7 @@ export const useGameSession = (socket, setInside, setNameGroup) => {
                     localStorage.removeItem("savedGroupName");
                     setInside(false);
                     setNameGroup("");
+                    setIsValidating(false);
                     alert("La partida terminó. Espera al próximo juego o únete con un nuevo nombre.");
                     return;
                 }
@@ -88,9 +92,11 @@ export const useGameSession = (socket, setInside, setNameGroup) => {
                 });
                 
                 setInside(true);
+                setIsValidating(false);
             } else {
                 console.log("ℹ️ No hay nombre guardado. Mostrar login.");
                 setInside(false);
+                setIsValidating(false);
             }
         };
 
@@ -133,5 +139,5 @@ export const useGameSession = (socket, setInside, setNameGroup) => {
             socket.off('session_expired', handleSessionExpired);
             socket.off('force_refresh', handleForceRefresh);
         };
-    }, [socket, setInside, setNameGroup]);
+    }, [socket, setInside, setNameGroup, setIsValidating]);
 }
