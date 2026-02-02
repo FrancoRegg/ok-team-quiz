@@ -18,8 +18,8 @@ function App() {
   const { requestWakeLock, releaseWakeLock } = useWakeLock();
 
   // Estados
-  const [inside, setInside] = useState(() => !!localStorage.getItem("savedGroupName"));
-  const [nameGroup, setNameGroup] = useState(() => localStorage.getItem("savedGroupName") || "");
+  const [inside, setInside] = useState(false);
+  const [nameGroup, setNameGroup] = useState("");
   const [gameState, setGameState] = useState("LOBBY");
   const [optionsAnswers, setOptionsAnswers] = useState(null);
   const [hasAnswered, setHasAnswered] = useState(false);

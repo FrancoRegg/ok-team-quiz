@@ -60,9 +60,22 @@ io.on("connection", (socket) => {
     console.log('🔌 CONEXIÓN DETECTADA en server.js - Socket ID:', socket.id);
     socket.emit('server_check', { 
         serverId: SERVER_RUN_ID, 
-        gameId: getGameSessionId() 
+        gameId: getGameSessionId(),
+        gameState: gameStateModule.getGameState() 
     })
     console.log('✅ server_check enviado');
+    
+    // ✅ AGREGAR: Handler para re-enviar server_check si se pierde
+    socket.on('request_server_check', () => {
+        console.log('🔄 Cliente pidió server_check manualmente');
+        socket.emit('server_check', { 
+            serverId: SERVER_RUN_ID, 
+            gameId: getGameSessionId(),
+            gameState: gameStateModule.getGameState() 
+        });
+        console.log('✅ server_check re-enviado');
+    });
+    
     // --- Handlers ---
     console.log('🔧 Registrando handlers para socket:', socket.id);
     registerPlayerHandlers(io, socket);
@@ -71,6 +84,7 @@ io.on("connection", (socket) => {
     registerAdminHandlers(io, socket, loadQuestions);
     console.log('✅ Handlers registrados para socket:', socket.id);
 });
+
     console.log('✅ Listener de connection registrado');
 
 app.use('/api/auth', authRoutes)
