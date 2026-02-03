@@ -8,8 +8,8 @@ function configureCORS() {
     : [
         'http://localhost:5173',      // Vite en desarrollo
         'http://localhost:3000',      // Si frontend y backend en mismo puerto
-        'http://192.168.1.13:5173',   // Tu red local    
-        'http://192.168.1.13:3000'
+        'http://192.168.1.12:5173',   // Tu red local    
+        'http://192.168.1.12:3000'
       ];
 
     const corsOptions = {
