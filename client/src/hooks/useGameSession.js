@@ -80,6 +80,7 @@ export const useGameSession = (socket, setInside, setNameGroup, setIsValidating)
                     setNameGroup("");
                     setIsValidating(false);
                     alert("La partida terminó. Espera al próximo juego o únete con un nuevo nombre.");
+                    window.location.reload();
                     return;
                 }
 
