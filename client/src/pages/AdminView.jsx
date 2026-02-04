@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useSocket } from '../hooks/useSocket'
 import '../styles/Admin.css'
 
 const PlayerEditItem = ({ player, onEdit }) => {
@@ -62,6 +63,7 @@ function AdminView() {
     const [ players, setPlayers ] = useState([])
     const [ showPlayersModal, setShowPlayersModal ] = useState(false)
 
+    const { socket } = useSocket();
 
     const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -150,26 +152,25 @@ function AdminView() {
         }
     };
 
-    const handleCleanSeason = async () => {
+    const handleCleanSeason = () => {
         if (!window.confirm('⚠️ ¿Estás seguro? Esto borrará TODOS los jugadores y sus puntuaciones permanentemente.')) {
             return;
         }
 
-        try {
-            const response = await fetchWithAuth(`${API_URL}/api/players/clean-season`, {
-                method: 'DELETE'
-            });
-
-            if (response.ok) {
-                alert('✅ Temporada limpiada correctamente');
-                setPlayers([]);
-            } else {
-                alert('Error al limpiar temporada');
-            }
-        } catch (error) {
-            console.error('Error al limpiar temporada:', error);
-            alert('Error al limpiar temporada');
+        if (!socket) {
+            alert('⚠️ Socket no conectado. Recarga la página e intenta de nuevo.');
+            return;
         }
+
+        socket.emit('reset_game', { cleanPlayers: true });
+        
+        console.log('🧹 Emitiendo reset_game con cleanPlayers=true');
+        
+        setTimeout(() => {
+            setPlayers([]);
+            setShowPlayersModal(false);
+            alert('✅ Temporada limpiada correctamente');
+        }, 500);
     };
 
     useEffect(() => {

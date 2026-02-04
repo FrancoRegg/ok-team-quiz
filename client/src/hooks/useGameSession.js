@@ -66,8 +66,12 @@ export const useGameSession = (socket, setInside, setNameGroup, setIsValidating)
                     });
                     
                     setInside(true);
-                    setIsValidating(false);
+                } else {
+                    console.log("ℹ️ GameId cambió pero no hay nombre guardado. Mostrar login.");
+                    setInside(false);
                 }
+                
+                setIsValidating(false);  // ✅ MOVER FUERA del if
                 return;
             }
 
