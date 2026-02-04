@@ -61,13 +61,6 @@ const registerAdminHandlers = (io, socket, loadQuestions) => {
         console.log('✅ Jugadores mantenidos en memoria (estado reseteado)');
     }
 
-        // Vaciamos players de memoria
-        for (const key in players) {
-            if (players[key].name !== 'HOST'){
-                delete players[key];
-            }
-        }
-
         // Reiniciamos variables
         setGameState("LOBBY");
         
