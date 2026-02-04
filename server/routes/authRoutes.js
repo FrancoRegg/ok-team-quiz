@@ -2,6 +2,26 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
+
+// Rate Limiter
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 5, // 5 intentos
+    message: {
+        success: false,
+        message: 'Demasiados intentos de login. Por favor, espera 15 minutos e intenta de nuevo.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+        console.log('🚫 Rate limit alcanzado para IP:', req.ip);
+        res.status(429).json({
+            success: false,
+            message: 'Demasiados intentos de login. Espera 15 minutos.'
+        });
+    }
+});
 
 // Comparar strings de forma segura (prevenir timing attacks)
 const secureCompare = (a, b) => {
@@ -15,7 +35,8 @@ const secureCompare = (a, b) => {
     return crypto.timingSafeEqual(bufA, bufB);
 }
 
-router.post('/login', (req, res) => {
+// Aplicar rate limiter al endpoint de login
+router.post('/login', loginLimiter, (req, res) => {
     const { password } = req.body;
 
     if (!password) {
@@ -44,15 +65,12 @@ router.post('/login', (req, res) => {
             token: token
         });
     } else {
-        console.log('⛔ Intento de login con contraseña incorrecta');
+        console.log('⛔ Intento de login con contraseña incorrecta desde IP:', req.ip);
         
-        // Delay aleatorio para evitar timing attacks
-        setTimeout(() => {
-            res.status(401).json({ 
-                success: false, 
-                message: "Contraseña incorrecta" 
-            });
-        }, Math.random() * 100 + 100);  // 100-200ms
+        return res.status(401).json({ 
+            success: false, 
+            message: "Contraseña incorrecta" 
+        });
     }
 });
 

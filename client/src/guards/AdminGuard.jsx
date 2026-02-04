@@ -19,17 +19,27 @@ function AdminGuard({ children }){
             });
 
             const data = await resp.json();
+            
+            // Manejar respuesta según status
+            if (resp.status === 429) {
+                // Rate limit alcanzado
+                alert(`🚫 ${data.message || 'Demasiados intentos. Espera 15 minutos.'}`);
+                setPassword("");
+                return;
+            }
+            
             if (data.success && data.token){
                 localStorage.setItem("admin_token", data.token);
                 setIsAuthenticated(true);
                 console.log('✅ Token guardado');
-            }else if (data.success && !data.token){
+            } else if (data.success && !data.token){
                 alert("⚠️ Login exitoso pero no se recibió token");
-            }else{
-                alert("⛔ Contraseña incorrecta");
-                setPassword(""); // Limpiamos el campo si falla
+            } else {
+                // ✅ Mostrar mensaje del servidor (puede ser contraseña incorrecta u otro error)
+                alert(`⛔ ${data.message || 'Contraseña incorrecta'}`);
+                setPassword("");
             }
-        }catch(error){
+        } catch(error){
             console.error(error);
             alert("Error de conexión con el servidor");
         }
