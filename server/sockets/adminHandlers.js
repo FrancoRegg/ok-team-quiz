@@ -32,17 +32,34 @@ const registerAdminHandlers = (io, socket, loadQuestions) => {
         }
 
         if (cleanPlayers) {
-            // Borrar todos los jugadores de BD
-            await Player.destroy({ where: {} });
-            console.log('🧹 Jugadores eliminados de BD');
-        } else {
-            // Solo marcar como desconectados
-            await Player.update(
-                { isConnected: false },
-                { where: {} }
-            );
-            console.log('🔄 Jugadores mantenidos en BD (marcados como desconectados)');
+    // Borrar todos los jugadores de BD
+    await Player.destroy({ where: {} });
+    console.log('🧹 Jugadores eliminados de BD');
+    
+    // Vaciar players de memoria (EXCEPTO HOST)
+    for (const key in players) {
+        if (players[key].name !== 'HOST') {
+            delete players[key];
         }
+    }
+    console.log('🗑️ Jugadores eliminados de memoria');
+    } else {
+        // Solo marcar como desconectados en BD
+        await Player.update(
+            { isConnected: false },
+            { where: {} }
+        );
+        console.log('🔄 Jugadores mantenidos en BD (marcados como desconectados)');
+        
+        // Mantener jugadores en memoria, solo resetear estado
+        for (const key in players) {
+            if (players[key].name !== 'HOST') {
+                players[key].hasAnswered = false;
+                players[key].isConnected = true;
+            }
+        }
+        console.log('✅ Jugadores mantenidos en memoria (estado reseteado)');
+    }
 
         // Vaciamos players de memoria
         for (const key in players) {
@@ -72,7 +89,7 @@ const registerAdminHandlers = (io, socket, loadQuestions) => {
         // Avisamos a todos
         io.emit('game_state', getGameState());
         io.emit('update_players', []); 
-        
+
         if (cleanPlayers) {
             console.log('📢 Emitiendo force_refresh (limpiar todo)');
             io.emit('force_refresh');
