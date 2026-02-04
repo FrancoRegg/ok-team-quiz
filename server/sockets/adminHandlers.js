@@ -81,7 +81,13 @@ const registerAdminHandlers = (io, socket, loadQuestions) => {
 
         // Avisamos a todos
         io.emit('game_state', getGameState());
-        io.emit('update_players', []); 
+
+        // Enviar lista correcta de jugadores según si se limpió o no
+        if (cleanPlayers) {
+            io.emit('update_players', []);
+        } else {
+            io.emit('update_players', Object.values(players));
+        } 
 
         if (cleanPlayers) {
             console.log('📢 Emitiendo force_refresh (limpiar todo)');
