@@ -72,7 +72,14 @@ const registerAdminHandlers = (io, socket, loadQuestions) => {
         // Avisamos a todos
         io.emit('game_state', getGameState());
         io.emit('update_players', []); 
-        io.emit('force_refresh'); 
+        
+        if (cleanPlayers) {
+            console.log('📢 Emitiendo force_refresh (limpiar todo)');
+            io.emit('force_refresh');
+        } else {
+            console.log('ℹ️ No se emite force_refresh (mantener jugadores)');
+            // Los jugadores recibirán game_state y volverán al lobby automáticamente
+        } 
 
         } catch (error){
             console.error('❌ Error en reset_game:', error.message);
