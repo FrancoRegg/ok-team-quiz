@@ -1,0 +1,131 @@
+.recovery-code-modal {
+    max-width: 550px;
+    width: 90%;
+}
+
+.recovery-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-left: 4px solid #ffc107;
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.recovery-warning .warning-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.recovery-warning p {
+    margin: 0;
+    color: #856404;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.recovery-code-display {
+    margin: 25px 0;
+}
+
+.code-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-family: 'Courier New', monospace;
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-align: center;
+    padding: 25px 20px;
+    border-radius: 12px;
+    letter-spacing: 3px;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    user-select: all;
+    cursor: text;
+    transition: all 0.3s ease;
+}
+
+.code-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(102, 126, 234, 0.5);
+}
+
+.recovery-actions {
+    display: flex;
+    gap: 12px;
+    margin: 25px 0;
+}
+
+.btn-copy-code,
+.btn-download-code {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-copy-code {
+    background: linear-gradient(135deg, #0096ff 0%, #0066cc 100%);
+    color: white;
+}
+
+.btn-copy-code:hover {
+    background: linear-gradient(135deg, #0066cc 0%, #004d99 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 150, 255, 0.4);
+}
+
+.btn-download-code {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    color: white;
+}
+
+.btn-download-code:hover {
+    background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+}
+
+.recovery-note {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.recovery-note p {
+    margin: 0;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.btn-close-recovery {
+    width: 100%;
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.btn-close-recovery:hover {
+    background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(108, 117, 125, 0.4);
+}
+
+.btn-close-recovery:active {
+    transform: translateY(0);
+}

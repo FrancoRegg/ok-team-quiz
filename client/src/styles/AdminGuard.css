@@ -52,7 +52,7 @@
     border: 2px solid #eee;
     border-radius: 8px;
     font-size: 1rem;
-    box-sizing: border-box; /* Importante para que el padding no rompa el ancho */
+    box-sizing: border-box;
     transition: border-color 0.3s;
 }
 
@@ -65,7 +65,7 @@
 .btn-access {
     width: 100%;
     padding: 12px;
-    background-color: #007bff; /* Azul estándar si no tienes var definida */
+    background-color: #007bff;
     color: white;
     border: none;
     border-radius: 8px;
@@ -79,7 +79,7 @@
     background-color: #0056b3;
 }
 
-/* Botón de "Olvidé contraseña" (NUEVO) */
+/* Botón de "Olvidé contraseña"*/
 .forgot-section {
     margin-top: 20px;
     border-top: 1px solid #eee;
@@ -98,4 +98,72 @@
 
 .btn-forgot:hover {
     color: #555;
+}
+
+/* Modal de Recuperacion*/
+.recovery-modal {
+    max-width: 550px;
+    width: 90%;
+}
+
+.recovery-code-input {
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.input-hint {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
+.btn-recover-access {
+    width: 100%;
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+}
+
+.btn-recover-access:hover:not(:disabled) {
+    background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.btn-recover-access:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-recover-access:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.recovery-support {
+    text-align: center;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #dee2e6;
+}
+
+.recovery-support p {
+    margin: 5px 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.recovery-support .support-info {
+    font-weight: bold;
+    color: #0096ff;
 }
