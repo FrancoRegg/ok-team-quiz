@@ -31,24 +31,7 @@ const { loadQuestions, sendNextQuestion } = require('./utils/gameLogics');
 const port = process.env.PORT;
 
 // Validar contraseña de admin
-const { validateAdminPassword } = require('./utils/passwordValidator');
-
-const passwordValidation = validateAdminPassword(process.env.ADMIN_PASSWORD);
-if (!passwordValidation.valid) {
-    console.error('❌ ERROR CRÍTICO:', passwordValidation.error);
-    console.error('');
-    console.error('🔐 La contraseña debe cumplir:');
-    console.error('   - Mínimo 8 caracteres');
-    console.error('   - Al menos 1 mayúscula');
-    console.error('   - Al menos 1 minúscula');
-    console.error('   - Al menos 1 número');
-    console.error('   - No ser una contraseña común');
-    console.error('');
-    console.error('📝 Actualiza ADMIN_PASSWORD en tu archivo .env');
-    console.error('');
-    process.exit(1);  // Detener servidor
-}
-console.log('✅ Contraseña de admin validada');
+const { initializePassword } = require('./utils/passwordManager');
 
 const app = express() // Inicializar express
 app.use(express.json());
@@ -123,6 +106,9 @@ async function startServer() {
     try {
         console.log("⏳ Iniciando sincronización de base de datos...");
         await dbSynchronization(); 
+
+        console.log("⏳ Inicializando contraseña de admin...");
+        await initializePassword();
         
         console.log("⏳ Cargando preguntas...");
         await loadQuestions();
