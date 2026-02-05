@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
+const { validatePassword, isUsingDefaultPassword } = require('../utils/passwordManager');
+const { authenticateAdmin } = require('../middleware/auth');
 
 // Rate Limiter
 const loginLimiter = rateLimit({
@@ -23,20 +24,8 @@ const loginLimiter = rateLimit({
     }
 });
 
-// Comparar strings de forma segura (prevenir timing attacks)
-const secureCompare = (a, b) => {
-    if (!a || !b || a.length !== b.length) {
-        return false;
-    }
-    
-    const bufA = Buffer.from(a);
-    const bufB = Buffer.from(b);
-    
-    return crypto.timingSafeEqual(bufA, bufB);
-}
-
 // Aplicar rate limiter al endpoint de login
-router.post('/login', loginLimiter, (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {  // ← async
     const { password } = req.body;
 
     if (!password) {
@@ -47,10 +36,11 @@ router.post('/login', loginLimiter, (req, res) => {
         });
     }
 
-    // Comparación segura contra timing attacks
-    if (secureCompare(password, process.env.ADMIN_PASSWORD)) {
+    // Validar contraseña contra BD
+    const isValid = await validatePassword(password);
+    
+    if (isValid) {
         
-        // Genera JWT que expira en 24 horas
         const token = jwt.sign(
             { role: 'admin', timestamp: Date.now() },
             process.env.JWT_SECRET || 'fallback-secret-key',
@@ -58,11 +48,15 @@ router.post('/login', loginLimiter, (req, res) => {
         );
 
         console.log('✅ Admin autenticado, token generado');
+        
+        // Verificar si está usando contraseña por defecto
+        const usingDefault = await isUsingDefaultPassword();
 
         return res.json({ 
             success: true, 
             message: "Acceso concedido",
-            token: token
+            token: token,
+            isDefaultPassword: usingDefault
         });
     } else {
         console.log('⛔ Intento de login con contraseña incorrecta desde IP:', req.ip);
@@ -71,6 +65,26 @@ router.post('/login', loginLimiter, (req, res) => {
             success: false, 
             message: "Contraseña incorrecta" 
         });
+    }
+});
+
+router.post('/change-password', authenticateAdmin, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+            success: false,
+            message: 'Se requiere contraseña actual y nueva contraseña'
+        });
+    }
+    
+    const { changePassword } = require('../utils/passwordManager');
+    const result = await changePassword(currentPassword, newPassword);
+    
+    if (result.success) {
+        return res.json(result);
+    } else {
+        return res.status(400).json(result);
     }
 });
 
