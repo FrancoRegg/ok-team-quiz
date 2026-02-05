@@ -253,6 +253,7 @@ function AdminView() {
 
     useEffect(() => {
         fetchQuestions();
+        fetchPlayers();
     }, []);
 
     const handleOptionChange = (index, value) => {
