@@ -88,4 +88,81 @@ router.post('/change-password', authenticateAdmin, async (req, res) => {
     }
 });
 
+router.post('/recover-with-code', async (req, res) => {
+    const { recoveryCode, newPassword } = req.body;
+    
+    if (!recoveryCode || !newPassword) {
+        return res.status(400).json({
+            success: false,
+            message: 'Se requiere código de recuperación y nueva contraseña'
+        });
+    }
+    
+    try {
+        const { validateAdminPassword } = require('../utils/passwordValidator');
+        const Password = require('../models/Password');
+        const bcrypt = require('bcrypt');
+        
+        // Buscar código en BD
+        const passwordRecord = await Password.findOne({
+            where: { recoveryCode: recoveryCode.toUpperCase().trim() }
+        });
+        
+        if (!passwordRecord) {
+            console.log('⛔ Código de recuperación inválido:', recoveryCode);
+            return res.status(401).json({
+                success: false,
+                message: 'Código de recuperación inválido'
+            });
+        }
+        
+        // Validar que nueva contraseña sea fuerte
+        const validation = validateAdminPassword(newPassword);
+        if (!validation.valid) {
+            return res.status(400).json({
+                success: false,
+                message: validation.error
+            });
+        }
+        
+        // Verificar que no sea la contraseña por defecto
+        if (newPassword === 'Admin2024!') {
+            return res.status(400).json({
+                success: false,
+                message: 'No puedes usar la contraseña por defecto'
+            });
+        }
+        
+        // Generar nuevo código de recuperación
+        const { generateUniqueRecoveryCode } = require('../utils/passwordManager');
+        const newRecoveryCode = await generateUniqueRecoveryCode();
+        
+        // Hashear nueva contraseña
+        const newPasswordHash = await bcrypt.hash(newPassword, 10);
+        
+        // Actualizar en BD
+        passwordRecord.passwordHash = newPasswordHash;
+        passwordRecord.isDefault = false;
+        passwordRecord.recoveryCode = newRecoveryCode;
+        passwordRecord.updatedAt = new Date();
+        await passwordRecord.save();
+        
+        console.log('✅ Contraseña recuperada exitosamente');
+        console.log('🔑 Nuevo código de recuperación generado:', newRecoveryCode);
+        
+        return res.json({
+            success: true,
+            message: 'Contraseña actualizada correctamente',
+            recoveryCode: newRecoveryCode
+        });
+        
+    } catch (error) {
+        console.error('❌ Error en recuperación:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Error al recuperar contraseña'
+        });
+    }
+});
+
 module.exports = router;
