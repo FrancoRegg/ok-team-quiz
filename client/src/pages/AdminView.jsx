@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
-import { useSocket } from '../hooks/useSocket'
+import { useSocket } from '../hooks/useSocket';
+import RecoveryCodeModal from '../components/screens/RecoveryCodeModal';
 import '../styles/Admin.css'
 
 const PlayerEditItem = ({ player, onEdit }) => {
@@ -91,6 +92,11 @@ function AdminView() {
             newPassword !== 'Admin2024!';  // No permitir la contraseña por defecto
     };
 
+    // Estados para código de recuperación
+    const [ showRecoveryCodeModal, setShowRecoveryCodeModal ] = useState(false);
+    const [ recoveryCode, setRecoveryCode ] = useState('');
+
+
     const handleChangePassword = async () => {
         if (!isPasswordValid()) {
             alert('⚠️ La contraseña no cumple todos los requisitos');
@@ -109,17 +115,23 @@ function AdminView() {
             const data = await response.json();
 
             if (data.success) {
-                alert('✅ ' + data.message);
-                
-                // Limpiar formulario
-                setCurrentPassword('');
-                setNewPassword('');
-                setConfirmPassword('');
-                setShowPasswordModal(false);
-                
-                // Actualizar flag de contraseña por defecto
-                localStorage.setItem('is_default_password', 'false');
-                window.location.reload();
+                // Mostrar modal con código de recuperación
+                if (data.recoveryCode) {
+                    setRecoveryCode(data.recoveryCode);
+                    setShowRecoveryCodeModal(true);
+                    setShowPasswordModal(false);
+                    
+                    // Limpiar formulario
+                    setCurrentPassword('');
+                    setNewPassword('');
+                    setConfirmPassword('');
+                    
+                    // Actualizar flag
+                    localStorage.setItem('is_default_password', 'false');
+                } else {
+                    alert('✅ ' + data.message);
+                    window.location.reload();
+                }
             } else {
                 alert('❌ ' + data.message);
             }
@@ -666,6 +678,16 @@ function AdminView() {
                 </div>
             )}
 
+            {/* MODAL: Código de Recuperación */}
+            {showRecoveryCodeModal && (
+                <RecoveryCodeModal 
+                    code={recoveryCode}
+                    onClose={() => {
+                        setShowRecoveryCodeModal(false);
+                        window.location.reload();
+                    }}
+                />
+            )}
         </div>
     );
 }
