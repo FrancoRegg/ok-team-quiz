@@ -17,6 +17,11 @@ const Password = sequelize.define('Password', {
         defaultValue: false,
         field: 'is_default'
     },
+    recoveryCode: {
+        type: DataTypes.STRING(20),
+        allowNull: true,
+        field: 'recovery_code'
+    },
     updatedAt: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
