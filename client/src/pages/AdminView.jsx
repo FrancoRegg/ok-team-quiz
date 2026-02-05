@@ -46,22 +46,88 @@ const PlayerEditItem = ({ player, onEdit }) => {
 
 function AdminView() {
 
-    const [ title, setTitle ] = useState("")
-    const [ type, setType ] = useState("TEXT")
-    const [ options, setOptions ] = useState(["", ""])
-    const [ mediaUrl, setMediaUrl ] = useState("")
-    const [ correctIndex, setCorrectIndex ] = useState(0)
+    const [ title, setTitle ] = useState("");
+    const [ type, setType ] = useState("TEXT");
+    const [ options, setOptions ] = useState(["", ""]);
+    const [ mediaUrl, setMediaUrl ] = useState("");
+    const [ correctIndex, setCorrectIndex ] = useState(0);
 
     // Estados de gestión
-    const [ questionsList, setQuestionsList ] = useState([]) 
-    const [ editingId, setEditingId ] = useState(null) 
+    const [ questionsList, setQuestionsList ] = useState([]); 
+    const [ editingId, setEditingId ] = useState(null); 
 
     // Estado control de tiempo
-    const [ timeLimit, setTimeLimit ] = useState(10)
+    const [ timeLimit, setTimeLimit ] = useState(10);
     
     // Estados PLayers
-    const [ players, setPlayers ] = useState([])
-    const [ showPlayersModal, setShowPlayersModal ] = useState(false)
+    const [ players, setPlayers ] = useState([]);
+    const [ showPlayersModal, setShowPlayersModal ] = useState(false);
+    const [ showPasswordModal, setShowPasswordModal ] = useState(false);
+    const [ currentPassword, setCurrentPassword ] = useState('');
+    const [ newPassword, setNewPassword ] = useState('');
+    const [ confirmPassword, setConfirmPassword ] = useState('');
+    const [ passwordStrength, setPasswordStrength ] = useState({
+        length: false,
+        uppercase: false,
+        lowercase: false,
+        number: false
+    });
+
+    const validatePasswordStrength = (password) => {
+        setPasswordStrength({
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /[0-9]/.test(password)
+        });
+    };
+
+    const isPasswordValid = () => {
+        return passwordStrength.length && 
+            passwordStrength.uppercase && 
+            passwordStrength.lowercase && 
+            passwordStrength.number &&
+            newPassword === confirmPassword &&
+            newPassword !== 'Admin2024!';  // No permitir la contraseña por defecto
+    };
+
+    const handleChangePassword = async () => {
+        if (!isPasswordValid()) {
+            alert('⚠️ La contraseña no cumple todos los requisitos');
+            return;
+        }
+
+        try {
+            const response = await fetchWithAuth(`${API_URL}/api/auth/change-password`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    currentPassword: currentPassword,
+                    newPassword: newPassword
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert('✅ ' + data.message);
+                
+                // Limpiar formulario
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+                setShowPasswordModal(false);
+                
+                // Actualizar flag de contraseña por defecto
+                localStorage.setItem('is_default_password', 'false');
+                window.location.reload();
+            } else {
+                alert('❌ ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error al cambiar contraseña:', error);
+            alert('❌ Error al cambiar contraseña');
+        }
+    };
 
     const { socket } = useSocket();
 
@@ -297,6 +363,25 @@ function AdminView() {
 
     return(
         <div className="admin-container">
+
+            {localStorage.getItem('is_default_password') === 'true' && (
+                <div className="password-warning-banner">
+                    <div className="warning-content">
+                        <span className="warning-icon">⚠️</span>
+                        <div className="warning-text">
+                            <strong>Contraseña por defecto detectada</strong>
+                            <p>Por seguridad, debes cambiar la contraseña antes de usar el panel.</p>
+                        </div>
+                        <button 
+                            className="btn-change-password-banner"
+                            onClick={() => setShowPasswordModal(true)}
+                        >
+                            Cambiar Ahora
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="header-row">
                 <h1 className="admin-title">
                     {editingId ? "✏️ Editando Pregunta" : "➕ Crear Nueva Pregunta"}
@@ -451,7 +536,7 @@ function AdminView() {
                 ))}
             </div>
 
-            {/* ✅ MODAL: Editar Puntuaciones (AGREGAR ESTO) */}
+            {/* MODAL: Editar Puntuacion */}
             {showPlayersModal && (
                 <div className="modal-overlay" onClick={() => setShowPlayersModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -480,6 +565,107 @@ function AdminView() {
                     </div>
                 </div>
             )}
+
+            {/* MODAL: Cambiar contraseña */}
+            {showPasswordModal && (
+                <div className="modal-overlay" onClick={() => setShowPasswordModal(false)}>
+                    <div className="modal-content password-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>🔐 Cambiar Contraseña</h2>
+                            <button className="modal-close" onClick={() => setShowPasswordModal(false)}>
+                                ✕
+                            </button>
+                        </div>
+                        
+                        <div className="modal-body">
+                            
+                            {/* Campo: Contraseña Actual */}
+                            <div className="form-group">
+                                <label className="form-label">Contraseña Actual:</label>
+                                <input
+                                    type="password"
+                                    className="form-input"
+                                    placeholder="Ingresa tu contraseña actual"
+                                    value={currentPassword}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                />
+                            </div>
+
+                            {/* Campo: Nueva Contraseña */}
+                            <div className="form-group">
+                                <label className="form-label">Nueva Contraseña:</label>
+                                <input
+                                    type="password"
+                                    className="form-input"
+                                    placeholder="Ingresa tu nueva contraseña"
+                                    value={newPassword}
+                                    onChange={(e) => {
+                                        setNewPassword(e.target.value);
+                                        validatePasswordStrength(e.target.value);
+                                    }}
+                                />
+                            </div>
+
+                            {/* Validación Visual en Tiempo Real */}
+                            <div className="password-requirements">
+                                <p className="requirements-title">La contraseña debe contener:</p>
+                                <div className="requirement-item">
+                                    <span className={passwordStrength.length ? 'check-valid' : 'check-invalid'}>
+                                        {passwordStrength.length ? '✅' : '❌'}
+                                    </span>
+                                    <span>Mínimo 8 caracteres</span>
+                                </div>
+                                <div className="requirement-item">
+                                    <span className={passwordStrength.uppercase ? 'check-valid' : 'check-invalid'}>
+                                        {passwordStrength.uppercase ? '✅' : '❌'}
+                                    </span>
+                                    <span>Al menos 1 mayúscula</span>
+                                </div>
+                                <div className="requirement-item">
+                                    <span className={passwordStrength.lowercase ? 'check-valid' : 'check-invalid'}>
+                                        {passwordStrength.lowercase ? '✅' : '❌'}
+                                    </span>
+                                    <span>Al menos 1 minúscula</span>
+                                </div>
+                                <div className="requirement-item">
+                                    <span className={passwordStrength.number ? 'check-valid' : 'check-invalid'}>
+                                        {passwordStrength.number ? '✅' : '❌'}
+                                    </span>
+                                    <span>Al menos 1 número</span>
+                                </div>
+                            </div>
+
+                            {/* Campo: Confirmar Contraseña */}
+                            <div className="form-group">
+                                <label className="form-label">Confirmar Nueva Contraseña:</label>
+                                <input
+                                    type="password"
+                                    className="form-input"
+                                    placeholder="Confirma tu nueva contraseña"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                />
+                                {confirmPassword && newPassword !== confirmPassword && (
+                                    <p className="password-mismatch">❌ Las contraseñas no coinciden</p>
+                                )}
+                                {confirmPassword && newPassword === confirmPassword && newPassword && (
+                                    <p className="password-match">✅ Las contraseñas coinciden</p>
+                                )}
+                            </div>
+
+                            {/* Botón Guardar */}
+                            <button
+                                className="btn-save-password"
+                                onClick={handleChangePassword}
+                                disabled={!isPasswordValid()}
+                            >
+                                💾 Guardar Nueva Contraseña
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }

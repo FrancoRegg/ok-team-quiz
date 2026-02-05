@@ -490,3 +490,159 @@
     background: #ccc;
     cursor: not-allowed;
 }
+
+/* --- Banner de advertencia - contraseña por defecto --- */
+.password-warning-banner {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+    border-left: 5px solid #d63031;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(214, 48, 49, 0.3);
+    animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.warning-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: white;
+}
+
+.warning-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.warning-text {
+    flex: 1;
+}
+
+.warning-text strong {
+    display: block;
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+.warning-text p {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.95;
+}
+
+.btn-change-password-banner {
+    background: white;
+    color: #d63031;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.btn-change-password-banner:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-change-password-banner:active {
+    transform: translateY(0);
+}
+
+/* --- Modal Cambio Contraseña --- */
+.password-modal {
+    max-width: 500px;
+    width: 90%;
+}
+
+.password-requirements {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.requirements-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.requirement-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    font-size: 0.9rem;
+}
+
+.check-valid {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.check-invalid {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.password-mismatch {
+    color: #dc3545;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
+.password-match {
+    color: #28a745;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
+.btn-save-password {
+    width: 100%;
+    background: linear-gradient(135deg, #0096ff 0%, #0066cc 100%);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+}
+
+.btn-save-password:hover:not(:disabled) {
+    background: linear-gradient(135deg, #0066cc 0%, #004d99 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 150, 255, 0.4);
+}
+
+.btn-save-password:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-save-password:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}

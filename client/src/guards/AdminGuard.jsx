@@ -7,6 +7,10 @@ function AdminGuard({ children }){
         const saved = localStorage.getItem("admin_token")
         return saved ? true : false;
     });
+    const [ isDefaultPassword, setIsDefaultPassword ] = useState(() => {
+        const saved = localStorage.getItem("is_default_password");
+        return saved === 'true';
+    });
 
     const handleLogin = async() => {
         try{
@@ -30,7 +34,9 @@ function AdminGuard({ children }){
             
             if (data.success && data.token){
                 localStorage.setItem("admin_token", data.token);
+                localStorage.setItem("is_default_password", data.isDefaultPassword || 'false');
                 setIsAuthenticated(true);
+                setIsDefaultPassword(data.isDefaultPassword || false);
                 console.log('✅ Token guardado');
             } else if (data.success && !data.token){
                 alert("⚠️ Login exitoso pero no se recibió token");
