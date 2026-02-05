@@ -4,6 +4,36 @@ const { validateAdminPassword } = require('./passwordValidator');
 
 const DEFAULT_PASSWORD = 'Admin2024!';
 
+// Generador de código de recuperación
+const generateRecoveryCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let part1 = '';
+    let part2 = '';
+    
+    for (let i = 0; i < 4; i++) {
+        part1 += chars.charAt(Math.floor(Math.random() * chars.length));
+        part2 += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    
+    return `RECOV-${part1}-${part2}`;
+}
+
+// Generar código ÚNICO (verifica que no exista en BD)
+const generateUniqueRecoveryCode = async() => {
+    let code;
+    let exists = true;
+    
+    while (exists) {
+        code = generateRecoveryCode();
+        const existingPassword = await Password.findOne({ 
+            where: { recoveryCode: code } 
+        });
+        exists = !!existingPassword;
+    }
+    
+    return code;
+}
+
 const initializePassword = async() => {
     try {
         const count = await Password.count();
@@ -31,7 +61,7 @@ const initializePassword = async() => {
     }
 }
 
-async function validatePassword(password) {
+const validatePassword = async(password) => {
     try {
         const passwordRecord = await Password.findOne();
         
@@ -46,7 +76,7 @@ async function validatePassword(password) {
     }
 }
 
-async function isUsingDefaultPassword() {
+const isUsingDefaultPassword = async() => {
     try {
         const passwordRecord = await Password.findOne();
         return passwordRecord?.isDefault === true;
@@ -56,7 +86,7 @@ async function isUsingDefaultPassword() {
     }
 }
 
-async function changePassword(currentPassword, newPassword) {
+const changePassword = async(currentPassword, newPassword) => {
     try {
         // Validar contraseña actual
         const isValid = await validatePassword(currentPassword);
@@ -93,16 +123,22 @@ async function changePassword(currentPassword, newPassword) {
             throw new Error('No hay contraseña en BD');
         }
         
+        // Generar nuevo código de recuperación único
+        const recoveryCode = await generateUniqueRecoveryCode();
+
         passwordRecord.passwordHash = newPasswordHash;
         passwordRecord.isDefault = false;
+        passwordRecord.recoveryCode = recoveryCode;
         passwordRecord.updatedAt = new Date();
         await passwordRecord.save();
         
         console.log('✅ Contraseña actualizada correctamente');
-        
+        console.log('🔑 Código de recuperación generado:', recoveryCode);
+
         return {
             success: true,
-            message: 'Contraseña actualizada correctamente'
+            message: 'Contraseña actualizada correctamente',
+            recoveryCode: recoveryCode
         };
         
     } catch (error) {
@@ -118,5 +154,6 @@ module.exports = {
     initializePassword,
     validatePassword,
     isUsingDefaultPassword,
-    changePassword
+    changePassword, 
+    generateUniqueRecoveryCode
 };
