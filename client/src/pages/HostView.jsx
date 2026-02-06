@@ -49,6 +49,10 @@ function HostView() {
             setGameState(data)
         })
 
+        socket.on('error_message', (data) => {
+            alert('⚠️ ' + data.message);
+        });
+
         socket.on('new_question', (questionData)=>{
             setCurrentQuestion(questionData)
         })
@@ -71,6 +75,7 @@ function HostView() {
                 socket.off('server_check');
                 socket.off('update_players');
                 socket.off('game_state');
+                socket.off('error_message');
                 socket.off('new_question');
                 socket.off('show_correct_answer');
                 socket.off('timer_update');

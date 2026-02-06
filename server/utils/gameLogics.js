@@ -31,6 +31,24 @@ const sendNextQuestion = async (io) => {
     if (getCurrentQuestionIndex() === 0) {
         await loadQuestions();
         console.log("🔄 Preguntas recargadas desde BD");
+    
+
+        // Validar que haya preguntas
+        if (getQuestions().length === 0) {
+            console.log('⚠️ No hay preguntas cargadas en BD');
+
+            // Buscar socket del HOST para enviarle el error
+            const hostSocket = Object.keys(players).find(id => players[id].name === 'HOST');
+            
+            if (hostSocket) {
+                io.to(hostSocket).emit('error_message', {
+                    message: 'No hay preguntas cargadas. Crea preguntas desde el panel de administración primero.'
+                });
+            } else {
+                console.log('❌ HOST no encontrado en players');
+            }
+            return;
+        }
     }
 
     // Si se acabaron las preguntas
