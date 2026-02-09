@@ -733,6 +733,20 @@
     }
 }
 
+/* --- VIDEOS --- */
+.video-iframe {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
+}
+
+/* Fallback para navegadores sin aspect-ratio */
+@supports not (aspect-ratio: 16 / 9) {
+    .video-iframe {
+        height: 450px;
+    }
+}
+
 /* --- RESPONSIVE --- */
 @media (max-width: 768px) {
     .host-container {

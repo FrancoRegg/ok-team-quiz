@@ -302,11 +302,12 @@ function HostView() {
                                     className="question-media"
                                 />
                             ) : currentQuestion.type === 'VIDEO' ? (
-                                <video 
+                                <iframe 
                                     src={currentQuestion.mediaUrl} 
-                                    controls 
-                                    autoPlay 
-                                    className="question-media"
+                                    className="question-media video-iframe"
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
                                 />
                             ) : null}
                         </div>
