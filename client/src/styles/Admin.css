@@ -1,523 +1,95 @@
+:root {
+    /* --- Espaciados consistentes --- */
+    --spacing-xs: 8px;
+    --spacing-sm: 12px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+    
+    /* --- Border radius --- */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    
+    /* --- Sombras minimalistas --- */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+    
+    /* --- Transiciones --- */
+    --transition-fast: 0.15s ease;
+    --transition-base: 0.2s ease;
+    
+    /* --- Colores de estado --- */
+    --color-success: #10b981;
+    --color-info: #3b82f6;
+    --color-warning: #f59e0b;
+    --color-error: #ef4444;
+}
+
+/* --- CONTENEDOR PRINCIPAL --- */
+
 .admin-container {
-    max-width: 600px;
-    margin: 40px auto;
+    max-width: 900px;
+    margin: var(--spacing-2xl) auto;
     background: var(--card-bg);
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    padding: var(--spacing-2xl);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
 }
 
-.admin-title {
-    color: var(--primary-blue);
-    text-align: center;
-    margin-bottom: 30px;
-    text-transform: uppercase;
-    font-size: 1.8rem;
-}
-
-/* --- GRUPOS DE FORMULARIO --- */
-.form-group {
-    margin-bottom: 20px;
-    text-align: left; 
-}
-
-.form-label {
-    display: block; 
-    font-weight: bold;
-    margin-bottom: 8px;
-    color: var(--text-main);
-}
-
-.form-input, .form-select {
-    width: 100%;
-    padding: 12px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 1rem;
-    box-sizing: border-box; 
-    transition: border-color 0.2s;
-    font-family: var(--font-stack);
-}
-
-.form-input:focus, .form-select:focus {
-    border-color: var(--primary-blue);
-    outline: none;
-}
-
-/* --- LISTA DE OPCIONES --- */
-.options-list {
-    margin: 20px 0;
-    background: #f9f9f9; 
-    padding: 20px;
-    border-radius: 10px;
-}
-
-.option-row {
-    display: flex; 
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    background: white;
-    padding: 5px;
-    border-radius: 6px;
-    border: 1px solid #eee;
-}
-
-.radio-check {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    accent-color: var(--primary-blue); 
-}
-
-.btn-delete {
-    background: #ffebee;
-    color: #c62828;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-.btn-delete:hover {
-    background: #ffcdd2;
-}
-
-/* --- BOTONES DE ACCIÓN --- */
-.btn-add {
-    background: white;
-    border: 2px dashed var(--primary-blue);
-    color: var(--primary-blue);
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
-}
-
-.btn-add:hover {
-    background: #e6f7ff;
-}
-
-.btn-save {
-    background: var(--primary-blue);
-    color: white;
-    width: 100%;
-    padding: 15px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 30px;
-    box-shadow: 0 4px 10px rgba(0,159,227, 0.3);
-}
-
-.btn-save:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0,159,227, 0.4);
-}
+/* --- HEADER --- */
 
 .header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: var(--spacing-xl);
+    gap: var(--spacing-md);
+}
+
+.admin-title {
+    color: var(--primary-blue);
+    margin: 0;
+    text-transform: uppercase;
+    font-size: 1.8rem;
+    font-weight: 700;
 }
 
 .btn-logout {
     background: transparent;
-    color: #d32f2f;
-    border: 1px solid #d32f2f;
-    padding: 8px 15px;
-    border-radius: 6px;
+    color: var(--color-error);
+    border: 2px solid var(--color-error);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
     font-size: 0.9rem;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 600;
+    transition: all var(--transition-base);
+    white-space: nowrap;
 }
 
 .btn-logout:hover {
-    background: #ffebee; 
+    background: #fef2f2;
 }
 
-/* --- LISTA DE PREGUNTAS --- */
-.divider {
-    margin: 40px 0;
-    border: 0;
-    border-top: 1px solid #eee;
-}
+/* --- BANNER DE ADVERTENCIA --- */
 
-.questions-title {
-    color: #333;
-    margin-bottom: 20px;
-}
-
-.questions-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding-bottom: 50px;
-}
-
-.question-item {
-    background: white;
-    padding: 15px 20px;
-    border-radius: 10px;
-    border: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    transition: transform 0.2s, border-color 0.2s;
-}
-
-.question-item:hover {
-    transform: translateX(5px);
-    border-color: var(--primary-blue);
-}
-
-.q-info strong {
-    display: block;
-    font-size: 1.1rem;
-    color: var(--secondary-dark);
-}
-
-.q-meta {
-    font-size: 0.85rem;
-    color: #888;
-    margin-top: 4px;
-}
-
-.q-actions {
-    display: flex;
-    gap: 10px;
-}
-
-/* Botones de la lista */
-.btn-icon {
-    width: 40px;
-    height: 40px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
-
-.btn-edit {
-    background: #e3f2fd;
-    color: var(--primary-blue);
-}
-.btn-edit:hover { background: #bbdefb; }
-
-.btn-delete-item {
-    background: #ffebee;
-    color: #d32f2f;
-}
-.btn-delete-item:hover { background: #ffcdd2; }
-
-/* --- UTILIDADES DE FORMULARIO --- */
-.form-row-multi {
-    display: flex;
-    gap: 15px;
-    width: 100%;
-}
-
-.flex-1 { flex: 1; }
-.flex-2 { flex: 2; }
-
-.option-input-text {
-    border: none;
-    background: transparent;
-    font-size: 1rem;
-    flex: 1;
-    outline: none;
-    color: #333;
-}
-
-.option-input-text:focus {
-    border-bottom: 1px solid var(--primary-blue);
-}
-
-.button-group {
-    display: flex;
-    gap: 15px;
-    margin-top: 30px;
-}
-
-.btn-save.editing {
-    background-color: #ff9800;
-}
-.btn-save.editing:hover {
-    background-color: #f57c00;
-}
-
-.btn-cancel {
-    background-color: #757575;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    font-size: 1rem;
-    font-weight: bold;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-.btn-cancel:hover { background-color: #616161; }
-
-/* --- TIEMPO LIMITE --- */
-.time-limit-input {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.input-number {
-    width: 100px;
-    padding: 8px;
-    font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.input-hint {
-    color: #666;
-    font-size: 0.9rem;
-}
-
-/* --- Gestión de Jugadores --- */
-.players-section {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 30px;
-}
-
-.section-title {
-    font-size: 1.5rem;
-    margin-bottom: 15px;
-    color: #333;
-}
-
-.players-actions {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 15px;
-}
-
-.btn-players {
-    background: #4CAF50;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-players:hover {
-    background: #45a049;
-    transform: translateY(-2px);
-}
-
-.btn-clean-season {
-    background: #f44336;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-clean-season:hover {
-    background: #da190b;
-    transform: translateY(-2px);
-}
-
-.players-count {
-    color: #666;
-    font-size: 0.95rem;
-}
-
-/* --- Modal --- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 80vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 2px solid #eee;
-}
-
-.modal-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 5px 10px;
-    color: #666;
-    transition: color 0.3s;
-}
-
-.modal-close:hover {
-    color: #f44336;
-}
-
-.modal-body {
-    padding: 20px;
-    overflow-y: auto;
-    flex: 1;
-}
-
-.no-players {
-    text-align: center;
-    color: #999;
-    padding: 40px;
-    font-size: 1.1rem;
-}
-
-.players-edit-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-/* --- Item de Jugador (Editar) --- */
-.player-edit-item {
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 15px;
-    background: #fafafa;
-}
-
-.player-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.player-info strong {
-    font-size: 1.1rem;
-    color: #333;
-}
-
-.current-score {
-    color: #666;
-    font-size: 0.9rem;
-}
-
-.player-edit-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.score-input {
-    flex: 1;
-    padding: 8px 12px;
-    border: 2px solid #ddd;
-    border-radius: 6px;
-    font-size: 1rem;
-}
-
-.score-input:focus {
-    outline: none;
-    border-color: #4CAF50;
-}
-
-.new-score {
-    font-weight: bold;
-    color: #4CAF50;
-    min-width: 80px;
-}
-
-.btn-save-score {
-    background: #2196F3;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-save-score:hover:not(:disabled) {
-    background: #0b7dda;
-}
-
-.btn-save-score:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-}
-
-/* --- Banner de advertencia - contraseña por defecto --- */
 .password-warning-banner {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
-    border-left: 5px solid #d63031;
-    padding: 20px;
-    margin-bottom: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(214, 48, 49, 0.3);
-    animation: slideDown 0.4s ease-out;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    background: #fef3c7;
+    border-left: 4px solid var(--color-warning);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    border-radius: var(--radius-sm);
+    animation: fadeIn 0.3s ease;
 }
 
 .warning-content {
     display: flex;
     align-items: center;
-    gap: 15px;
-    color: white;
+    gap: var(--spacing-md);
 }
 
 .warning-icon {
@@ -532,125 +104,759 @@
 .warning-text strong {
     display: block;
     font-size: 1.1rem;
-    margin-bottom: 5px;
+    margin-bottom: var(--spacing-xs);
+    color: #1f2937;
 }
 
 .warning-text p {
     margin: 0;
     font-size: 0.9rem;
-    opacity: 0.95;
+    color: #4b5563;
 }
 
 .btn-change-password-banner {
     background: white;
-    color: #d63031;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-weight: bold;
+    color: #b45309;
+    border: 2px solid #b45309;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
     cursor: pointer;
     font-size: 0.95rem;
-    transition: all 0.3s ease;
+    transition: all var(--transition-base);
     flex-shrink: 0;
 }
 
 .btn-change-password-banner:hover {
-    background: #f8f9fa;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background: #fef3c7;
 }
 
-.btn-change-password-banner:active {
-    transform: translateY(0);
+/* --- SECCION / Gestion de participantes --- */
+
+.players-section {
+    background: #f9fafb;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-xl);
 }
 
-/* --- Modal Cambio Contraseña --- */
+.section-title {
+    font-size: 1.5rem;
+    margin: 0 0 var(--spacing-md) 0;
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.players-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.btn-players {
+    background: var(--color-success);
+    color: white;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-base);
+}
+
+.btn-players:hover {
+    background: #059669;
+}
+
+.btn-clean-season {
+    background: var(--color-error);
+    color: white;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-base);
+}
+
+.btn-clean-season:hover {
+    background: #dc2626;
+}
+
+.players-count {
+    color: #6b7280;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* --- DIVIDER --- */
+
+.divider {
+    margin: var(--spacing-xl) 0;
+    border: 0;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* --- FORMULARIO --- */
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+    text-align: left;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+    color: #1f2937;
+    font-size: 0.95rem;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 2px solid #e5e7eb;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: border-color var(--transition-base);
+    font-family: var(--font-stack);
+}
+
+.form-input:focus,
+.form-select:focus {
+    border-color: var(--primary-blue);
+    outline: none;
+}
+
+/* --- OPCIONES DE RESPUESTA --- */
+
+.options-list {
+    margin: var(--spacing-lg) 0;
+    background: #f9fafb;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+}
+
+.option-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    background: white;
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-sm);
+    border: 1px solid #e5e7eb;
+}
+
+.radio-check {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--primary-blue);
+    flex-shrink: 0;
+}
+
+.option-input-text {
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    flex: 1;
+    outline: none;
+    color: #1f2937;
+    padding: var(--spacing-xs);
+}
+
+.btn-delete {
+    background: #fef2f2;
+    color: var(--color-error);
+    border: none;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background var(--transition-base);
+}
+
+.btn-delete:hover {
+    background: #fee2e2;
+}
+
+.btn-add {
+    background: white;
+    border: 2px dashed var(--primary-blue);
+    color: var(--primary-blue);
+    width: 100%;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: var(--spacing-sm);
+    transition: all var(--transition-base);
+}
+
+.btn-add:hover {
+    background: #eff6ff;
+}
+
+/* --- FORMULARIO --- */
+
+.form-row-multi {
+    display: flex;
+    gap: var(--spacing-md);
+    width: 100%;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.flex-2 {
+    flex: 2;
+}
+
+/* --- TIEMPO LIMITE --- */
+
+.time-limit-input {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.input-number {
+    width: 100px;
+    padding: var(--spacing-sm);
+    font-size: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: var(--radius-sm);
+    transition: border-color var(--transition-base);
+}
+
+.input-number:focus {
+    border-color: var(--primary-blue);
+    outline: none;
+}
+
+.input-hint {
+    color: #6b7280;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* --- BOTONES DE ACCION --- */
+
+.button-group {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+}
+
+.btn-save {
+    background: var(--primary-blue);
+    color: white;
+    flex: 1;
+    padding: var(--spacing-md);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-base);
+}
+
+.btn-save:hover {
+    background: #0077cc;
+}
+
+.btn-save.editing {
+    background-color: var(--color-warning);
+}
+
+.btn-save.editing:hover {
+    background-color: #d97706;
+}
+
+.btn-cancel {
+    background-color: #6b7280;
+    color: white;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--transition-base);
+}
+
+.btn-cancel:hover {
+    background-color: #4b5563;
+}
+
+/* --- LISTA DE PREGUNTAS --- */
+
+.questions-title {
+    color: #1f2937;
+    margin-bottom: var(--spacing-lg);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding-bottom: var(--spacing-2xl);
+}
+
+.question-item {
+    background: white;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border: 2px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition-base);
+}
+
+.question-item:hover {
+    border-color: var(--primary-blue);
+}
+
+.q-info strong {
+    display: block;
+    font-size: 1.1rem;
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.q-meta {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: var(--spacing-xs);
+}
+
+.q-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition-base);
+}
+
+.btn-edit {
+    background: #eff6ff;
+    color: var(--primary-blue);
+}
+
+.btn-edit:hover {
+    background: #dbeafe;
+}
+
+.btn-delete-item {
+    background: #fef2f2;
+    color: var(--color-error);
+}
+
+.btn-delete-item:hover {
+    background: #fee2e2;
+}
+
+/* --- MODALES --- */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+    background: white;
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 600px;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0;
+    width: 45px;
+    height: 45px;
+    color: #9ca3af;
+    transition: all var(--transition-base);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    background: #fee2e2;
+    color: var(--color-error);
+}
+
+.modal-body {
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* --- MODAL / Editar participantes --- */
+
+.no-players {
+    text-align: center;
+    color: #9ca3af;
+    padding: var(--spacing-2xl) var(--spacing-lg);
+    font-size: 1.1rem;
+}
+
+.players-edit-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.player-edit-item {
+    border: 2px solid #e5e7eb;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    background: #fafafa;
+}
+
+.player-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.player-info strong {
+    font-size: 1.1rem;
+    color: #1f2937;
+}
+
+.current-score {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.player-edit-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.score-input {
+    flex: 1;
+    padding: var(--spacing-sm);
+    border: 2px solid #e5e7eb;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    transition: border-color var(--transition-base);
+}
+
+.score-input:focus {
+    outline: none;
+    border-color: var(--color-success);
+}
+
+.new-score {
+    font-weight: 600;
+    color: var(--color-success);
+    min-width: 80px;
+}
+
+.btn-save-score {
+    background: var(--color-info);
+    color: white;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-base);
+}
+
+.btn-save-score:hover:not(:disabled) {
+    background: #2563eb;
+}
+
+.btn-save-score:disabled {
+    background: #d1d5db;
+    cursor: not-allowed;
+}
+
+/* --- MODAL / Cambiar contraseña --- */
+
 .password-modal {
     max-width: 500px;
-    width: 90%;
 }
 
 .password-requirements {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    padding: 15px;
-    margin: 15px 0;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-md);
+    margin: var(--spacing-md) 0;
 }
 
 .requirements-title {
-    font-weight: bold;
-    margin-bottom: 10px;
-    color: #495057;
+    font-weight: 600;
+    margin: 0 0 var(--spacing-sm) 0;
+    color: #4b5563;
     font-size: 0.9rem;
 }
 
 .requirement-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 5px 0;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) 0;
     font-size: 0.9rem;
 }
 
 .check-valid {
-    color: #28a745;
-    font-weight: bold;
+    color: var(--color-success);
+    font-weight: 700;
 }
 
 .check-invalid {
-    color: #dc3545;
-    font-weight: bold;
+    color: var(--color-error);
+    font-weight: 700;
 }
 
 .password-mismatch {
-    color: #dc3545;
+    color: var(--color-error);
     font-size: 0.85rem;
-    margin-top: 5px;
-    margin-bottom: 0;
+    margin: var(--spacing-xs) 0 0 0;
 }
 
 .password-match {
-    color: #28a745;
+    color: var(--color-success);
     font-size: 0.85rem;
-    margin-top: 5px;
-    margin-bottom: 0;
+    margin: var(--spacing-xs) 0 0 0;
 }
 
 .btn-save-password {
     width: 100%;
-    background: linear-gradient(135deg, #0096ff 0%, #0066cc 100%);
+    background: var(--primary-blue);
     color: white;
     border: none;
-    padding: 14px;
-    border-radius: 8px;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-sm);
     font-size: 1rem;
-    font-weight: bold;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 20px;
+    transition: background var(--transition-base);
+    margin-top: var(--spacing-lg);
 }
 
 .btn-save-password:hover:not(:disabled) {
-    background: linear-gradient(135deg, #0066cc 0%, #004d99 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 150, 255, 0.4);
-}
-
-.btn-save-password:active:not(:disabled) {
-    transform: translateY(0);
+    background: #0077cc;
 }
 
 .btn-save-password:disabled {
-    background: #6c757d;
+    background: #9ca3af;
     cursor: not-allowed;
     opacity: 0.6;
 }
 
-/* --- Ayuda para URL --- */
-.input-hint {
-    margin-top: 5px;
-    font-size: 0.85rem;
-    color: #6c757d;
-    line-height: 1.4;
+/* --- Animacion Unica --- */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* --- RESPONSIVE / Tablets --- */
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    .admin-container {
+        max-width: 700px;
+        padding: var(--spacing-lg);
+    }
+
+    .form-row-multi {
+        flex-direction: column;
+    }
+
+    .players-actions {
+        flex-direction: column;
+    }
+
+    .btn-players,
+    .btn-clean-season {
+        width: 100%;
+    }
+}
+
+/* --- RESPONSIVE / Moviles --- */
+
+@media (max-width: 768px) {
+    .admin-container {
+        margin: var(--spacing-md);
+        padding: var(--spacing-lg);
+    }
+
+    .admin-title {
+        font-size: 1.4rem;
+    }
+
+    .header-row {
+        flex-direction: column-reverse;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+
+    .btn-logout {
+        width: 100%;
+    }
+
+    .warning-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .btn-change-password-banner {
+        width: 100%;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+    }
+
+    .players-actions {
+        flex-direction: column;
+    }
+
+    .btn-players,
+    .btn-clean-season {
+        width: 100%;
+    }
+
+    .form-row-multi {
+        flex-direction: column;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .btn-save,
+    .btn-cancel {
+        width: 100%;
+    }
+
+    .question-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+
+    .q-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .player-edit-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .new-score {
+        text-align: center;
+    }
+
+    .btn-save-score {
+        width: 100%;
+    }
+
+    .modal-content {
+        width: 95%;
+    }
+
+    .modal-header h2 {
+        font-size: 1.3rem;
+    }
+}
+
+/* --- RESPONSIVE / Moviles pequeños --- */
+
+@media (max-width: 480px) {
+    .admin-container {
+        margin: var(--spacing-sm);
+        padding: var(--spacing-md);
+    }
+
+    .admin-title {
+        font-size: 1.2rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+    }
+
+    .warning-icon {
+        font-size: 1.5rem;
+    }
+
+    .option-row {
+        padding: var(--spacing-xs);
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
 }

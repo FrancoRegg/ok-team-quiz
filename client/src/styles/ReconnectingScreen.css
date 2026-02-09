@@ -1,28 +1,55 @@
 .reconnecting-card {
     text-align: center;
-    padding: 40px 20px;
+    padding: var(--spacing-2xl) var(--spacing-lg);
 }
 
-.spinner {
-    width: 50px;
-    height: 50px;
-    margin: 0 auto 20px;
+.reconnecting-card .spinner {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto var(--spacing-lg);
     border: 4px solid rgba(0, 150, 255, 0.2);
     border-top-color: var(--primary-blue);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
 .reconnecting-card h2 {
     color: var(--primary-blue);
-    margin-bottom: 10px;
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 1.8rem;
+    font-weight: 700;
 }
 
 .reconnecting-card p {
-    color: #666;
-    font-size: 0.9rem;
+    color: #6b7280;
+    font-size: 0.95rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* --- ANIMACIÓN --- */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 480px) {
+    .reconnecting-card {
+        padding: var(--spacing-xl) var(--spacing-md);
+    }
+
+    .reconnecting-card .spinner {
+        width: 50px;
+        height: 50px;
+    }
+
+    .reconnecting-card h2 {
+        font-size: 1.5rem;
+    }
+
+    .reconnecting-card p {
+        font-size: 0.85rem;
+    }
 }

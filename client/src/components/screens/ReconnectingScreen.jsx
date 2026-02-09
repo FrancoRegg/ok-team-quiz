@@ -6,7 +6,7 @@ const ReconnectingScreen = () => {
             <div className="mobile-card reconnecting-card">
                 <div className="spinner"></div>
                 <h2>Reconectando...</h2>
-                <p>Validando sesión</p>
+                <p>Verificando conexión con el servidor</p>
             </div>
         </div>
     );

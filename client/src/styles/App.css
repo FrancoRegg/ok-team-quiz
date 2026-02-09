@@ -1,146 +1,240 @@
+:root {
+    /* --- Espaciados --- */
+    --spacing-xs: 8px;
+    --spacing-sm: 12px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+    
+    /* --- Border radius --- */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    
+    /* --- Sombras --- */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+    
+    /* --- Transiciones --- */
+    --transition-base: 0.2s ease;
+    
+    /* --- Colores --- */
+    --color-success: #10b981;
+    --color-error: #ef4444;
+}
+
+/* --- CONTENEDOR PRINCIPAL (MÓVIL) --- */
+
 .mobile-container {
-  min-height: 100vh;
-  background-color: var(--bg-color);
-  font-family: var(--font-stack);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  box-sizing: border-box;
-  text-align: center;
-  touch-action: manipulation; 
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f2f5 0%, #e5e7eb 100%);
+    font-family: var(--font-stack);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    box-sizing: border-box;
+    text-align: center;
+    touch-action: manipulation;
 }
 
-/* --- TARJETAS --- */
+/* --- TARJETA BASE --- */
+
 .mobile-card {
-  background: white;
-  padding: 30px;
-  border-radius: 20px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-  width: 100%;
-  max-width: 400px; 
-  animation: slideUp 0.4s ease-out;
+    background: white;
+    padding: var(--spacing-2xl);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 420px;
+    animation: slideUp 0.4s ease-out;
 }
 
-/* --- INPUTS Y BOTONES DE LOGIN --- */
+/* --- INPUTS --- */
+
 .mobile-input {
-  width: 100%;
-  padding: 15px;
-  margin: 20px 0;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  font-size: 1.1rem; 
-  text-align: center;
-  box-sizing: border-box;
-  outline: none;
+    width: 100%;
+    padding: var(--spacing-md);
+    margin: var(--spacing-lg) 0;
+    border: 2px solid #e5e7eb;
+    border-radius: var(--radius-md);
+    font-size: 1.1rem;
+    text-align: center;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color var(--transition-base);
+    font-family: var(--font-stack);
 }
 
 .mobile-input:focus {
-  border-color: var(--primary-blue);
+    border-color: var(--primary-blue);
 }
+
+/* --- BOTÓN LOGIN --- */
 
 .btn-login {
-  width: 100%;
-  padding: 15px;
-  background: var(--primary-blue);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0,159,227, 0.3);
+    width: 100%;
+    padding: var(--spacing-md);
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-base);
 }
 
-/* --- GRID DE JUEGO --- */
+.btn-login:hover {
+    background: #0077cc;
+}
+
+.btn-login:active {
+    opacity: 0.8;
+}
+
+/* --- GRID DE OPCIONES --- */
+
 .game-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr; 
-  gap: 15px;
-  width: 100%;
-  max-width: 500px;
-  margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    width: 100%;
+    max-width: 500px;
+    margin-top: var(--spacing-lg);
 }
 
 .game-btn {
-  background: white;
-  border: 2px solid transparent; 
-  border-radius: 15px;
-  padding: 10px;
-  min-height: 120px; 
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: var(--secondary-dark);
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-  transition: transform 0.1s, background 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  word-break: break-word; 
+    background: white;
+    border: 3px solid #e5e7eb;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    min-height: 120px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1f2937;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    word-break: break-word;
+    text-align: center;
 }
 
 .game-btn.active {
-  border-color: var(--primary-blue);
-  color: var(--primary-blue);
-}
-.game-btn.active:active {
-  transform: scale(0.95);
-  background: #e6f7ff;
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+    background: #eff6ff;
 }
 
 .game-btn.disabled {
-  background: #f0f0f0;
-  color: #aaa;
-  border-color: transparent;
-  cursor: not-allowed;
+    background: #f3f4f6;
+    color: #9ca3af;
+    border-color: #e5e7eb;
+    cursor: not-allowed;
 }
 
 .game-btn.correct {
-  background: #4CAF50 !important; 
-  color: white !important;
-  border-color: #4CAF50 !important;
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(76, 175, 80, 0.4);
+    background: var(--color-success);
+    color: white;
+    border-color: var(--color-success);
+    animation: successPulse 0.5s ease;
 }
 
 .game-btn.incorrect {
-  background: #F44336 !important; 
-  color: white !important;
-  border-color: #F44336 !important;
-  animation: shake 0.4s;
+    background: var(--color-error);
+    color: white;
+    border-color: var(--color-error);
+    animation: shake 0.4s ease;
 }
 
-/* --- ANIMACIONES Y EXTRAS --- */
-.pulse-text {
-  animation: pulse 1.5s infinite;
-  font-size: 1.5rem;
-  margin: 20px 0;
-}
+/* --- ESTADO DE CONEXIÓN --- */
 
 .status-footer {
-  margin-top: 30px;
-  font-size: 0.8rem;
-  opacity: 0.7;
+    margin-top: var(--spacing-xl);
+    font-size: 0.85rem;
+    color: #6b7280;
 }
+
+.status-connected {
+    color: var(--color-success);
+    font-weight: 600;
+}
+
+.status-disconnected {
+    color: var(--color-error);
+    font-weight: 600;
+}
+
+/* --- ANIMACIONES --- */
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.7; }
-  100% { transform: scale(1); opacity: 1; }
+@keyframes successPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
 @keyframes shake {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  50% { transform: translateX(5px); }
-  75% { transform: translateX(-5px); }
-  100% { transform: translateX(0); }
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-8px);
+    }
+    75% {
+        transform: translateX(8px);
+    }
+}
+
+/* --- RESPONSIVE / Moviles pequeños --- */
+
+@media (max-width: 480px) {
+    .mobile-container {
+        padding: var(--spacing-md);
+    }
+
+    .mobile-card {
+        padding: var(--spacing-lg);
+    }
+
+    .game-grid {
+        gap: var(--spacing-sm);
+    }
+
+    .game-btn {
+        min-height: 100px;
+        font-size: 1.1rem;
+        padding: var(--spacing-md);
+    }
+}
+
+@media (max-width: 360px) {
+    .game-btn {
+        min-height: 90px;
+        font-size: 1rem;
+    }
 }
 

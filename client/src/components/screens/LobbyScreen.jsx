@@ -9,10 +9,9 @@ const LobbyScreen = ({ playerName, score }) => {
             
             <div className="lobby-container">
                 <div className="lobby-waiting">
-                    <div className="pulse-text">⏳</div>
-                    <h2>Esperando al Host...</h2>
-                    <p>¡Prepárate, va a empezar!</p>
-                    <div className="status-footer">Mira la pantalla grande</div>
+                    <div className="pulse-indicator"></div>
+                    <h2>Esperando inicio de partida</h2>
+                    <p>Mantente atento a la pantalla principal</p>
                 </div>
             </div>
         </div>

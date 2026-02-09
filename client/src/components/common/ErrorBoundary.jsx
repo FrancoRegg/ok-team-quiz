@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import PropTypes from 'prop-types';
+import '../../styles/ErrorBoundary.css'
 
 // Error Boundary para capturar errores en componentes hijos, evita que un error en un componente rompa toda la aplicación
 
@@ -43,7 +44,7 @@ class ErrorBoundary extends Component {
             return (
                 <div className="error-boundary-container">
                     <div className="error-boundary-card">
-                        <h1>😕 Oops! Algo salió mal</h1>
+                        <h1>Ha ocurrido un error</h1>
                         <p>La aplicación encontró un error inesperado.</p>
                         
                         {process.env.NODE_ENV === 'development' && this.state.error && (
@@ -58,7 +59,7 @@ class ErrorBoundary extends Component {
                             className="btn-reset-error"
                             onClick={this.handleReset}
                         >
-                            🔄 Recargar aplicación
+                            Recargar Aplicación
                         </button>
                     </div>
                 </div>

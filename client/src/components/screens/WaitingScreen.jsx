@@ -8,10 +8,10 @@ const WaitingScreen = ({ playerName, score }) => {
             <GameHeader playerName={playerName} score={score} />
             
             <div className="waiting-state">
-                <div className="pulse-text">⏳</div>
-                <h2>Esperando pregunta...</h2>
+                <div className="pulse-indicator"></div>
+                <h2>Preparando siguiente pregunta</h2>
                 <p className="waiting-message">
-                    El anfitrión está leyendo la pregunta en la pantalla principal
+                    Mantente atento a la pantalla principal
                 </p>
             </div>
         </div>

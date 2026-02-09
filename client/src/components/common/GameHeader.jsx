@@ -5,8 +5,8 @@ const GameHeader = ({ playerName, score }) => {
     return (
         <>
             <div className="app-header">
-                <span className="player-info">👤 {playerName}</span>
-                <span className="score-badge">{score} pts</span>
+                <span className="player-info">{playerName}</span>
+                <span className="score-badge">{score}</span>
             </div>
             <div className="header-spacer"></div>
         </>

@@ -142,7 +142,7 @@ function App() {
   // Fallback
   return (
     <div className="mobile-container">
-      <div className="pulse-text">Cargando...</div>
+      <div className="pulse-indicator"></div>
     </div>
 
   );

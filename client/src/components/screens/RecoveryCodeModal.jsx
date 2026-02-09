@@ -62,15 +62,15 @@ Generado el: ${new Date().toLocaleString('es-ES')}
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content recovery-code-modal" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>🔐 Código de Recuperación</h2>
+                    <h2>Código de Recuperación</h2>
                 </div>
                 
                 <div className="modal-body">
                     <div className="recovery-warning">
                         <span className="warning-icon">⚠️</span>
                         <p>
-                            <strong>¡Importante!</strong> Este código te permitirá recuperar el acceso 
-                            si olvidas tu contraseña. <strong>Guárdalo en un lugar seguro.</strong>
+                            <strong>Importante:</strong> Guarda este código en un lugar seguro. 
+                            Lo necesitarás para recuperar el acceso si olvidas tu contraseña.
                         </p>
                     </div>
 
@@ -85,26 +85,26 @@ Generado el: ${new Date().toLocaleString('es-ES')}
                             className="btn-copy-code"
                             onClick={handleCopy}
                         >
-                            {copied ? '✅ Copiado' : '📋 Copiar Código'}
+                            {copied ? 'Copiado ✓' : 'Copiar Código'}
                         </button>
                         
                         <button 
                             className="btn-download-code"
                             onClick={handleDownload}
                         >
-                            💾 Descargar TXT
+                            Descargar TXT
                         </button>
                     </div>
 
                     <div className="recovery-note">
-                        <p>Este código <strong>NO se volverá a mostrar</strong>. Asegúrate de guardarlo.</p>
+                        <p>Este código es necesario para recuperar el acceso si olvidas tu contraseña.</p>
                     </div>
 
                     <button 
                         className="btn-close-recovery"
                         onClick={onClose}
                     >
-                        Cerrar - Ya lo guardé ✓
+                        Cerrar
                     </button>
                 </div>
             </div>

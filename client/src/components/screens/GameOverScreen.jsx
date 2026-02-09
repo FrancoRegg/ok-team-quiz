@@ -1,15 +1,18 @@
 import PropTypes from 'prop-types';
 import '../../styles/App.css';
+import '../../styles/GameOverScreen.css' 
 
 const GameOverScreen = ({ score, onExitGame }) => {
     return (
         <div className="mobile-container">
             <div className="mobile-card">
-                <h1>🏁 Fin del Juego</h1>
-                <p>Mira la pantalla grande para ver el podio.</p>
+                <h1>Partida Finalizada</h1>
+                <p>Consulta el podio en la pantalla principal.</p>
                 
                 <div className="game-over-score">
-                    {score} pts
+                    <span className="score-label">Tu puntuación</span>
+                    <span className="score-value">{score}</span>
+                    <span className="score-unit">puntos</span>
                 </div>
                 
                 <button className="btn-exit" onClick={onExitGame}>

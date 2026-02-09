@@ -1,43 +1,160 @@
-/* --- Estado activo (QUESTION_ACTIVE) --- */
 .question-container {
     width: 100%;
     max-width: 500px;
 }
 
 .question-prompt {
-    margin-bottom: 20px;
+    margin-bottom: var(--spacing-lg);
     font-size: 1.3rem;
     text-align: center;
+    color: #1f2937;
+    font-weight: 700;
 }
 
-.waiting-result {
-    font-size: 1rem;
-    color: #888;
-    margin-top: 20px;
-}
+/* --- TEMPORIZADOR --- */
 
-/* --- Temporizador --- */
 .mobile-timer {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    margin-bottom: 25px;
-    padding: 18px 35px;
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    border-radius: 50px;
-    border: 3px solid #f59e0b;
-    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-xl);
+    background: #fef3c7;
+    border-radius: var(--radius-full);
+    border: 2px solid var(--color-warning);
+    box-shadow: var(--shadow-sm);
 }
 
 .mobile-timer-icon {
-    font-size: 1.8rem;
+    display: none;
 }
 
 .mobile-timer-number {
     font-size: 2.8rem;
     font-weight: 900;
     color: #b45309;
-    min-width: 60px;
+    line-height: 1;
+}
+
+/* --- RESPUESTA ENVIADA --- */
+
+.answer-submitted {
+    background: #f0fdf4;
+    border: 2px solid var(--color-success);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
     text-align: center;
+    animation: slideUp 0.3s ease;
+}
+
+.check-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--color-success);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 auto var(--spacing-sm);
+    animation: successPulse 0.5s ease;
+}
+
+.answer-submitted p {
+    margin: 0;
+    color: #059669;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* --- ESTADO DE CARGA --- */
+
+.loading-state {
+    text-align: center;
+    padding: var(--spacing-2xl);
+}
+
+.loading-state .spinner {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto var(--spacing-lg);
+    border: 4px solid rgba(0, 150, 255, 0.2);
+    border-top-color: var(--primary-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loading-state p {
+    color: #6b7280;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* --- ANIMACIONES --- */
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes successPulse {
+    0% {
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* --- RESPONSIVE --- */
+
+@media (max-width: 480px) {
+    .question-prompt {
+        font-size: 1.2rem;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .mobile-timer {
+        padding: var(--spacing-sm) var(--spacing-lg);
+    }
+
+    .mobile-timer-icon {
+        width: 28px;
+        height: 28px;
+        border-width: 2px;
+    }
+
+    .mobile-timer-number {
+        font-size: 2.5rem;
+        min-width: 50px;
+    }
+
+    .check-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.8rem;
+    }
+
+    .answer-submitted p {
+        font-size: 1rem;
+    }
 }

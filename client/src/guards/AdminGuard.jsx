@@ -147,20 +147,20 @@ function AdminGuard({ children }){
                 <div className="lock-icon">🔒</div>
                 
                 <h2 className="login-title">Acceso Restringido</h2>
-                <p className="login-subtitle">Panel de Control OK TEAM</p>
+                <p className="login-subtitle">Panel de Administración</p>
 
                 <input 
                     className="login-input"
                     name="Password" 
                     type="password" 
-                    placeholder="Escribe la contraseña..."
+                    placeholder="Ingresa tu contraseña..."
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)}
                     onKeyDown={handleKeyDown} 
                 />
                 
                 <button className="btn-access" onClick={handleLogin}>
-                    Acceder al Panel ➡
+                    Acceder
                 </button>
 
                 {/* Enlace de recuperación */}
@@ -174,7 +174,7 @@ function AdminGuard({ children }){
                 <div className="modal-overlay" onClick={() => setShowRecoveryModal(false)}>
                     <div className="modal-content recovery-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>🔓 Recuperar Acceso</h2>
+                            <h2>Recuperar Acceso</h2>
                             <button className="modal-close" onClick={() => setShowRecoveryModal(false)}>
                                 ✕
                             </button>
@@ -184,7 +184,7 @@ function AdminGuard({ children }){
                             
                             {/* Código de Recuperación */}
                             <div className="form-group">
-                                <label className="form-label">Código de Recuperación:</label>
+                                <label className="form-label">Código de recuperación:</label>
                                 <input
                                     type="text"
                                     className="form-input recovery-code-input"
@@ -193,12 +193,12 @@ function AdminGuard({ children }){
                                     onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())}
                                     maxLength={17}
                                 />
-                                <p className="input-hint">Ingresa el código que guardaste al cambiar tu contraseña</p>
+                                <p className="input-hint">Ingresa el código que recibiste al cambiar tu contraseña</p>
                             </div>
 
                             {/* Nueva Contraseña */}
                             <div className="form-group">
-                                <label className="form-label">Nueva Contraseña:</label>
+                                <label className="form-label">Nueva contraseña:</label>
                                 <input
                                     type="password"
                                     className="form-input"
@@ -242,7 +242,7 @@ function AdminGuard({ children }){
 
                             {/* Confirmar Contraseña */}
                             <div className="form-group">
-                                <label className="form-label">Confirmar Nueva Contraseña:</label>
+                                <label className="form-label">Confirmar Contraseña:</label>
                                 <input
                                     type="password"
                                     className="form-input"
@@ -264,13 +264,13 @@ function AdminGuard({ children }){
                                 onClick={handleRecovery}
                                 disabled={!isPasswordValid() || !recoveryCode.trim()}
                             >
-                                🔓 Recuperar Acceso
+                                Recuperar Acceso
                             </button>
 
                             {/* Soporte */}
                             <div className="recovery-support">
                                 <p>¿No tienes el código?</p>
-                                <p className="support-info">Contacta a soporte técnico</p>
+                                <p className="support-info">Contacta al administrador del sistema</p>
                             </div>
                         </div>
                     </div>

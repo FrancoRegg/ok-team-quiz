@@ -1,109 +1,250 @@
-/* Contenedor principal: Centrado perfecto */
+:root {
+    /* --- Espaciados consistentes --- */
+    --spacing-xs: 8px;
+    --spacing-sm: 12px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+    
+    /* --- Border radius --- */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-full: 50px;
+    
+    /* --- Sombras minimalistas --- */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+    
+    /* --- Transiciones --- */
+    --transition-fast: 0.15s ease;
+    --transition-base: 0.2s ease;
+    
+    /* --- Colores de estado --- */
+    --color-success: #10b981;
+    --color-info: #3b82f6;
+    --color-warning: #f59e0b;
+    --color-error: #ef4444;
+}
+
+/* --- CONTENEDOR PRINCIPAL --- */
+
 .guard-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     background-color: #f0f2f5;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-stack);
+    padding: var(--spacing-lg);
 }
 
-/* Tarjeta de Login */
+/* --- TARJETA DE LOGIN --- */
+
 .login-card {
     background: white;
-    padding: 40px;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    padding: var(--spacing-2xl);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
     text-align: center;
     width: 100%;
-    max-width: 400px; /* Ancho máximo para que no se estire en pantallas grandes */
-    border: 1px solid #e1e4e8;
+    max-width: 420px;
+    border: 1px solid #e5e7eb;
 }
 
-/* Icono del candado */
 .lock-icon {
     font-size: 3rem;
-    margin-bottom: 15px;
-    background-color: #e3f2fd;
+    margin-bottom: var(--spacing-md);
+    background-color: #eff6ff;
     width: 80px;
     height: 80px;
     line-height: 80px;
-    border-radius: 50%;
+    border-radius: var(--radius-full);
     margin-left: auto;
     margin-right: auto;
 }
 
 .login-title {
-    color: #333;
-    margin-bottom: 10px;
+    color: #1f2937;
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 1.8rem;
+    font-weight: 700;
 }
 
 .login-subtitle {
-    color: #666;
-    margin-bottom: 30px;
-    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0 0 var(--spacing-xl) 0;
+    font-size: 0.95rem;
+    font-weight: 400;
 }
 
-/* Input de contraseña */
+/* --- INPUT DE CONTRASEÑA --- */
+
 .login-input {
     width: 100%;
-    padding: 12px 15px;
-    margin-bottom: 20px;
-    border: 2px solid #eee;
-    border-radius: 8px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    border: 2px solid #e5e7eb;
+    border-radius: var(--radius-sm);
     font-size: 1rem;
     box-sizing: border-box;
-    transition: border-color 0.3s;
+    transition: border-color var(--transition-base);
+    font-family: var(--font-stack);
 }
 
 .login-input:focus {
-    border-color: var(--primary-blue, #007bff);
+    border-color: var(--primary-blue);
     outline: none;
 }
 
-/* Botón de Acceder */
+/* --- BOTON ACCEDER --- */
+
 .btn-access {
     width: 100%;
-    padding: 12px;
-    background-color: #007bff;
+    padding: var(--spacing-md);
+    background-color: var(--primary-blue);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     font-size: 1rem;
-    font-weight: bold;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: background var(--transition-base);
 }
 
 .btn-access:hover {
-    background-color: #0056b3;
+    background-color: #0077cc;
 }
 
-/* Botón de "Olvidé contraseña"*/
+/* --- SECCION OLVIDE CONTRASEÑA --- */
+
 .forgot-section {
-    margin-top: 20px;
-    border-top: 1px solid #eee;
-    padding-top: 15px;
+    margin-top: var(--spacing-lg);
+    border-top: 1px solid #e5e7eb;
+    padding-top: var(--spacing-md);
 }
 
 .btn-forgot {
     background: none;
     border: none;
-    color: #888;
+    color: #6b7280;
     text-decoration: underline;
     cursor: pointer;
     font-size: 0.9rem;
-    transition: color 0.3s;
+    transition: color var(--transition-base);
 }
 
 .btn-forgot:hover {
-    color: #555;
+    color: #1f2937;
 }
 
-/* Modal de Recuperacion*/
+/* --- MODAL / Estructura base --- */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    animation: fadeIn 0.2s ease;
+    padding: var(--spacing-lg);
+}
+
+.modal-content {
+    background: white;
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 550px;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0;
+    width: 45px;
+    height: 45px;
+    color: #9ca3af;
+    transition: all var(--transition-base);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    background: #fee2e2;
+    color: var(--color-error);
+}
+
+.modal-body {
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* --- MODAL / Recuperacion --- */
+
 .recovery-modal {
     max-width: 550px;
-    width: 90%;
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+    text-align: left;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+    color: #1f2937;
+    font-size: 0.95rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 2px solid #e5e7eb;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: border-color var(--transition-base);
+    font-family: var(--font-stack);
+}
+
+.form-input:focus {
+    border-color: var(--primary-blue);
+    outline: none;
 }
 
 .recovery-code-input {
@@ -115,55 +256,198 @@
 
 .input-hint {
     font-size: 0.85rem;
-    color: #6c757d;
-    margin-top: 5px;
+    color: #6b7280;
+    margin-top: var(--spacing-xs);
     margin-bottom: 0;
+    line-height: 1.4;
 }
+
+/* --- VALIDACION DE CONTRASEÑA --- */
+
+.password-requirements {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-md);
+    margin: var(--spacing-md) 0;
+}
+
+.requirements-title {
+    font-weight: 600;
+    margin: 0 0 var(--spacing-sm) 0;
+    color: #4b5563;
+    font-size: 0.9rem;
+}
+
+.requirement-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) 0;
+    font-size: 0.9rem;
+}
+
+.check-valid {
+    color: var(--color-success);
+    font-weight: 700;
+}
+
+.check-invalid {
+    color: var(--color-error);
+    font-weight: 700;
+}
+
+.password-mismatch {
+    color: var(--color-error);
+    font-size: 0.85rem;
+    margin: var(--spacing-xs) 0 0 0;
+}
+
+.password-match {
+    color: var(--color-success);
+    font-size: 0.85rem;
+    margin: var(--spacing-xs) 0 0 0;
+}
+
+/* --- BOTON RECUPERAR ACCESO --- */
 
 .btn-recover-access {
     width: 100%;
-    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    background: var(--color-success);
     color: white;
     border: none;
-    padding: 16px;
-    border-radius: 8px;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-sm);
     font-size: 1rem;
-    font-weight: bold;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 20px;
+    transition: background var(--transition-base);
+    margin-top: var(--spacing-lg);
 }
 
 .btn-recover-access:hover:not(:disabled) {
-    background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-}
-
-.btn-recover-access:active:not(:disabled) {
-    transform: translateY(0);
+    background: #059669;
 }
 
 .btn-recover-access:disabled {
-    background: #6c757d;
+    background: #9ca3af;
     cursor: not-allowed;
     opacity: 0.6;
 }
 
+/* --- SECCION DE SOPORTE --- */
+
 .recovery-support {
     text-align: center;
-    margin-top: 25px;
-    padding-top: 20px;
-    border-top: 1px solid #dee2e6;
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid #e5e7eb;
 }
 
 .recovery-support p {
-    margin: 5px 0;
-    color: #6c757d;
+    margin: var(--spacing-xs) 0;
+    color: #6b7280;
     font-size: 0.9rem;
 }
 
 .recovery-support .support-info {
-    font-weight: bold;
-    color: #0096ff;
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+/* --- ANIMACION UNICA --- */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* --- RESPONSIVE / Tablets --- */
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    .login-card {
+        max-width: 450px;
+        padding: var(--spacing-xl);
+    }
+
+    .modal-content {
+        max-width: 500px;
+    }
+}
+
+/* --- RESPONSIVE / Movil --- */
+
+@media (max-width: 768px) {
+    .guard-container {
+        padding: var(--spacing-md);
+    }
+
+    .login-card {
+        padding: var(--spacing-lg);
+    }
+
+    .lock-icon {
+        width: 70px;
+        height: 70px;
+        line-height: 70px;
+        font-size: 2.5rem;
+    }
+
+    .login-title {
+        font-size: 1.5rem;
+    }
+
+    .modal-content {
+        width: 95%;
+        max-height: 90vh;
+    }
+
+    .modal-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .modal-body {
+        padding: var(--spacing-md);
+    }
+}
+
+/* --- RESPONSIVE / Movil pequeño --- */
+
+@media (max-width: 480px) {
+    .guard-container {
+        padding: var(--spacing-sm);
+    }
+
+    .login-card {
+        padding: var(--spacing-md);
+    }
+
+    .lock-icon {
+        width: 60px;
+        height: 60px;
+        line-height: 60px;
+        font-size: 2rem;
+    }
+
+    .login-title {
+        font-size: 1.3rem;
+    }
+
+    .login-subtitle {
+        font-size: 0.85rem;
+    }
+
+    .modal-header {
+        padding: var(--spacing-md);
+    }
+
+    .modal-close {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+    }
 }

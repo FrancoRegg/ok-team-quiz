@@ -1,13 +1,26 @@
+/* --- LOGIN SCREEN --- */
 .welcome-title {
     color: var(--primary-blue);
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin: 0 0 var(--spacing-sm) 0;
+    line-height: 1.2;
 }
 
-.status-connected {
-    color: green;
-    font-weight: bold;
+.welcome-title + p {
+    color: #6b7280;
+    font-size: 1.05rem;
+    margin: 0;
+    font-weight: 400;
 }
 
-.status-disconnected {
-    color: red;
-    font-weight: bold;
+/* --- RESPONSIVE --- */
+@media (max-width: 480px) {
+    .welcome-title {
+        font-size: 1.8rem;
+    }
+
+    .welcome-title + p {
+        font-size: 0.95rem;
+    }
 }

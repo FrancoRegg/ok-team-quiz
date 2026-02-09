@@ -99,14 +99,14 @@ function HostView() {
             <div className="modal-overlay" onClick={() => setShowResetModal(false)}>
                 <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
-                        <h2>🔄 Reiniciar Partida</h2>
+                        <h2>Reiniciar Partida</h2>
                         <button className="modal-close" onClick={() => setShowResetModal(false)}>
                             ✕
                         </button>
                     </div>
                     
                     <div className="modal-body">
-                        <p className="modal-question">¿Qué quieres hacer con los jugadores?</p>
+                        <p className="modal-question">¿Qué desea hacer con los participantes?</p>
                         
                         <div className="reset-options">
                             <button 
@@ -118,8 +118,8 @@ function HostView() {
                             >
                                 <span className="option-icon">🔄</span>
                                 <div className="option-text">
-                                    <strong>Mantener jugadores</strong>
-                                    <small>Solo resetear preguntas (conservar puntos)</small>
+                                    <strong>Mantener participantes</strong>
+                                    <small>Reiniciar solo las preguntas (conservar puntos)</small>
                                 </div>
                             </button>
                             
@@ -135,7 +135,7 @@ function HostView() {
                                 <span className="option-icon">🧹</span>
                                 <div className="option-text">
                                     <strong>Limpiar todo</strong>
-                                    <small>Borrar jugadores y empezar de cero</small>
+                                    <small>Eliminar participantes y comenzar de cero</small>
                                 </div>
                             </button>
                         </div>
@@ -150,7 +150,7 @@ function HostView() {
             <div className="modal-overlay" onClick={() => setShowRankingModal(false)}>
                 <div className="modal-content ranking-modal" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-header">
-                        <h2>🏆 Tabla de Posiciones</h2>
+                        <h2>Tabla de Posiciones</h2>
                         <button className="modal-close" onClick={() => setShowRankingModal(false)}>
                             ✕
                         </button>
@@ -158,7 +158,7 @@ function HostView() {
                     
                     <div className="modal-body">
                         {groups.filter(g => g.name !== 'HOST').length === 0 ? (
-                            <p className="no-players">No hay jugadores registrados</p>
+                            <p className="no-players">No hay participantes registrados</p>
                         ) : (
                             <div className="ranking-full-list">
                                 {groups
@@ -189,7 +189,7 @@ function HostView() {
         return(
             <div className="host-container">
                 <div>
-                    <h1 className="big-title">¡Únete al Quiz!</h1>
+                    <h1 className="big-title">OK TEAM Quiz</h1>
                 
                     <div className="qr-frame">
                         {joinUrl && (
@@ -200,14 +200,14 @@ function HostView() {
                         )}
                     </div>
                 </div>
-                <h3 className="sub-title">Escanea o entra en: 
+                <h3 className="sub-title">Escanea el QR o ingresa desde el móvil a: 
                     <span className="url-highlight">{joinUrl}</span>
                 </h3>
                 
                 <hr/>
 
                 {groups.filter(g => g.name !== 'HOST').length === 0 && (
-                    <h3>Esperando Jugadores...</h3>
+                    <h3>Esperando Participantes...</h3>
                 )}
                 <ul className="players-grid">
                     {groups.filter(grupo => grupo.name !== 'HOST').map((value)=>(
@@ -217,7 +217,7 @@ function HostView() {
                 <button 
                     className="btn-primary"
                     onClick={()=>{socket.emit('next_question')}}>
-                        Empezar Juego
+                        Iniciar Partida
                 </button>
                 <AdminButton />
                 <ResetModal />
@@ -235,17 +235,17 @@ function HostView() {
 
         return(
             <div className="host-container">
-                <h1 className="big-title">Juego Terminado</h1>
+                <h1 className="big-title">Partida Finalizada</h1>
                 {winner && (
                     <div className="qr-frame">
-                        <h2 className="sub-title">🏆 GANADOR:</h2>
+                        <h2 className="sub-title">🏆 GANADOR</h2>
                         <h1 className="big-title">{winner.name}</h1>
                         <h3>Con {winner.score} puntos</h3>
                     </div>
                 )}
 
                 <div className="ranking-table-container">
-                    <h3 className="sub-title" style={{marginTop: '20px'}}>Tabla Final</h3>
+                    <h3 className="sub-title" style={{marginTop: '20px'}}>Tabla de Posiciones</h3>
                     <ul className="ranking-list" style={{padding: 0, listStyle: 'none', margin: 0}}>
                         {sortedGroups.map((p, i) => (
                             <li key={p.id} className="ranking-row-item">
@@ -263,7 +263,7 @@ function HostView() {
                     className="btn-primary" 
                     onClick={() => setShowResetModal(true)}
                     >
-                    Nueva Partida 🔄
+                    Nueva Partida
                 </button>
                 <AdminButton />
                 <ResetModal />
@@ -335,7 +335,7 @@ function HostView() {
                         <button 
                             className="btn-main-action activate"
                             onClick={()=>{socket.emit('activate_answers')}}>
-                            🟢 Activar Respuestas
+                                Activar Respuestas
                         </button>
                     )}
                     
@@ -343,7 +343,7 @@ function HostView() {
                         <button 
                             className="btn-main-action show-answer"
                             onClick={()=>{socket.emit('show_answer')}}>
-                            📺 Mostrar Respuesta
+                                Mostrar Respuesta Correcta
                         </button>
                     )}
 
@@ -351,13 +351,13 @@ function HostView() {
                         <button 
                             className="btn-main-action next-question"
                             onClick={()=>{socket.emit('next_question')}}>
-                            Siguiente Pregunta ➡
+                                Siguiente Pregunta
                         </button>
                     )}
                 </div>
                 
                 <div className="live-stats-bar">
-                    <span className="stat-label">Líderes ahora:</span>
+                    <span className="stat-label">Posiciones Actuales:</span>
                     {groups
                         .filter(g => g.name !== 'HOST')
                         .sort((a, b) => b.score - a.score)

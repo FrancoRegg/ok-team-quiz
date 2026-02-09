@@ -46,14 +46,14 @@ const QuestionScreen = ({
             <div className="question-container">
                 {timer !== null && (
                     <div className="mobile-timer">
-                        <span className="mobile-timer-icon">⏱️</span>
+                        <span className="mobile-timer-icon"></span>
                         <span className="mobile-timer-number">{timer}</span>
                     </div>
                 )}
 
                 {optionsAnswers?.options ? (
                     <div>
-                        <h3 className="question-prompt">Elige una opción:</h3>
+                        <h3 className="question-prompt">Selecciona tu respuesta:</h3>
                         <div className="game-grid">
                             {optionsAnswers.options.map((answer, i) => (
                                 <button
@@ -67,13 +67,17 @@ const QuestionScreen = ({
                             ))}
                         </div>
                         {hasAnswered && answerStatus === null && (
-                            <p className="pulse-text waiting-result">
-                                Respuesta enviada... Esperando resultado 🤞
-                            </p>
+                            <div className="answer-submitted">
+                                <div className="check-icon">✓</div>
+                                <p>Respuesta enviada</p>
+                            </div>
                         )}
                     </div>
                 ) : (
-                    <div className="pulse-text">Cargando preguntas... 🔄</div>
+                    <div className="loading-state">
+                        <div className="spinner"></div>
+                        <p>Cargando pregunta...</p>
+                    </div>
                 )}
             </div>
         </div>

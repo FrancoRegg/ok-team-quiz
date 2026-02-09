@@ -17,7 +17,7 @@ const LoginScreen = ({
     return (
         <div className="mobile-container">
             <div className="mobile-card">
-                <h1 className="welcome-title">¡Bienvenido! 👋</h1>
+                <h1 className="welcome-title">¿Listos para jugar?</h1>
                 <p>Ingresa el nombre de tu equipo</p>
                 
                 <input 
@@ -30,7 +30,7 @@ const LoginScreen = ({
                 />
                 
                 <button className="btn-login" onClick={onEnterGame}> 
-                    ¡A Jugar! 🚀 
+                    Unirse a la Partida 
                 </button>
                 
                 <div className="status-footer">

@@ -25,7 +25,7 @@ const PlayerEditItem = ({ player, onEdit }) => {
                 <input 
                     type="number"
                     className="score-input"
-                    placeholder="+100 o -50"
+                    placeholder="Ej: +100 o -50"
                     value={scoreChange || ''}
                     onChange={(e) => setScoreChange(parseInt(e.target.value) || 0)}
                 />
@@ -99,7 +99,7 @@ function AdminView() {
 
     const handleChangePassword = async () => {
         if (!isPasswordValid()) {
-            alert('⚠️ La contraseña no cumple todos los requisitos');
+            alert('La contraseña no cumple los requisitos de seguridad');
             return;
         }
 
@@ -129,15 +129,15 @@ function AdminView() {
                     // Actualizar flag
                     localStorage.setItem('is_default_password', 'false');
                 } else {
-                    alert('✅ ' + data.message);
+                    alert(data.message);
                     window.location.reload();
                 }
             } else {
-                alert('❌ ' + data.message);
+                alert(data.message);
             }
         } catch (error) {
             console.error('Error al cambiar contraseña:', error);
-            alert('❌ Error al cambiar contraseña');
+            alert('Error al cambiar contraseña');
         }
     };
 
@@ -247,7 +247,7 @@ function AdminView() {
         setTimeout(() => {
             setPlayers([]);
             setShowPlayersModal(false);
-            alert('✅ Temporada limpiada correctamente');
+            alert('Temporada limpiada correctamente');
         }, 500);
     };
 
@@ -326,7 +326,7 @@ function AdminView() {
 
     const handleSubmit = async() => {
         if(!title || options.some(opt => opt.trim() === "")){
-            alert("Debes rellenar el titulo y las opciones");
+            alert("Completa todos los campos obligatorios");
             return;
         }
 
@@ -357,7 +357,7 @@ function AdminView() {
                 method = 'PUT';
             }
 
-            // ✅ USAR fetchWithAuth en vez de fetch directo
+            // USAR fetchWithAuth en vez de fetch directo
             const response = await fetchWithAuth(`${API_URL}${url}`, {
                 method: method,
                 body: JSON.stringify(questionData)
@@ -371,7 +371,7 @@ function AdminView() {
             }      
 
             if(response.ok){
-                alert(editingId ? "¡Pregunta actualizada! ✏️" : "¡Pregunta guardada! 🎉");
+                alert(editingId ? "Pregunta actualizada correctamente" : "Pregunta guardada correctamente");
                 resetForm(); 
                 fetchQuestions(); 
             } else {
@@ -398,14 +398,14 @@ function AdminView() {
                     <div className="warning-content">
                         <span className="warning-icon">⚠️</span>
                         <div className="warning-text">
-                            <strong>Contraseña por defecto detectada</strong>
-                            <p>Por seguridad, debes cambiar la contraseña antes de usar el panel.</p>
+                            <strong>Contraseña por defecto activa</strong>
+                            <p>Por seguridad, debes cambiar la contraseña de acceso.</p>
                         </div>
                         <button 
                             className="btn-change-password-banner"
                             onClick={() => setShowPasswordModal(true)}
                         >
-                            Cambiar Ahora
+                            Cambiar Contraseña
                         </button>
                     </div>
                 </div>
@@ -413,44 +413,44 @@ function AdminView() {
 
             <div className="header-row">
                 <h1 className="admin-title">
-                    {editingId ? "✏️ Editando Pregunta" : "➕ Crear Nueva Pregunta"}
+                    {editingId ? "Editar Pregunta" : "Nueva Pregunta"}
                 </h1>
                 <button className="btn-logout" onClick={handleLogout}>
-                    Cerrar Sesión 🔒
+                    Cerrar Sesión
                 </button>
             </div>
 
-            {/* ✅ Sección de gestión de jugadores */}
+            {/* Sección de gestión de jugadores */}
             <div className="players-section">
-                <h2 className="section-title">👥 Gestión de Jugadores</h2>
+                <h2 className="section-title">Gestión de Participantes</h2>
                 <div className="players-actions">
                     <button className="btn-players" onClick={handleOpenPlayersModal}>
-                        ✏️ Editar Puntuaciones
+                        Editar Puntuaciones
                     </button>
                     <button className="btn-clean-season" onClick={handleCleanSeason}>
-                        🧹 Limpiar Temporada
+                        Limpiar Temporada
                     </button>
                 </div>
                 <p className="players-count">
-                    Jugadores registrados: <strong>{players.length}</strong>
+                    Participantes registrados: <strong>{players.length}</strong>
                 </p>
             </div>
 
             <hr className="divider"/>
 
             <div className="form-group">
-                <label className="form-label">Título de la Pregunta:</label>
+                <label className="form-label">Título de la pregunta:</label>
                 <input 
                     className="form-input"
                     type="text" 
-                    placeholder="Ej: ¿En qué año se fundó OKTeam?"
+                    placeholder="Ejemplo: ¿En qué año se fundó OKTeam?"
                     value={title} 
                     onChange={(e) => setTitle(e.target.value)} 
                 />
             </div>
 
             <div className="form-group">
-                <label className="form-label">Opciones de Respuesta:</label>
+                <label className="form-label">Opciones de respuesta:</label>
                 <div className="options-list">
                     {options.map((opt, i)=>(
                         <div key={i} className="option-row">
@@ -476,14 +476,14 @@ function AdminView() {
                     ))}
                     
                     <button className="btn-add" onClick={addOption}>
-                        + Agregar otra opción
+                        Agregar opción
                     </button>
                 </div>
             </div>
 
             <div className="form-group form-row-multi">
                 <div className="flex-1">
-                    <label className="form-label">Tipo:</label>
+                    <label className="form-label">Tipo de pregunta:</label>
                     <select 
                         className="form-select"
                         value={type}
@@ -495,7 +495,7 @@ function AdminView() {
                 </div>
 
                 <div className="form-group">
-                    <label className="form-label">⏱️ Tiempo límite (segundos):</label>
+                    <label className="form-label">Tiempo límite (segundos):</label>
                     <div className="time-limit-input">
                         <input
                             type="number"
@@ -514,7 +514,7 @@ function AdminView() {
                 {type !== 'TEXT' && (
                     <div className="flex-2">
                         <label className="form-label">
-                            {type === 'IMAGE' ? '🖼️ Enlace de Imagen (URL):' : '🎥 Enlace de Video (URL):'}
+                            {type === 'IMAGE' ? 'URL de la imagen:' : 'URL del Video:'}
                         </label>
                         <input 
                             className="form-input"
@@ -541,7 +541,7 @@ function AdminView() {
                     className={`btn-save ${editingId ? 'editing' : ''}`} 
                     onClick={handleSubmit}
                 >
-                    {editingId ? "💾 Guardar Cambios" : "✨ Crear Pregunta"}
+                    {editingId ? "Guardar Cambios" : "Guardar Pregunta"}
                 </button>
 
                 {editingId && (
@@ -553,7 +553,7 @@ function AdminView() {
 
             <hr className="divider"/>
             
-            <h2 className="questions-title">📚 Preguntas Guardadas ({questionsList.length})</h2>
+            <h2 className="questions-title">Preguntas Guardadas ({questionsList.length})</h2>
             
             <div className="questions-list">
                 {questionsList.map((q) => (
@@ -581,7 +581,7 @@ function AdminView() {
                 <div className="modal-overlay" onClick={() => setShowPlayersModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>✏️ Editar Puntuaciones</h2>
+                            <h2>Editar Puntuaciones</h2>
                             <button className="modal-close" onClick={() => setShowPlayersModal(false)}>
                                 ✕
                             </button>
@@ -589,7 +589,7 @@ function AdminView() {
                         
                         <div className="modal-body">
                             {players.length === 0 ? (
-                                <p className="no-players">No hay jugadores registrados</p>
+                                <p className="no-players">No hay participantes registrados</p>
                             ) : (
                                 <div className="players-edit-list">
                                     {players.map(player => (
@@ -611,7 +611,7 @@ function AdminView() {
                 <div className="modal-overlay" onClick={() => setShowPasswordModal(false)}>
                     <div className="modal-content password-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>🔐 Cambiar Contraseña</h2>
+                            <h2>Cambiar Contraseña</h2>
                             <button className="modal-close" onClick={() => setShowPasswordModal(false)}>
                                 ✕
                             </button>
@@ -699,7 +699,7 @@ function AdminView() {
                                 onClick={handleChangePassword}
                                 disabled={!isPasswordValid()}
                             >
-                                💾 Guardar Nueva Contraseña
+                                Guardar Contraseña
                             </button>
                         </div>
                     </div>
