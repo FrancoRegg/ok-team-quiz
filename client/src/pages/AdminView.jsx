@@ -330,6 +330,22 @@ function AdminView() {
             return;
         }
 
+        // Validar URL si tipo es IMAGE/VIDEO
+        if ((type === 'IMAGE' || type === 'VIDEO') && !mediaUrl.trim()) {
+            alert("⚠️ Debes ingresar una URL para la " + (type === 'IMAGE' ? 'imagen' : 'video'));
+            return;
+        }
+
+        // Validar formato de URL
+        if ((type === 'IMAGE' || type === 'VIDEO') && mediaUrl.trim()) {
+            try {
+                new URL(mediaUrl);
+            } catch (error) {
+                alert("⚠️ La URL ingresada no es válida. Debe comenzar con http:// o https://");
+                return;
+            }
+        }
+
         const questionData = { title, type, options, mediaUrl, correctIndex, timeLimit };
         
         try{
@@ -472,7 +488,7 @@ function AdminView() {
                         className="form-select"
                         value={type}
                         onChange={(e) => setType(e.target.value)}>
-                        <option value="TEXT">Solo Texto</option>
+                        <option value="TEXT">Texto</option>
                         <option value="IMAGE">Imagen</option>
                         <option value="VIDEO">Video</option>
                     </select>
@@ -497,14 +513,25 @@ function AdminView() {
 
                 {type !== 'TEXT' && (
                     <div className="flex-2">
-                        <label className="form-label">Enlace (URL):</label>
+                        <label className="form-label">
+                            {type === 'IMAGE' ? '🖼️ Enlace de Imagen (URL):' : '🎥 Enlace de Video (URL):'}
+                        </label>
                         <input 
                             className="form-input"
                             type="text" 
-                            placeholder="http://..."
+                            placeholder={
+                                type === 'IMAGE' 
+                                    ? "https://drive.google.com/uc?id=... o https://i.imgur.com/..." 
+                                    : "https://www.youtube.com/embed/..."
+                            }
                             value={mediaUrl} 
                             onChange={(e) => setMediaUrl(e.target.value)}
                         />
+                        <p className="input-hint">
+                            {type === 'IMAGE' 
+                                ? "💡 Sube tu imagen a Google Drive o Imgur y pega el enlace público aquí" 
+                                : "💡 Sube tu video a YouTube y usa el enlace de 'Insertar' (embed)"}
+                        </p>
                     </div>
                 )}
             </div>
