@@ -83,7 +83,7 @@ const registerAnswerHandlers = (io, socket) => {
             };
 
             // Enviar resultado individual
-            socket.emit('answer_result', result)
+            //socket.emit('answer_result', result)
             
             // Actualizar Host
             io.to('game_room').emit('update_players', Object.values(players))

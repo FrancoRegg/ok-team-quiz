@@ -66,12 +66,14 @@ const QuestionScreen = ({
                                 </button>
                             ))}
                         </div>
+                        {/* 
                         {hasAnswered && answerStatus === null && (
                             <div className="answer-submitted">
                                 <div className="check-icon">✓</div>
                                 <p>Respuesta enviada</p>
                             </div>
                         )}
+                            */}
                     </div>
                 ) : (
                     <div className="loading-state">

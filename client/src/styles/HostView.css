@@ -336,8 +336,8 @@
 }
 
 .btn-main-action.next-question {
-    border-color: #8b5cf6;
-    color: #7c3aed;
+    border-color: var(--color-info);
+    color: var(--color-info);
 }
 
 .btn-main-action.next-question:hover {
