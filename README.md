@@ -1,26 +1,68 @@
 <div align="center">
 
-# 🎮 OK TEAM Quiz App
+# 🎮 OK TEAM Quiz
 
-**Sistema de trivial interactivo en tiempo real diseñado para eventos presenciales.**
-Permite a un presentador (Host) gestionar preguntas en una pantalla grande mientras los participantes responden desde sus dispositivos móviles.
+**Sistema de trivia interactivo en tiempo real para eventos presenciales.**
+
+📌 **Proyecto desarrollado para un cliente real — Actualmente en producción**
 
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-2ea44f?style=for-the-badge&logo=github)
 ![Stack](https://img.shields.io/badge/Stack-PERN%20%2B%20Socket.io-3178c6?style=for-the-badge&logo=react)
-![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
 </div>
+
+---
+
+## 🚀 Sobre el Proyecto
+
+Aplicación fullstack desarrollada de forma independiente en **2 meses** para una empresa que necesitaba dinamizar sus eventos presenciales con trivias interactivas.
+
+El sistema permite a un presentador (Host) proyectar preguntas en una pantalla grande mientras los participantes responden en tiempo real desde sus móviles. Soporta **+20 jugadores simultáneos** con sincronización instantánea.
+
+### Capturas de Pantalla
+
+| Vista Host (Proyector/TV) | Vista Jugador (Móvil) |
+|:-------------------------:|:---------------------:|
+| ![Host mostrando pregunta](./screenshots/host-question.png) | ![Jugador respondiendo](./screenshots/player-answer.png) |
+
+| Panel de Administración | Tabla de Posiciones |
+|:-----------------------:|:-------------------:|
+| ![Panel admin](./screenshots/admin-panel.png) | ![Leaderboard](./screenshots/leaderboard.png) |
+
+---
+
+## 💡 Desafíos Técnicos Resueltos
+
+- **Comunicación en tiempo real:** Implementación de WebSockets con Socket.io para sincronizar estado entre Host y múltiples jugadores con latencia mínima.
+- **Gestión de sesiones:** Sistema de reconexión inteligente que maneja caídas de red sin perder el estado del jugador.
+- **Seguridad:** Autenticación JWT, contraseñas hasheadas con bcrypt, rate limiting (5 intentos = bloqueo 15 min), y sistema de recuperación con códigos únicos.
+- **Arquitectura escalable:** Separación clara cliente-servidor en monorepo, preparado para despliegue en Railway/Render.
+
+---
+
+## 🛠️ Stack Tecnológico
+
+| Backend | Frontend | Base de Datos | Tiempo Real |
+|:-------:|:--------:|:-------------:|:-----------:|
+| Node.js + Express | React + Vite | PostgreSQL | Socket.io |
+
+---
+
+## 🌐 Demo en Vivo
+
+🔗 **[Ver aplicación](https://ok-team-quiz.onrender.com/)**
+
+> ⚠️ **Nota:** La aplicación está alojada en el plan gratuito de Render. Si el servidor estuvo inactivo, la primera carga puede tardar entre 60-120 segundos en iniciar. Después de eso, funciona con normalidad.
 
 ---
 
 ## 📋 Tabla de Contenidos
 
 1. [Características](#-características-principales)
-2. [Tecnologías](#-tecnologías)
-3. [Instalación y Configuración](#-instalación-y-configuración-local)
-4. [Despliegue](#-despliegue-producción)
-5. [Estructura del Proyecto](#-estructura-del-proyecto)
-6. [Manual de Uso](#-manual-de-uso-rápido)
+2. [Instalación y Configuración](#-instalación-y-configuración-local)
+3. [Despliegue](#-despliegue-producción)
+4. [Estructura del Proyecto](#-estructura-del-proyecto)
+5. [Manual de Uso](#-manual-de-uso-rápido)
 
 ---
 
@@ -42,20 +84,6 @@ Permite a un presentador (Host) gestionar preguntas en una pantalla grande mient
     * Contador automático de jugadores registrados
 * **🛡️ Resiliencia:** Sistema de reconexión inteligente y manejo de sesiones para evitar "jugadores fantasma" ante caídas de red.
 * **📸 Multimedia:** Soporte nativo para preguntas que incluyen imágenes y videos.
-
----
-
-## 🛠️ Tecnologías
-
-Este proyecto utiliza una arquitectura **Cliente-Servidor (Monorepo)** basada en el stack PERN:
-
-| Área | Tecnología | Descripción |
-| :--- | :--- | :--- |
-| **Backend** | Node.js + Express | Servidor REST y gestión de WebSockets. |
-| **Frontend** | React + Vite | SPA rápida y optimizada. |
-| **Base de Datos** | PostgreSQL | Persistencia de datos relacional (vía Sequelize ORM). |
-| **Comunicación** | Socket.io | Eventos bidireccionales en tiempo real. |
-| **Estilos** | CSS3 Nativo | Diseño totalmente Responsive y personalizado. |
 
 ---
 
@@ -87,7 +115,6 @@ cd ..
 Crea un archivo `.env` en la **raíz del proyecto** con la siguiente estructura.
 
 > ⚠️ **Nota:** Ajusta los valores de base de datos según tu configuración local de PostgreSQL.
-
 ```env
 # --- Servidor ---
 PORT=3000
@@ -114,14 +141,12 @@ VITE_SOCKET_URL=http://localhost:3000
 Para desarrollar, necesitas dos terminales abiertas simultáneamente:
 
 Terminal 1 (Backend):
-
 ```
 node server/server.js
 # O si tienes nodemon instalado:
 npm run dev
 ```
 Terminal 2 (Frontend):
-
 ```
 cd client
 npm run dev
@@ -285,8 +310,9 @@ OK-TEAM-QUIZ/
 **Opción 2: Google Drive**
 1.  Sube el video a Google Drive
 2.  Mismo proceso que imágenes: cambiar `/view` por `/preview`
+
 ---
 
 <div align="center">
-  <sub>Desarrollado con ❤️ para OK TEAM</sub>
+  <sub>Desarrollado con ❤️ por Franco Reggiardo</sub>
 </div>
