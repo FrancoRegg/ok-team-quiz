@@ -38,15 +38,16 @@ if (process.env.DATABASE_URL) {
     });
 }
 
+// La llama startServer antes de sincronizar. Propaga el error a propósito:
+// si no hay base, el arranque tiene que fallar y no seguir a medias.
 const testConnection = async() => {
     try {
         await sequelize.authenticate();
         console.log('✅ Conexión a PostgreSQL exitosa.');
     } catch (error) {
-        console.error('❌ No se pudo conectar a la base de datos:', error);
+        console.error('❌ No se pudo conectar a la base de datos:', error.message);
+        throw error;
     }
 }
 
-testConnection();
-
-module.exports = { sequelize };
+module.exports = { sequelize, testConnection };

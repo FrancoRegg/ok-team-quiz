@@ -6,6 +6,7 @@ const http = require('http');
 
 // --- CONFIGURACION --- 
 const { dbSynchronization } = require('./config/sync');
+const { testConnection } = require('./config/db');
 const { configureSocket } = require('./config/socket');
 const { configureCORS } = require('./config/cors');
 
@@ -102,10 +103,32 @@ app.use((req, res) => {
     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
+// --- MANEJADOR GLOBAL DE ERRORES ---
+// Cualquier excepción que escape de una ruta termina acá. Sin esto, Express
+// responde su página genérica de "Server Error" y no queda rastro de la causa.
+app.use((err, req, res, next) => {
+    console.error(`❌ Error no controlado en ${req.method} ${req.originalUrl}:`, err);
+
+    if (res.headersSent) {
+        return next(err);
+    }
+
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    res.status(err.status || 500).json({
+        error: 'Error interno del servidor',
+        // En producción no exponemos detalles internos al cliente
+        details: isProduction ? undefined : err.message
+    });
+});
+
 async function startServer() {
     try {
+        console.log("⏳ Conectando a la base de datos...");
+        await testConnection();
+
         console.log("⏳ Iniciando sincronización de base de datos...");
-        await dbSynchronization(); 
+        await dbSynchronization();
 
         console.log("⏳ Inicializando contraseña de admin...");
         await initializePassword();
@@ -117,7 +140,10 @@ async function startServer() {
             console.log(`✅ Servidor corriendo y listo en el puerto ${port}`)
         });
     } catch (error) {
+        // Si la base no responde, cortamos acá. Antes el proceso seguía vivo
+        // sin base y cada operación fallaba con un 500 sin explicación.
         console.error("❌ Error fatal al iniciar el servidor:", error);
+        process.exit(1);
     }
 }
 
