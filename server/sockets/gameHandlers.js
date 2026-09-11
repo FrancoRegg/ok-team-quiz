@@ -124,16 +124,12 @@ const registerGameHandlers = (io, socket, sendNextQuestion) => {
             const currentQ = getQuestions()[getCurrentQuestionIndex() - 1];
             
             if (currentQ) {
-                const hostSocket = Object.keys(players).find(id => players[id].name === 'HOST');
-                
-                if (hostSocket) {
-                    io.to(hostSocket).emit('show_correct_answer', {
-                        correctIndex: currentQ.correctIndex,
-                        correctOption: currentQ.options[currentQ.correctIndex]
-                    });
-                } else {
-                    console.log('❌ HOST no encontrado en players');  // ← AGREGAR
-                }
+                // Va a toda la sala: el HOST la muestra en el proyector y
+                // cada jugador la ve en su móvil (solo la respuesta, sin la pregunta)
+                io.to('game_room').emit('show_correct_answer', {
+                    correctIndex: currentQ.correctIndex,
+                    correctOption: currentQ.options[currentQ.correctIndex]
+                });
             }
             
             io.to('game_room').emit('game_state', getGameState());

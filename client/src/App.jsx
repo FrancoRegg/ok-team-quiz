@@ -5,6 +5,7 @@ import { useGameSession } from './hooks/useGameSession';
 import { useGameSocket } from './hooks/useGameSocket';
 import { useWakeLock } from './hooks/useWakeLock';
 
+import AnswerRevealScreen from './components/screens/AnswerRevealScreen';
 import GameOverScreen from './components/screens/GameOverScreen';
 import LobbyScreen from './components/screens/LobbyScreen';
 import LoginScreen from './components/screens/LoginScreen';
@@ -16,7 +17,6 @@ import './styles/App.css';
 
 function App() {
   const { socket, isConnected } = useSocket();
-  const { requestWakeLock, releaseWakeLock } = useWakeLock();
 
   // Estados
   const [inside, setInside] = useState(false);
@@ -27,9 +27,14 @@ function App() {
   const [answerStatus, setAnswerStatus] = useState(null);
   const [myAnswer, setMyAnswer] = useState(null);       
   const [correctAnswer, setCorrectAnswer] = useState(null);
+  const [correctOption, setCorrectOption] = useState(null);
   const [scoreGroup, setScoreGroup] = useState(0);
   const [timer, setTimer] = useState(null);
   const [isValidating, setIsValidating] = useState(true); 
+
+  // Mantiene la pantalla encendida mientras el jugador esta en la partida.
+  // Va atado a 'inside' para que tambien cubra las reconexiones automaticas.
+  useWakeLock(inside);
 
   // Hooks personalizados
   useGameSession(socket, setInside, setNameGroup, setIsValidating);
@@ -41,6 +46,7 @@ function App() {
     setAnswerStatus,
     setMyAnswer,
     setCorrectAnswer,
+    setCorrectOption,
     setScoreGroup,
     setTimer
   });
@@ -72,11 +78,9 @@ function App() {
     });
     
     setInside(true);
-    requestWakeLock(); 
   }
 
   const exitGame = () => {
-    releaseWakeLock();
     localStorage.removeItem("savedGroupName");
     setInside(false);
     setNameGroup("");
@@ -121,6 +125,16 @@ function App() {
 
   if (gameState === 'LOBBY') {
     return <LobbyScreen playerName={nameGroup} score={scoreGroup} />;
+  }
+
+  if (gameState === 'SHOW_ANSWER') {
+    return (
+      <AnswerRevealScreen
+        playerName={nameGroup}
+        score={scoreGroup}
+        correctOption={correctOption}
+      />
+    );
   }
 
   if (gameState === 'QUESTION_ACTIVE') {

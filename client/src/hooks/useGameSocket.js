@@ -10,6 +10,7 @@ export const useGameSocket = (socket, gameHandlers) => {
         setAnswerStatus,
         setMyAnswer,
         setCorrectAnswer,
+        setCorrectOption,
         setScoreGroup,
         setTimer
     } = gameHandlers;
@@ -27,7 +28,14 @@ export const useGameSocket = (socket, gameHandlers) => {
             setAnswerStatus(null);
             setMyAnswer(null);
             setCorrectAnswer(null);
+            setCorrectOption(null);
             if (navigator.vibrate) navigator.vibrate(100);
+        };
+
+        // El HOST la muestra en el proyector y el jugador en su móvil
+        const handleShowCorrectAnswer = (data) => {
+            setCorrectAnswer(data.correctIndex);
+            setCorrectOption(data.correctOption);
         };
 
         const handleTimerUpdate = (data) => {
@@ -63,6 +71,7 @@ export const useGameSocket = (socket, gameHandlers) => {
         // Registrar eventos
         socket.on('game_state', handleGameState);
         socket.on('new_question', handleNewQuestion);
+        socket.on('show_correct_answer', handleShowCorrectAnswer);
         socket.on('answer_result', handleAnswerResult);
         socket.on('update_players', handleUpdatePlayers);
         socket.on('timer_update', handleTimerUpdate); 
@@ -71,6 +80,7 @@ export const useGameSocket = (socket, gameHandlers) => {
         return () => {
             socket.off('game_state', handleGameState);
             socket.off('new_question', handleNewQuestion);
+            socket.off('show_correct_answer', handleShowCorrectAnswer);
             socket.off('answer_result', handleAnswerResult);
             socket.off('update_players', handleUpdatePlayers);
             socket.off('timer_update', handleTimerUpdate); 
