@@ -6,6 +6,7 @@ const {
     getCurrentQuestionIndex,
     getQuestions,
     getGameSessionId,
+    getRemainingTime,
     players,
     playerTimeouts
 } = gameState;
@@ -110,16 +111,27 @@ const registerPlayerHandlers = (io, socket) => {
             socket.emit('game_state', getGameState());
             io.to('game_room').emit('update_players', Object.values(players))
 
-            // Enviar pregunta si ingresa tarde
-            if (getGameState() === 'QUESTION' && getCurrentQuestionIndex() > 0) {
-                const currentQ = getQuestions()[getCurrentQuestionIndex() - 1]; 
-                if (currentQ) {
+            // Poner al día a quien ingresa tarde o se reconecta
+            if (getCurrentQuestionIndex() > 0) {
+                const currentQ = getQuestions()[getCurrentQuestionIndex() - 1];
+
+                if (currentQ && getGameState() === 'QUESTION_ACTIVE') {
                     socket.emit('new_question', {
                         title: currentQ.title,
                         options: currentQ.options,
                         type: currentQ.type,
                         mediaUrl: currentQ.mediaUrl
                     });
+                    socket.emit('timer_update', { remainingTime: getRemainingTime() });
+                    console.log(`📤 Pregunta en curso enviada a ${groupId}`);
+                }
+
+                if (currentQ && getGameState() === 'SHOW_ANSWER') {
+                    socket.emit('show_correct_answer', {
+                        correctIndex: currentQ.correctIndex,
+                        correctOption: currentQ.options[currentQ.correctIndex]
+                    });
+                    console.log(`📤 Respuesta correcta enviada a ${groupId}`);
                 }
             }
         } catch (error){
