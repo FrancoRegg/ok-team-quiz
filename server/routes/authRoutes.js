@@ -109,7 +109,7 @@ router.post('/recover-with-code', async (req, res) => {
         });
         
         if (!passwordRecord) {
-            console.log('⛔ Código de recuperación inválido:', recoveryCode);
+            console.log('⛔ Intento de recuperación con código inválido desde IP:', req.ip);
             return res.status(401).json({
                 success: false,
                 message: 'Código de recuperación inválido'
@@ -147,8 +147,8 @@ router.post('/recover-with-code', async (req, res) => {
         passwordRecord.updatedAt = new Date();
         await passwordRecord.save();
         
-        console.log('✅ Contraseña recuperada exitosamente');
-        console.log('🔑 Nuevo código de recuperación generado:', newRecoveryCode);
+        // El código nunca va a los logs: con él se puede resetear la contraseña
+        console.log('✅ Contraseña recuperada exitosamente, nuevo código de recuperación emitido');
         
         return res.json({
             success: true,

@@ -156,8 +156,6 @@ function AdminView() {
             throw new Error('No token available');
         };
 
-        console.log('🔐 fetchWithAuth: Enviando token:', token.substring(0, 10) + '...');
-        
         return fetch(url, {
             ...options,
             headers: {

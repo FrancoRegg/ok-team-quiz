@@ -1,8 +1,6 @@
 const jwt = require('jsonwebtoken')
 
 const authenticateAdmin = (req, res, next) => {
-    console.log('🔍 authenticateAdmin - Validando request a:', req.path);
-    
     const authHeader = req.headers.authorization;
     
     if (!authHeader) {
@@ -24,14 +22,12 @@ const authenticateAdmin = (req, res, next) => {
     // Verificar JWT
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
-        console.log('✅ JWT válido:', decoded);
-        
         // Opcional: agregar info del token al request
         req.user = decoded;
         
         next();
     } catch (error) {
-        console.log('⛔ JWT inválido o expirado:', error.message);
+        console.log(`⛔ JWT inválido o expirado en ${req.method} ${req.originalUrl}:`, error.message);
         return res.status(403).json({ 
             error: 'No autorizado - Token inválido o expirado',
             details: error.message

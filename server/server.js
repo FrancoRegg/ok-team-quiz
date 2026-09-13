@@ -60,37 +60,28 @@ const SERVER_RUN_ID = getServerRunId();
 module.exports.players = players;
 
 // --- SOCKETS ---
-console.log('🔧 Registrando listener de connection...');
 io.on("connection", (socket) => {
-    console.log('🔌 CONEXIÓN DETECTADA en server.js - Socket ID:', socket.id);
-    socket.emit('server_check', { 
-        serverId: SERVER_RUN_ID, 
+    socket.emit('server_check', {
+        serverId: SERVER_RUN_ID,
         gameId: getGameSessionId(),
-        gameState: gameStateModule.getGameState() 
+        gameState: gameStateModule.getGameState()
     })
-    console.log('✅ server_check enviado');
-    
+
     // Handler para re-enviar server_check si se pierde
     socket.on('request_server_check', () => {
-        console.log('🔄 Cliente pidió server_check manualmente');
-        socket.emit('server_check', { 
-            serverId: SERVER_RUN_ID, 
+        socket.emit('server_check', {
+            serverId: SERVER_RUN_ID,
             gameId: getGameSessionId(),
-            gameState: gameStateModule.getGameState() 
+            gameState: gameStateModule.getGameState()
         });
-        console.log('✅ server_check re-enviado');
     });
-    
+
     // --- Handlers ---
-    console.log('🔧 Registrando handlers para socket:', socket.id);
     registerPlayerHandlers(io, socket);
     registerGameHandlers(io, socket, sendNextQuestion);
     registerAnswerHandlers(io, socket);
     registerAdminHandlers(io, socket, loadQuestions);
-    console.log('✅ Handlers registrados para socket:', socket.id);
 });
-
-    console.log('✅ Listener de connection registrado');
 
 app.use('/api/auth', authRoutes)
 app.use('/api/questions', authenticateAdmin ,questionRoutes)

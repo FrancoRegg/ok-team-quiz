@@ -132,8 +132,8 @@ const changePassword = async(currentPassword, newPassword) => {
         passwordRecord.updatedAt = new Date();
         await passwordRecord.save();
         
-        console.log('✅ Contraseña actualizada correctamente');
-        console.log('🔑 Código de recuperación generado:', recoveryCode);
+        // El código nunca va a los logs: con él se puede resetear la contraseña
+        console.log('✅ Contraseña actualizada correctamente, nuevo código de recuperación emitido');
 
         return {
             success: true,
