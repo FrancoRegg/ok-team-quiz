@@ -12,8 +12,10 @@ const configureCORS = () => {
         : [
             'http://localhost:5173',      // Vite en desarrollo
             'http://localhost:3000',      // Si frontend y backend en mismo puerto
-            process.env.LOCAL_IP ? `http://${process.env.LOCAL_IP}:5173` : null ,   // Tu red local    
-            process.env.LOCAL_IP ? `http://${process.env.LOCAL_IP}:3000` : null
+            'https://localhost:5173',     // Vite con `npm run dev:https`
+            process.env.LOCAL_IP ? `http://${process.env.LOCAL_IP}:5173` : null ,   // Tu red local
+            process.env.LOCAL_IP ? `http://${process.env.LOCAL_IP}:3000` : null,
+            process.env.LOCAL_IP ? `https://${process.env.LOCAL_IP}:5173` : null    // Celular con `npm run dev:https`
         ].filter(Boolean);
 
     const corsOptions = {
