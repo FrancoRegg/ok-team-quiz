@@ -192,9 +192,26 @@ Entrá desde el celular a `https://<IP-de-tu-PC>:5173/play`. La primera vez el n
 
 | Comando | Dónde | Para qué |
 |---|---|---|
+| `npm test` | `server/` | Corre los tests del servidor (requiere `npm install` en `server/`) |
 | `npm run lint` | `client/` | Revisa el código del frontend con ESLint |
 | `npm run build` | `client/` | Genera el build de producción en `client/dist` |
 | `node seed.js --confirm` | `server/` | Carga preguntas de ejemplo. **Borra todas las preguntas existentes** (no toca jugadores ni la contraseña de admin) y se niega a correr contra producción |
+
+### 7. Tests
+
+El servidor tiene tests de la lógica del juego, el puntaje, los jugadores, el reinicio de partida, la validación de preguntas y las contraseñas de admin. Usan [Vitest](https://vitest.dev) y no necesitan base de datos ni `.env`:
+
+```
+cd server
+npm install
+npm test
+```
+
+* **`npm run test:watch`** los vuelve a correr al guardar cambios.
+* **`TEST_LOGS=1 npm test`** muestra los logs del servidor, útil para depurar un test que falla.
+* Los tests nunca tocan la base real: simulan los modelos, y si alguno intenta una consulta de verdad falla con un mensaje que indica qué simular.
+
+**Integración continua:** cada push y cada pull request a `master` corren en GitHub Actions los tests del servidor y el build del cliente (`.github/workflows/ci.yml`).
 
 ---
 
