@@ -12,6 +12,7 @@ import LoginScreen from './components/screens/LoginScreen';
 import QuestionScreen from './components/screens/QuestionScreen';
 import WaitingScreen from './components/screens/WaitingScreen';
 import ReconnectingScreen from './components/screens/ReconnectingScreen';
+import WakeLockBadge from './components/common/WakeLockBadge';
 
 import './styles/App.css';
 
@@ -34,7 +35,7 @@ function App() {
 
   // Mantiene la pantalla encendida mientras el jugador esta en la partida.
   // Va atado a 'inside' para que tambien cubra las reconexiones automaticas.
-  useWakeLock(inside);
+  const wakeLockStatus = useWakeLock(inside);
 
   // Hooks personalizados
   useGameSession(socket, setInside, setNameGroup, setIsValidating);
@@ -100,65 +101,75 @@ function App() {
   }
 
   // Renderizado condicional
-  if (isValidating) {
-    return <ReconnectingScreen />;
-  }
+  const renderScreen = () => {
+    if (isValidating) {
+      return <ReconnectingScreen />;
+    }
 
-  if (gameState === 'GAME_OVER') {
-    return <GameOverScreen score={scoreGroup} onExitGame={exitGame} />;
-  }
+    if (gameState === 'GAME_OVER') {
+      return <GameOverScreen score={scoreGroup} onExitGame={exitGame} />;
+    }
 
-  if (!inside) {
+    if (!inside) {
+      return (
+        <LoginScreen 
+          nameGroup={nameGroup}
+          setNameGroup={setNameGroup}
+          onEnterGame={enterGame}
+          isConnected={isConnected}
+        />
+      );
+    }
+
+    if (gameState === 'QUESTION_LOCKED') {
+      return <WaitingScreen playerName={nameGroup} score={scoreGroup} />;
+    }
+
+    if (gameState === 'LOBBY') {
+      return <LobbyScreen playerName={nameGroup} score={scoreGroup} />;
+    }
+
+    if (gameState === 'SHOW_ANSWER') {
+      return (
+        <AnswerRevealScreen
+          playerName={nameGroup}
+          score={scoreGroup}
+          correctOption={correctOption}
+        />
+      );
+    }
+
+    if (gameState === 'QUESTION_ACTIVE') {
+      return (
+        <QuestionScreen 
+          playerName={nameGroup}
+          score={scoreGroup}
+          timer={timer}
+          optionsAnswers={optionsAnswers}
+          hasAnswered={hasAnswered}
+          answerStatus={answerStatus}
+          myAnswer={myAnswer}
+          correctAnswer={correctAnswer}
+          onSubmitAnswer={submitAnswer}
+        />
+      );
+    }
+
+    // Fallback
     return (
-      <LoginScreen 
-        nameGroup={nameGroup}
-        setNameGroup={setNameGroup}
-        onEnterGame={enterGame}
-        isConnected={isConnected}
-      />
+      <div className="mobile-container">
+        <div className="pulse-indicator"></div>
+      </div>
+
     );
-  }
+  };
 
-  if (gameState === 'QUESTION_LOCKED') {
-    return <WaitingScreen playerName={nameGroup} score={scoreGroup} />;
-  }
-
-  if (gameState === 'LOBBY') {
-    return <LobbyScreen playerName={nameGroup} score={scoreGroup} />;
-  }
-
-  if (gameState === 'SHOW_ANSWER') {
-    return (
-      <AnswerRevealScreen
-        playerName={nameGroup}
-        score={scoreGroup}
-        correctOption={correctOption}
-      />
-    );
-  }
-
-  if (gameState === 'QUESTION_ACTIVE') {
-    return (
-      <QuestionScreen 
-        playerName={nameGroup}
-        score={scoreGroup}
-        timer={timer}
-        optionsAnswers={optionsAnswers}
-        hasAnswered={hasAnswered}
-        answerStatus={answerStatus}
-        myAnswer={myAnswer}
-        correctAnswer={correctAnswer}
-        onSubmitAnswer={submitAnswer}
-      />
-    );
-  }
-
-  // Fallback
   return (
-    <div className="mobile-container">
-      <div className="pulse-indicator"></div>
-    </div>
-
+    <>
+      {renderScreen()}
+      {/* Indicador de prueba del wake lock: solo en desarrollo */}
+      {import.meta.env.DEV && <WakeLockBadge status={wakeLockStatus} />}
+    </>
   );
 }
 
