@@ -2,7 +2,7 @@ const validateAdminPassword = (password) => {
     if (!password) {
         return {
             valid: false,
-            error: 'ADMIN_PASSWORD no está definida en .env'
+            error: 'La contraseña es obligatoria'
         };
     }
 
