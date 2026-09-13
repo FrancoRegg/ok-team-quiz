@@ -21,7 +21,7 @@ const authenticateAdmin = (req, res, next) => {
     
     // Verificar JWT
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         // Opcional: agregar info del token al request
         req.user = decoded;
         

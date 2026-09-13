@@ -1,6 +1,16 @@
 // --- CORE DE NODE Y EXTERNOS ---
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+// Sin JWT_SECRET no hay forma segura de firmar los tokens del panel de
+// administración. Antes se usaba una clave por defecto escrita en el código,
+// visible en el repositorio: con ella cualquiera podía fabricar un token válido.
+if (!process.env.JWT_SECRET) {
+    console.error('❌ Falta la variable de entorno JWT_SECRET. El servidor no puede arrancar sin ella.');
+    console.error('   Generá una con: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+    process.exit(1);
+}
+
 const express = require('express');
 const http = require('http');
 

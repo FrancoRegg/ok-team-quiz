@@ -43,7 +43,7 @@ router.post('/login', loginLimiter, async (req, res) => {  // ← async
         
         const token = jwt.sign(
             { role: 'admin', timestamp: Date.now() },
-            process.env.JWT_SECRET || 'fallback-secret-key',
+            process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
 
