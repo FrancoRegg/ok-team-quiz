@@ -87,6 +87,13 @@ app.use('/api/auth', authRoutes)
 app.use('/api/questions', authenticateAdmin ,questionRoutes)
 app.use('/api/players', authenticateAdmin, playerRoutes)
 
+// Cualquier otra ruta bajo /api no existe: respondemos 404 en JSON.
+// Sin esto caía en el catch-all de React y devolvía index.html con status 200,
+// y el cliente fallaba al parsear HTML como si fuera JSON.
+app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'Ruta de API no encontrada' });
+});
+
 // Servir los archivos estáticos del build de React
 app.use(express.static(path.join(__dirname, '../client/dist')));
 // Hacer que cualquier ruta no-API devuelva el index.html (para que funcione React Router)
