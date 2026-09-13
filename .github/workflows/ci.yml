@@ -1,0 +1,76 @@
+# Integración continua: corre en cada push y en cada pull request a master.
+#
+# Un push a master despliega solo en Render, así que esta es la red que
+# avisa si algo se rompió antes (o apenas) de llegar a producción.
+# Render puede configurarse para desplegar solo si estos checks pasan
+# (Settings → Auto-Deploy → "After CI Checks Pass").
+
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [master]
+
+# Un push nuevo a la misma rama cancela la corrida anterior, que ya quedó vieja
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Vite 7 exige Node 20.19 o superior para compilar el frontend.
+  # package.json todavía declara 18.x: pendiente alinearlo con la versión
+  # que usa Render (el log de cada build la indica).
+  NODE_VERSION: '22.x'
+
+jobs:
+  server-tests:
+    name: Tests del servidor
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # Sin base de datos: los tests simulan los modelos y test/setup.js
+      # hace fallar cualquier consulta real
+      - name: Correr tests
+        run: npm test
+
+  client-build:
+    name: Build del cliente
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # Lo mismo que compila Render al desplegar
+      - name: Compilar
+        run: npm run build
+
+      # ESLint todavía no corre acá: reporta 19 hallazgos pendientes (A28 en
+      # la checklist). Sumar `npm run lint` cuando estén resueltos.
