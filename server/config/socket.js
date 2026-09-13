@@ -13,10 +13,6 @@ function configureSocket(server, allowedOrigins) {
 
     console.log('✅ Socket.io configurado');
 
-    io.on('connection', (socket) => {
-        console.log('🔌 CONEXIÓN DETECTADA en configureSocket - Socket ID:', socket.id);
-    });
-    
     return io;
 }
 
