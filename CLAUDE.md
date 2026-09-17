@@ -18,7 +18,7 @@ Guía para retomar el trabajo en este repo. Se actualiza al cerrar cada tanda (v
 1. El trabajo va en **tandas** tomadas de la checklist privada [Mantenimiento OK TEAM Quiz](https://claude.ai/artifact/WGtSSiWaWNhvNxPgMNeqaX): lista **A** = hallazgos propios, lista **B** = requerimientos del cliente. Los IDs de este archivo son los de la checklist.
 2. Los worktrees nuevos nacen de `master`. Antes de trabajar, avanzar la rama del worktree: `git merge --ff-only mejoras-cliente`.
 3. Investigar cada ítem contra el código antes de tocarlo. Si el diagnóstico estaba mal, corregirlo en la checklist.
-4. **Un commit por ítem** o unidad lógica. Mensajes en **inglés** que expliquen el porqué. Comentarios en el código en **español**.
+4. **Un commit por ítem** o unidad lógica. Mensaje con el estilo de Franco: **una sola línea en inglés**, mayúscula inicial, sin punto final, **sin cuerpo y sin trailer `Co-Authored-By`**; a veces con prefijo de área (`Security: Rate Limit on admin login`). Los commits hasta `dc30b1f` tienen cuerpo largo: quedaron así porque ya estaban pusheados. Comentarios en el código en **español**.
 5. Verificar cada cambio: tests del server, build del cliente y, cuando aplique, la app corriendo. El server de prueba va en el **puerto 3100** (Franco suele tener el suyo en 3000). Borrar los datos de prueba de la base local al terminar.
 6. Llevar los commits a **`mejoras-cliente`** con fast-forward, comprobando antes que la carpeta principal del repo esté limpia.
 7. **Nunca tocar `master`**: ni merge ni push. Lo hace Franco o lo pide explícitamente. Push a GitHub solo cuando lo pida: un push a `mejoras-cliente` despliega el staging.
@@ -29,8 +29,7 @@ Guía para retomar el trabajo en este repo. Se actualiza al cerrar cada tanda (v
 | Rama | Estado |
 |---|---|
 | `master` | `7deb2ad`, igual en GitHub. Es lo que corre en producción. |
-| `mejoras-cliente` | Tandas 1 a 3 y este archivo, pusheados (`dc30b1f`, 2026-09-17). CI en verde y desplegado en el staging, pendiente de la revisión de Franco. |
-| rama del worktree | Tanda 4 en curso (A12, A11), fuera de `mejoras-cliente` hasta que Franco apruebe lo pusheado. |
+| `mejoras-cliente` | En GitHub: tandas 1 a 3 (`dc30b1f`), CI en verde, validadas por Franco en el staging. En local, además, lo hecho de la tanda 4, sin pushear. |
 | `feature_*`, `IC`, `password`, `refactoring` | Históricas, ya integradas en `master`. |
 
 Plan de entrega: pushear `mejoras-cliente` (respaldo, primera corrida de CI y deploy al staging), validar las tandas 1 a 3 en el staging y después trabajar tanda por tanda: push, CI en verde, prueba en staging. No fusionar a `master` sin la decisión de Franco.
@@ -162,6 +161,7 @@ reset_game (desde cualquier estado) → LOBBY
 
 - `DELETE /api/players/clean-season` no lo usa nadie: el panel limpia la temporada con `reset_game` por socket.
 - `disconnectSocket` (`client/src/hooks/useSocket.js:50`) se exporta y no se usa.
+- **Imágenes de preguntas (candidato a A31):** el admin acepta cualquier URL http(s) aunque no sea una imagen. En el staging se cargó `drive.google.com/drive/u/1/home`, la portada de Drive, y el proyector no mostró nada. Además, la ayuda confunde: el README recomienda enlaces de Drive `/preview` (páginas, no imágenes) y el formulario sugiere `drive.google.com/uc?id=`, que Google bloquea cada vez más para usarlo en otros sitios. Propuesta: vista previa de la imagen en el formulario y ayuda corregida.
 - El script `build` de la raíz no instala Vite con `NODE_ENV=production` (ver Trampas); el README lo presenta como la estrategia de deploy.
 
 ## Registro de tandas
@@ -175,7 +175,8 @@ reset_game (desde cualquier estado) → LOBBY
 | 2026-09-16 | — | CLAUDE.md creado. Sin acceso a Render: se sigue con la tanda 4 |
 | 2026-09-17 | — | Franco monta un staging propio en Render que despliega `mejoras-cliente` |
 | 2026-09-17 | 4 | A12 y A11 eliminados (139 tests, lint sin cambios). Fuera del primer push al staging |
-| 2026-09-17 | — | Push de `mejoras-cliente` con las tandas 1 a 3: primera corrida de CI en verde. Franco revisa en el staging |
+| 2026-09-17 | — | Push de `mejoras-cliente` con las tandas 1 a 3: primera corrida de CI en verde |
+| 2026-09-17 | — | Franco valida en el staging: admin, partida, respuesta en el celular, Wake Lock en iPhone, entrada tarde, reinicio manteniendo participantes y 404 JSON. La imagen no se vio por la URL usada (ver A31). Commits de la tanda 4 reescritos a una línea |
 
 ## Cómo mantener este archivo
 
