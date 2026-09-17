@@ -140,20 +140,6 @@
     cursor: not-allowed;
 }
 
-.game-btn.correct {
-    background: var(--color-success);
-    color: white;
-    border-color: var(--color-success);
-    animation: successPulse 0.5s ease;
-}
-
-.game-btn.incorrect {
-    background: var(--color-error);
-    color: white;
-    border-color: var(--color-error);
-    animation: shake 0.4s ease;
-}
-
 /* --- ESTADO DE CONEXIÓN --- */
 
 .status-footer {
@@ -182,30 +168,6 @@
     to {
         transform: translateY(0);
         opacity: 1;
-    }
-}
-
-@keyframes successPulse {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
-@keyframes shake {
-    0%, 100% {
-        transform: translateX(0);
-    }
-    25% {
-        transform: translateX(-8px);
-    }
-    75% {
-        transform: translateX(8px);
     }
 }
 

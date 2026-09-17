@@ -2,36 +2,24 @@ import PropTypes from 'prop-types';
 import GameHeader from '../common/GameHeader';
 import '../../styles/QuestionScreen.css';
 
-const QuestionScreen = ({ 
-    playerName, 
+const QuestionScreen = ({
+    playerName,
     score,
     timer,
     optionsAnswers,
     hasAnswered,
-    answerStatus,
     myAnswer,
-    correctAnswer,
     onSubmitAnswer
 }) => {
 
+    // Sin feedback de acierto: al responder solo queda resaltada la opción
+    // elegida. La respuesta correcta se ve cuando el HOST la muestra.
     const getButtonClass = (index) => {
         if (timer === 0) return 'disabled';
 
-        if (answerStatus === null && !hasAnswered) return 'active';
+        if (!hasAnswered) return 'active';
 
-        if (answerStatus === null && hasAnswered) {
-            return index === myAnswer ? 'active' : 'disabled';
-        }
-
-        if (answerStatus === 'CORRECT' && index === correctAnswer) {
-            return 'correct';
-        }
-
-        if (answerStatus === 'INCORRECT' && index === myAnswer) {
-            return 'incorrect';
-        }
-        
-        return 'disabled';
+        return index === myAnswer ? 'active' : 'disabled';
     };
 
     const handleAnswerClick = (index) => {
@@ -57,8 +45,8 @@ const QuestionScreen = ({
                         <div className="game-grid">
                             {optionsAnswers.options.map((answer, i) => (
                                 <button
-                                    key={i} 
-                                    disabled={timer === 0 || (hasAnswered && answerStatus === null)}
+                                    key={i}
+                                    disabled={timer === 0 || hasAnswered}
                                     onClick={() => handleAnswerClick(i)}
                                     className={`game-btn ${getButtonClass(i)}`}
                                 >
@@ -66,14 +54,6 @@ const QuestionScreen = ({
                                 </button>
                             ))}
                         </div>
-                        {/* 
-                        {hasAnswered && answerStatus === null && (
-                            <div className="answer-submitted">
-                                <div className="check-icon">✓</div>
-                                <p>Respuesta enviada</p>
-                            </div>
-                        )}
-                            */}
                     </div>
                 ) : (
                     <div className="loading-state">
@@ -94,9 +74,7 @@ QuestionScreen.propTypes = {
         options: PropTypes.arrayOf(PropTypes.string)
     }),
     hasAnswered: PropTypes.bool.isRequired,
-    answerStatus: PropTypes.oneOf(['CORRECT', 'INCORRECT', null]),
     myAnswer: PropTypes.number,
-    correctAnswer: PropTypes.number,
     onSubmitAnswer: PropTypes.func.isRequired
 };
 

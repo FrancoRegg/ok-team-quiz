@@ -25,9 +25,7 @@ function App() {
   const [gameState, setGameState] = useState("LOBBY");
   const [optionsAnswers, setOptionsAnswers] = useState(null);
   const [hasAnswered, setHasAnswered] = useState(false);
-  const [answerStatus, setAnswerStatus] = useState(null);
-  const [myAnswer, setMyAnswer] = useState(null);       
-  const [correctAnswer, setCorrectAnswer] = useState(null);
+  const [myAnswer, setMyAnswer] = useState(null);
   const [correctOption, setCorrectOption] = useState(null);
   const [scoreGroup, setScoreGroup] = useState(0);
   const [timer, setTimer] = useState(null);
@@ -44,9 +42,7 @@ function App() {
     setGameState,
     setOptionsAnswers,
     setHasAnswered,
-    setAnswerStatus,
     setMyAnswer,
-    setCorrectAnswer,
     setCorrectOption,
     setScoreGroup,
     setTimer
@@ -147,9 +143,7 @@ function App() {
           timer={timer}
           optionsAnswers={optionsAnswers}
           hasAnswered={hasAnswered}
-          answerStatus={answerStatus}
           myAnswer={myAnswer}
-          correctAnswer={correctAnswer}
           onSubmitAnswer={submitAnswer}
         />
       );

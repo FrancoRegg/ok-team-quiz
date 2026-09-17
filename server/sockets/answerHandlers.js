@@ -73,18 +73,9 @@ const registerAnswerHandlers = (io, socket) => {
                 );
             }
 
-            const result = { 
-                correct: isCorrect, 
-                wasFirst: isCorrect && getFirstCorrectAnswer() === socket.id
-            };
+            // El jugador no recibe si acertó: la respuesta correcta se revela
+            // para todos a la vez cuando el HOST la muestra (show_correct_answer).
 
-            if(isCorrect){
-                result.correctIndex = questionInPlay.correctIndex;
-            };
-
-            // Enviar resultado individual
-            //socket.emit('answer_result', result)
-            
             // Actualizar Host
             io.to('game_room').emit('update_players', Object.values(players))
 
