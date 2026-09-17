@@ -88,19 +88,8 @@ const registerAnswerHandlers = (io, socket) => {
             // Actualizar Host
             io.to('game_room').emit('update_players', Object.values(players))
 
-            // --- LÓGICA DE AVANCE AUTOMÁTICO ---
-            // const allPlayers = Object.values(players).filter(p => p.name !== 'HOST');
-            // const totalPlayers = allPlayers.length;
-            // const answersCount = allPlayers.filter(p => p.hasAnswered).length;
-
-            // if (totalPlayers > 0 && answersCount === totalPlayers) {
-            //     console.log("🚀 Todos respondieron. Avanzando...");
-            //     setTimeout(() => {
-            //         sendNextQuestion();
-            //     }, 3000); 
-            // }
-
-            // Cancelar timer cuando todos hayan respondido antes de acabar el tiempo
+            // Cancelar timer cuando todos hayan respondido antes de acabar el tiempo.
+            // La partida no avanza sola: la siguiente pregunta siempre la pide el HOST.
             const allPlayers = Object.values(players).filter(p => p.name !== 'HOST');
             const totalPlayers = allPlayers.length;
             const answersCount = allPlayers.filter(p => p.hasAnswered).length;
