@@ -29,7 +29,8 @@ Guía para retomar el trabajo en este repo. Se actualiza al cerrar cada tanda (v
 | Rama | Estado |
 |---|---|
 | `master` | `7deb2ad`, igual en GitHub. Es lo que corre en producción. |
-| `mejoras-cliente` | Tandas 1 a 3 y este archivo **solo en local**. En GitHub sigue igual a `master`, así que el staging hoy corre el código de producción. |
+| `mejoras-cliente` | Tandas 1 a 3 y este archivo, pusheados (`dc30b1f`, 2026-09-17). CI en verde y desplegado en el staging, pendiente de la revisión de Franco. |
+| rama del worktree | Tanda 4 en curso (A12, A11), fuera de `mejoras-cliente` hasta que Franco apruebe lo pusheado. |
 | `feature_*`, `IC`, `password`, `refactoring` | Históricas, ya integradas en `master`. |
 
 Plan de entrega: pushear `mejoras-cliente` (respaldo, primera corrida de CI y deploy al staging), validar las tandas 1 a 3 en el staging y después trabajar tanda por tanda: push, CI en verde, prueba en staging. No fusionar a `master` sin la decisión de Franco.
@@ -174,6 +175,7 @@ reset_game (desde cualquier estado) → LOBBY
 | 2026-09-16 | — | CLAUDE.md creado. Sin acceso a Render: se sigue con la tanda 4 |
 | 2026-09-17 | — | Franco monta un staging propio en Render que despliega `mejoras-cliente` |
 | 2026-09-17 | 4 | A12 y A11 eliminados (139 tests, lint sin cambios). Fuera del primer push al staging |
+| 2026-09-17 | — | Push de `mejoras-cliente` con las tandas 1 a 3: primera corrida de CI en verde. Franco revisa en el staging |
 
 ## Cómo mantener este archivo
 
