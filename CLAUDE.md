@@ -8,7 +8,8 @@ Guía para retomar el trabajo en este repo. Se actualiza al cerrar cada tanda (v
 
 - Trivia en tiempo real para eventos presenciales. El **Host** (proyector) muestra las preguntas, los **jugadores** responden desde el celular y el **Admin** gestiona preguntas y puntajes.
 - **Está en producción, en uso por una empresa cliente.** Deploy en Render: https://ok-team-quiz.onrender.com
-- **Un push a `master` despliega solo.** No hay staging, y hoy no hay acceso al panel de Render (ni logs ni rollback).
+- **Un push a `master` despliega solo en producción.** No hay acceso al Render del cliente (ni logs ni rollback).
+- **Staging propio de Franco** (Render, capa gratuita, desde 2026-09-17): despliega la rama `mejoras-cliente` de GitHub. Un push a `mejoras-cliente` actualiza el staging, no producción. Se duerme tras un rato sin uso (el primer pedido tarda y se pierde la partida en memoria).
 - El estado de la partida vive en memoria de un único proceso: un reinicio o deploy corta la partida en curso.
 - El esquema se sincroniza con `sequelize.sync({ alter: true })` en cada arranque, contra la base viva: **cambiar un modelo altera la tabla de producción en el próximo deploy.** Confirmar con Franco antes de tocar modelos o el flujo de sockets.
 
@@ -20,18 +21,18 @@ Guía para retomar el trabajo en este repo. Se actualiza al cerrar cada tanda (v
 4. **Un commit por ítem** o unidad lógica. Mensajes en **inglés** que expliquen el porqué. Comentarios en el código en **español**.
 5. Verificar cada cambio: tests del server, build del cliente y, cuando aplique, la app corriendo. El server de prueba va en el **puerto 3100** (Franco suele tener el suyo en 3000). Borrar los datos de prueba de la base local al terminar.
 6. Llevar los commits a **`mejoras-cliente`** con fast-forward, comprobando antes que la carpeta principal del repo esté limpia.
-7. **Nunca tocar `master`**: ni merge ni push. Lo hace Franco o lo pide explícitamente. Push a GitHub solo cuando lo pida.
+7. **Nunca tocar `master`**: ni merge ni push. Lo hace Franco o lo pide explícitamente. Push a GitHub solo cuando lo pida: un push a `mejoras-cliente` despliega el staging.
 8. Al cerrar la tanda: tildar lo terminado en la checklist y actualizar este archivo.
 
-## Estado de ramas (2026-09-16)
+## Estado de ramas (2026-09-17)
 
 | Rama | Estado |
 |---|---|
 | `master` | `7deb2ad`, igual en GitHub. Es lo que corre en producción. |
-| `mejoras-cliente` | Tandas 1 a 3 (+24 commits sobre `master`) **solo en local**: en GitHub sigue igual a `master`. |
+| `mejoras-cliente` | Tandas 1 a 3 y este archivo **solo en local**. En GitHub sigue igual a `master`, así que el staging hoy corre el código de producción. |
 | `feature_*`, `IC`, `password`, `refactoring` | Históricas, ya integradas en `master`. |
 
-Plan de entrega propuesto, pendiente de decisión de Franco: pushear `mejoras-cliente` (respaldo y primera corrida real de CI; no despliega). No fusionar a `master` sin visibilidad sobre Render. Alternativa para destrabar: una instancia propia en Render apuntando a `mejoras-cliente`, como staging. Después, una entrega por tanda.
+Plan de entrega: pushear `mejoras-cliente` (respaldo, primera corrida de CI y deploy al staging), validar las tandas 1 a 3 en el staging y después trabajar tanda por tanda: push, CI en verde, prueba en staging. No fusionar a `master` sin la decisión de Franco.
 
 ## Comandos
 
@@ -170,6 +171,7 @@ reset_game (desde cualquier estado) → LOBBY
 | 2026-09-13 | 2 | A4–A9, A13, A15, A19, A24 |
 | 2026-09-13 | 3 | A17, A18; A21 descartado |
 | 2026-09-16 | — | CLAUDE.md creado. Sin acceso a Render: se sigue con la tanda 4 |
+| 2026-09-17 | — | Franco monta un staging propio en Render que despliega `mejoras-cliente` |
 
 ## Cómo mantener este archivo
 
