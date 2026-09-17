@@ -39,7 +39,7 @@ Plan de entrega: pushear `mejoras-cliente` (respaldo, primera corrida de CI y de
 | Comando | Dónde | Para qué |
 |---|---|---|
 | `npm start` | raíz | Server de producción (`node server/server.js`) |
-| `npm run build` | raíz | Instala y compila el cliente en `client/dist` (lo que corre Render) |
+| `npm run build` | raíz | Instala y compila el cliente en `client/dist`. En Render no sirve tal cual (ver Trampas) |
 | `npm run dev` | `server/` | Server con nodemon |
 | `npm test` / `npm run test:watch` | `server/` | Tests (Vitest). No necesitan base ni `.env` |
 | `npx vitest run --sequence.shuffle` | `server/` | Suite en orden aleatorio |
@@ -114,6 +114,7 @@ reset_game (desde cualquier estado) → LOBBY
 - Desde un worktree, el fallback de React no anda con el build: `res.sendFile` rechaza con 404 las rutas absolutas que contienen una carpeta con punto (`.claude`). En producción no pasa.
 - **Dos `package.json` con dependencias duplicadas**: la raíz es lo que instala Render y `server/` es lo que usan el desarrollo y los tests. Una dependencia nueva del server va **en los dos** (A26).
 - `engines` declara Node 18.x, pero Vite 7 exige 20.19 o superior (A30).
+- **Build en Render:** con `NODE_ENV=production`, `npm install` omite las devDependencies, y Vite lo es. Por eso el `npm run build` de la raíz fallaría ahí. El Build Command del staging es `npm install && cd client && npm install --include=dev && npm run build`.
 - Wake Lock no funciona por `http://` con la IP local: usar `npm run dev:https`.
 
 ## Estado del trabajo
@@ -123,6 +124,7 @@ reset_game (desde cualquier estado) → LOBBY
 - **Tanda 1:** A2 el jugador que entra tarde recibe la pregunta en curso · A22 manejador global de errores y arranque que falla sin base · B1 pantalla encendida · B2 respuesta correcta en el celular. Además, modo `dev:https` e indicador de Wake Lock en desarrollo.
 - **Tanda 2:** A4 404 JSON en `/api` · A5 dependencias faltantes en `server/` · A6 `VITE_API_URL` en AdminGuard · A7 ESLint analiza `.js`/`.jsx` · A8 README al día · A9 fuera `ADMIN_PASSWORD` · A13 listener de conexión duplicado · A15 logs de debug y códigos de recuperación fuera de los logs · A19 guardas en `seed.js` · A24 `JWT_SECRET` obligatoria.
 - **Tanda 3:** A17 tests del server · A18 CI en GitHub Actions · A21 descartado (el HOST no se acumula en memoria).
+- **Tanda 4 (en curso):** A12 fuera el avance automático comentado · A11 fuera el feedback de acierto sin uso. Decisión de Franco: la partida no avanza sola y el jugador ve la respuesta recién cuando el Host la muestra.
 
 ### Tanda 4: lógica del juego y limpieza (no depende de Render ni del cliente)
 
@@ -135,8 +137,6 @@ reset_game (desde cualquier estado) → LOBBY
 | A14 | Dependencia circular `require('../server')` | `controllers/player.controller.js:42` | Tomar `players` de `gameState` y quitar `module.exports.players` de `server.js:70` |
 | A27 | El manejador de errores rotula todo como «Error interno» | `server.js:127` | |
 | A28 | 19 hallazgos de ESLint (9 en HostView por componentes definidos dentro del render) | `HostView.jsx`, `useGameSocket.js`, `AdminView.jsx`, `ErrorBoundary.jsx` | Riesgo medio: corregir dependencias de hooks cambia cuándo corren los efectos. Después, sumar lint al CI |
-| A11 | Feedback de respuesta a medio desmontar (`answer_result`) | `answerHandlers.js:86`, `useGameSocket.js`, `QuestionScreen.jsx` | **Falta definir** con Franco: ¿se elimina o se recupera? |
-| A12 | Avance automático comentado | `answerHandlers.js:91-101` | **Falta definir**: ¿se elimina o se recupera? |
 
 ### Tanda 5: seguridad, esquema y deploy
 
@@ -161,6 +161,7 @@ reset_game (desde cualquier estado) → LOBBY
 
 - `DELETE /api/players/clean-season` no lo usa nadie: el panel limpia la temporada con `reset_game` por socket.
 - `disconnectSocket` (`client/src/hooks/useSocket.js:50`) se exporta y no se usa.
+- El script `build` de la raíz no instala Vite con `NODE_ENV=production` (ver Trampas); el README lo presenta como la estrategia de deploy.
 
 ## Registro de tandas
 
@@ -172,6 +173,7 @@ reset_game (desde cualquier estado) → LOBBY
 | 2026-09-13 | 3 | A17, A18; A21 descartado |
 | 2026-09-16 | — | CLAUDE.md creado. Sin acceso a Render: se sigue con la tanda 4 |
 | 2026-09-17 | — | Franco monta un staging propio en Render que despliega `mejoras-cliente` |
+| 2026-09-17 | 4 | A12 y A11 eliminados (139 tests, lint sin cambios). Fuera del primer push al staging |
 
 ## Cómo mantener este archivo
 
