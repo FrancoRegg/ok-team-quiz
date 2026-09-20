@@ -317,6 +317,15 @@
 }
 
 /* --- Variantes de botones --- */
+.btn-main-action.back {
+    border-color: #9ca3af;
+    color: #4b5563;
+}
+
+.btn-main-action.back:hover {
+    background: #f3f4f6;
+}
+
 .btn-main-action.activate {
     border-color: var(--color-success);
     color: var(--color-success);

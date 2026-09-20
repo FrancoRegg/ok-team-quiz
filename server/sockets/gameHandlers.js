@@ -3,6 +3,8 @@ const gameState = require('../utils/gameState');
 const {
     getGameState,
     getCurrentQuestion,
+    getCurrentQuestionIndex,
+    setCurrentQuestionIndex,
     getTimerInterval,
     getRemainingTime,
     setGameState,
@@ -26,6 +28,55 @@ const registerGameHandlers = (io, socket, sendNextQuestion) => {
         }
     });
 
+
+    // --- PREVIOUS QUESTION ---
+    // Deshace el último "Siguiente" cuando el HOST se pasó de pregunta: vuelve a
+    // la anterior con su respuesta ya revelada, que es la pantalla que acababa de
+    // perder. Solo funciona con la pregunta nueva en pantalla y las respuestas
+    // sin activar, así que nadie respondió todavía y no hay puntos que revertir.
+    socket.on('previous_question', () => {
+        try{
+            if (getGameState() !== 'QUESTION_LOCKED') {
+                console.log('⚠️ Intento de volver atrás en estado:', getGameState());
+                return;
+            }
+
+            if (getCurrentQuestionIndex() <= 1) {
+                console.log('⚠️ Intento de volver atrás en la primera pregunta');
+                return;
+            }
+
+            setCurrentQuestionIndex(getCurrentQuestionIndex() - 1);
+            setGameState('SHOW_ANSWER');
+
+            const previousQ = getCurrentQuestion();
+
+            // La pregunta va solo al proyector; los jugadores ven la respuesta
+            const hostSocket = Object.keys(players).find(id => players[id].name === 'HOST');
+            if (hostSocket) {
+                io.to(hostSocket).emit('new_question', {
+                    title: previousQ.title,
+                    options: previousQ.options,
+                    type: previousQ.type,
+                    mediaUrl: previousQ.mediaUrl,
+                    canGoBack: getCurrentQuestionIndex() > 1
+                });
+            }
+
+            io.to('game_room').emit('show_correct_answer', {
+                correctIndex: previousQ.correctIndex,
+                correctOption: previousQ.options[previousQ.correctIndex]
+            });
+
+            io.to('game_room').emit('game_state', getGameState());
+            console.log(`⬅️ Vuelta a la pregunta ${getCurrentQuestionIndex()}`);
+        } catch (error){
+            console.error('❌ Error en previous_question:', error.message);
+            io.to('game_room').emit('error', {
+                message: 'Error al volver a la pregunta anterior'
+            });
+        }
+    });
 
     // --- ACTIVATE ANSWERS ---
     socket.on('activate_answers', () => {

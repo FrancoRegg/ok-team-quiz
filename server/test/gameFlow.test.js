@@ -74,6 +74,7 @@ describe('sendNextQuestion', () => {
             options: QUESTIONS[0].options,
             type: QUESTIONS[0].type,
             mediaUrl: QUESTIONS[0].mediaUrl,
+            canGoBack: false, // es la primera: no hay nada que deshacer
         }]);
         expect(sentToRoom(io, 'game_room', 'new_question')).toEqual([]);
     });
@@ -154,6 +155,83 @@ describe('eventos del HOST', () => {
             await host.trigger('next_question');
 
             expect(sentToRoom(io, 'game_room', 'error')).toEqual([{ message: 'Error al avanzar pregunta' }]);
+        });
+    });
+
+    describe('previous_question', () => {
+        beforeEach(() => {
+            registerGameHandlers(io, host, sendNextQuestion);
+        });
+
+        it.each(['LOBBY', 'QUESTION_ACTIVE', 'SHOW_ANSWER', 'GAME_OVER'])(
+            'se ignora si la partida está en %s',
+            (state) => {
+                putQuestionInState(1, state);
+
+                host.trigger('previous_question');
+
+                expect(gameState.getGameState()).toBe(state);
+                expect(gameState.getCurrentQuestionIndex()).toBe(2);
+                expect(io.emitted).toEqual([]);
+            }
+        );
+
+        it('en la primera pregunta no hace nada: no hay nada que deshacer', () => {
+            putQuestionInState(0, 'QUESTION_LOCKED');
+
+            host.trigger('previous_question');
+
+            expect(gameState.getGameState()).toBe('QUESTION_LOCKED');
+            expect(gameState.getCurrentQuestionIndex()).toBe(1);
+            expect(io.emitted).toEqual([]);
+        });
+
+        it('vuelve a la pregunta anterior con su respuesta revelada', () => {
+            putQuestionInState(1, 'QUESTION_LOCKED');
+
+            host.trigger('previous_question');
+
+            expect(gameState.getGameState()).toBe('SHOW_ANSWER');
+            expect(gameState.getCurrentQuestion()).toMatchObject({ title: QUESTIONS[0].title });
+            expect(sentToRoom(io, 'game_room', 'show_correct_answer')).toEqual([
+                { correctIndex: 2, correctOption: 'Júpiter' },
+            ]);
+            expect(sentToRoom(io, 'game_room', 'game_state')).toEqual(['SHOW_ANSWER']);
+        });
+
+        it('la pregunta vuelve al proyector y no a los jugadores', () => {
+            putQuestionInState(1, 'QUESTION_LOCKED');
+
+            host.trigger('previous_question');
+
+            expect(sentToRoom(io, 'game_room', 'new_question')).toEqual([]);
+            const [question] = sentToRoom(io, HOST_ID, 'new_question');
+            expect(question).toMatchObject({ title: QUESTIONS[0].title, canGoBack: false });
+            expect(question).not.toHaveProperty('correctIndex');
+        });
+
+        it('no toca los puntajes de la pregunta ya jugada', () => {
+            addPlayer('s1', { name: 'Equipo 1', score: 100 });
+            putQuestionInState(1, 'QUESTION_LOCKED');
+
+            host.trigger('previous_question');
+
+            expect(gameState.players.s1.score).toBe(100);
+        });
+
+        it('después de volver, el HOST puede avanzar otra vez a la misma pregunta', async () => {
+            stubQuestionsInDb();
+            putQuestionInState(1, 'QUESTION_LOCKED');
+
+            host.trigger('previous_question');
+            await sendNextQuestion(io);
+
+            expect(gameState.getGameState()).toBe('QUESTION_LOCKED');
+            expect(gameState.getCurrentQuestionIndex()).toBe(2);
+            expect(sentToRoom(io, HOST_ID, 'new_question').at(-1)).toMatchObject({
+                title: QUESTIONS[1].title,
+                canGoBack: true,
+            });
         });
     });
 

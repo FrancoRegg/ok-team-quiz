@@ -331,8 +331,19 @@ function HostView() {
                 </div>
 
                 <div className="main-action-buttons">
+                    {/* Volver atrás solo acá: la pregunta está en pantalla, nadie
+                        respondió todavía y el servidor avisa con canGoBack si hay
+                        una pregunta anterior a la que volver */}
+                    {gameState === 'QUESTION_LOCKED' && currentQuestion?.canGoBack && (
+                        <button
+                            className="btn-main-action back"
+                            onClick={()=>{socket.emit('previous_question')}}>
+                                Atrás
+                        </button>
+                    )}
+
                     {gameState === 'QUESTION_LOCKED' && (
-                        <button 
+                        <button
                             className="btn-main-action activate"
                             onClick={()=>{socket.emit('activate_answers')}}>
                                 Activar Respuestas

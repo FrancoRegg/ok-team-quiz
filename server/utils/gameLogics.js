@@ -70,11 +70,14 @@ const sendNextQuestion = async (io) => {
 
     const fullQuestion = getCurrentQuestion();
 
+    // Solo va al HOST: canGoBack le dice si mostrar el botón "Atrás", que no
+    // tiene sentido en la primera pregunta porque no hay nada que deshacer.
     const questionToSend = {
         title: fullQuestion.title,
         options: fullQuestion.options,
-        type: fullQuestion.type,      
-        mediaUrl: fullQuestion.mediaUrl
+        type: fullQuestion.type,
+        mediaUrl: fullQuestion.mediaUrl,
+        canGoBack: getCurrentQuestionIndex() > 1
     }
 
     // Resetear estado de respuesta de los jugadores
