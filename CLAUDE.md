@@ -66,7 +66,7 @@ Monorepo sin workspaces. El `package.json` de la raíz es el del deploy: depende
 - `config/`: `db.js` (`DATABASE_URL` con SSL o variables `PG*`), `cors.js` (orígenes por entorno más `LOCAL_IP`), `socket.js`, `sync.js`.
 - `utils/gameState.js`: todo el estado de la partida en variables de módulo, con getters y setters. `players` y `playerTimeouts` se exportan por referencia: se mutan, nunca se reasignan.
 - `utils/gameLogics.js`: `loadQuestions` y `sendNextQuestion`.
-- `sockets/`: `playerHandlers` (`join_game`, `disconnect` con 30 s de gracia), `gameHandlers` (`next_question`, `activate_answers` con timer, `show_answer`), `answerHandlers` (`submit_answer` y puntaje), `adminHandlers` (`reset_game`).
+- `sockets/`: `playerHandlers` (`join_game`, `disconnect` con 30 s de gracia), `gameHandlers` (`next_question`, `previous_question`, `activate_answers` con timer, `show_answer`), `answerHandlers` (`submit_answer` y puntaje), `adminHandlers` (`reset_game`).
 - REST: `/api/auth` (`login` con rate limit, `change-password` con JWT, `recover-with-code`), `/api/questions` (CRUD con JWT), `/api/players` (listar, `PUT /:id` con `scoreChange`, `DELETE /clean-season`; con JWT).
 - Modelos: `Question` (`title`, `type` TEXT|IMAGE|VIDEO, `options[]`, `mediaUrl`, `correctIndex`, `timeLimit` 5–120), `Player` (`name` **único**, `score`, `isConnected`), `Password` (fila única: hash, `isDefault`, `recoveryCode`). Si la tabla está vacía, se crea la contraseña por defecto `Admin2024!`.
 
@@ -78,14 +78,15 @@ LOBBY ─next_question→ QUESTION_LOCKED ─activate_answers→ QUESTION_ACTIVE
 reset_game (desde cualquier estado) → LOBBY
 ```
 
-- `QUESTION_LOCKED`: la pregunta va solo al HOST (`new_question`); los jugadores esperan.
+- `QUESTION_LOCKED`: la pregunta va solo al HOST (`new_question`, con `canGoBack` para el botón «Atrás»); los jugadores esperan.
+- `previous_question` (botón «Atrás»): solo en `QUESTION_LOCKED` y si no es la primera pregunta. Retrocede el índice y deja la partida en `SHOW_ANSWER` sobre la pregunta anterior, la pantalla que el Host acababa de perder. No toca puntajes: nadie respondió la pregunta nueva y en `SHOW_ANSWER` no se aceptan respuestas.
 - `QUESTION_ACTIVE`: `new_question` a la sala `game_room` y timer con `timer_update` cada segundo hasta `timer_finished`. Si todos respondieron, el timer se corta, pero la partida **no avanza sola**: siempre avanza el Host.
 - `SHOW_ANSWER`: `show_correct_answer { correctIndex, correctOption }` a toda la sala (proyector y celulares).
-- Puntaje: primera respuesta correcta +100, las siguientes correctas +90, incorrecta 0.
+- Puntaje: primera respuesta correcta +100, las siguientes correctas +90, incorrecta 0. El puntaje en memoria sube solo si se guardó en la base; si el guardado falla, el jugador puede responder de nuevo (A29).
 
 **Invariantes que confunden:**
 
-- `currentQuestionIndex` apunta a la **siguiente** pregunta: `sendNextQuestion` incrementa después de enviar, así que la pregunta en juego es `questions[index - 1]` (repetido en cuatro lugares; A16 lo encapsula).
+- `currentQuestionIndex` apunta a la **siguiente** pregunta: la que está en pantalla es `questions[index - 1]`. Ese `- 1` no se repite más: usar `getCurrentQuestion()` de `gameState`.
 - Las preguntas se recargan desde la base al arrancar la partida (índice 0) y en cada reset. Editarlas a mitad de partida no cambia la partida en curso.
 - El HOST es un jugador más en `players`, identificado por `name === 'HOST'`, y se filtra por nombre en todos lados.
 - Sesión del jugador: al conectar, el server emite `server_check { serverId, gameId, gameState }`. El cliente lo compara con `localStorage` (`server_run_id`, `game_session_id`, `savedGroupName`) para reconectar solo o volver al login. En producción, un `join_game` con `gameId` viejo recibe `session_expired`.
@@ -124,15 +125,12 @@ reset_game (desde cualquier estado) → LOBBY
 - **Tanda 1:** A2 el jugador que entra tarde recibe la pregunta en curso · A22 manejador global de errores y arranque que falla sin base · B1 pantalla encendida · B2 respuesta correcta en el celular. Además, modo `dev:https` e indicador de Wake Lock en desarrollo.
 - **Tanda 2:** A4 404 JSON en `/api` · A5 dependencias faltantes en `server/` · A6 `VITE_API_URL` en AdminGuard · A7 ESLint analiza `.js`/`.jsx` · A8 README al día · A9 fuera `ADMIN_PASSWORD` · A13 listener de conexión duplicado · A15 logs de debug y códigos de recuperación fuera de los logs · A19 guardas en `seed.js` · A24 `JWT_SECRET` obligatoria.
 - **Tanda 3:** A17 tests del server · A18 CI en GitHub Actions · A21 descartado (el HOST no se acumula en memoria).
-- **Tanda 4 (en curso):** A12 fuera el avance automático comentado · A11 fuera el feedback de acierto sin uso. Decisión de Franco: la partida no avanza sola y el jugador ve la respuesta recién cuando el Host la muestra.
+- **Tanda 4 (en curso):** A12 fuera el avance automático comentado · A11 fuera el feedback de acierto sin uso (decisión de Franco: la partida no avanza sola y el jugador ve la respuesta recién cuando el Host la muestra) · A29 el puntaje en memoria sube solo si se guardó en la base · A16 `getCurrentQuestion()` · B5 botón «Atrás».
 
 ### Tanda 4: lógica del juego y limpieza (no depende de Render ni del cliente)
 
 | ID | Qué | Dónde | Notas |
 |---|---|---|---|
-| A29 | Si falla el guardado del puntaje, los puntos quedan solo en memoria y el reintento se ignora | `server/sockets/answerHandlers.js:46-74` | Riesgo medio |
-| A16 | Encapsular la pregunta en juego (`getCurrentQuestion()`) en lugar de `index - 1` | `gameHandlers.js:44,124`, `answerHandlers.js:47`, `playerHandlers.js:116` | Prerrequisito de B5. Riesgo medio |
-| B5 | Botón «Atrás» en el proyector | `gameHandlers.js`, `HostView.jsx` | Definido: solo en `QUESTION_LOCKED`, deshace el último «Siguiente» (nadie respondió, no hay puntos que revertir). Propuesta: no mostrarlo en la primera pregunta |
 | A10 | `resetGame()` no se usa: `adminHandlers` la reimplementa | `utils/gameState.js:84` | La usan los tests (`test/helpers/game.js`) |
 | A14 | Dependencia circular `require('../server')` | `controllers/player.controller.js:42` | Tomar `players` de `gameState` y quitar `module.exports.players` de `server.js:70` |
 | A27 | El manejador de errores rotula todo como «Error interno» | `server.js:127` | |
@@ -162,6 +160,7 @@ reset_game (desde cualquier estado) → LOBBY
 - `DELETE /api/players/clean-season` no lo usa nadie: el panel limpia la temporada con `reset_game` por socket.
 - `disconnectSocket` (`client/src/hooks/useSocket.js:50`) se exporta y no se usa.
 - **Imágenes de preguntas (candidato a A31):** el admin acepta cualquier URL http(s) aunque no sea una imagen. En el staging se cargó `drive.google.com/drive/u/1/home`, la portada de Drive, y el proyector no mostró nada. Además, la ayuda confunde: el README recomienda enlaces de Drive `/preview` (páginas, no imágenes) y el formulario sugiere `drive.google.com/uc?id=`, que Google bloquea cada vez más para usarlo en otros sitios. Propuesta: vista previa de la imagen en el formulario y ayuda corregida.
+- **El cliente no escucha el evento `error`:** el server le manda mensajes al jugador («Las respuestas aún no están activadas», el aviso de A29, los de `join_game`) y ninguno se ve en pantalla, porque `useGameSocket` no registra ese listener. Pendiente de decidir si se muestran.
 - El script `build` de la raíz no instala Vite con `NODE_ENV=production` (ver Trampas); el README lo presenta como la estrategia de deploy.
 
 ## Registro de tandas
@@ -177,6 +176,8 @@ reset_game (desde cualquier estado) → LOBBY
 | 2026-09-17 | 4 | A12 y A11 eliminados (139 tests, lint sin cambios). Fuera del primer push al staging |
 | 2026-09-17 | — | Push de `mejoras-cliente` con las tandas 1 a 3: primera corrida de CI en verde |
 | 2026-09-17 | — | Franco valida en el staging: admin, partida, respuesta en el celular, Wake Lock en iPhone, entrada tarde, reinicio manteniendo participantes y 404 JSON. La imagen no se vio por la URL usada (ver A31). Commits de la tanda 4 reescritos a una línea |
+
+| 2026-09-20 | 4 | A29, A16 y B5 (155 tests, mutaciones verificadas, flujo probado contra la base local). B5: «Atrás» solo antes de activar respuestas, decidido por Franco ante la falta de respuesta del cliente |
 
 ## Cómo mantener este archivo
 
