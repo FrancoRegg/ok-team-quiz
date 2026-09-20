@@ -2,8 +2,7 @@ const gameState = require('../utils/gameState');
 
 const {
     getGameState,
-    getCurrentQuestionIndex,
-    getQuestions,
+    getCurrentQuestion,
     getTimerInterval,
     getRemainingTime,
     setGameState,
@@ -41,7 +40,7 @@ const registerGameHandlers = (io, socket, sendNextQuestion) => {
         setGameState('QUESTION_ACTIVE');
         
         // Enviar la pregunta a TODOS los jugadores
-        const currentQ = getQuestions()[getCurrentQuestionIndex() - 1];
+        const currentQ = getCurrentQuestion();
         if (currentQ) {
             const questionToSend = {
                 title: currentQ.title,
@@ -121,8 +120,8 @@ const registerGameHandlers = (io, socket, sendNextQuestion) => {
             
             setGameState('SHOW_ANSWER');
             
-            const currentQ = getQuestions()[getCurrentQuestionIndex() - 1];
-            
+            const currentQ = getCurrentQuestion();
+
             if (currentQ) {
                 // Va a toda la sala: el HOST la muestra en el proyector y
                 // cada jugador la ve en su móvil (solo la respuesta, sin la pregunta)

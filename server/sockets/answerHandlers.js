@@ -3,8 +3,7 @@ const gameState = require('../utils/gameState');
 
 const {
     getGameState,
-    getCurrentQuestionIndex,
-    getQuestions,
+    getCurrentQuestion,
     getFirstCorrectAnswer,
     getTimerInterval,
     setFirstCorrectAnswer,
@@ -43,7 +42,7 @@ const registerAnswerHandlers = (io, socket) => {
                 return;
             }
 
-            const questionInPlay = getQuestions()[getCurrentQuestionIndex() - 1];
+            const questionInPlay = getCurrentQuestion();
 
             if(!questionInPlay){
                 throw new Error('No hay pregunta activa');

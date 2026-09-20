@@ -39,6 +39,15 @@ const getCurrentQuestionIndex = () => {
     return currentQuestionIndex;
 }
 
+// La pregunta que está en pantalla. currentQuestionIndex apunta a la siguiente,
+// porque sendNextQuestion lo incrementa después de enviarla: ese "- 1" estaba
+// repetido en cada handler y es fácil de leer al revés.
+// Devuelve null en el lobby, cuando todavía no se envió ninguna, y también si
+// el índice quedó fuera de rango.
+const getCurrentQuestion = () => {
+    return questions[currentQuestionIndex - 1] || null;
+}
+
 const getFirstCorrectAnswer = () => {
     return firstCorrectAnswer;
 }
@@ -115,6 +124,7 @@ module.exports = {
     getPlayerTimeouts,
     getGameState,
     getCurrentQuestionIndex,
+    getCurrentQuestion,
     getFirstCorrectAnswer,
     getTimerInterval,
     getRemainingTime,

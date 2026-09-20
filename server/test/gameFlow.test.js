@@ -16,6 +16,29 @@ beforeEach(() => {
     addPlayer(HOST_ID, { name: 'HOST' });
 });
 
+describe('getCurrentQuestion', () => {
+    it('en el lobby todavía no hay pregunta en juego', () => {
+        expect(gameState.getCurrentQuestion()).toBeNull();
+    });
+
+    it('devuelve la pregunta que el HOST puso en pantalla', async () => {
+        stubQuestionsInDb();
+        const io = createFakeIo();
+
+        await sendNextQuestion(io);
+        expect(gameState.getCurrentQuestion()).toMatchObject({ title: QUESTIONS[0].title });
+
+        await sendNextQuestion(io);
+        expect(gameState.getCurrentQuestion()).toMatchObject({ title: QUESTIONS[1].title });
+    });
+
+    it('si el índice quedó fuera de rango devuelve null en lugar de romper', () => {
+        gameState.setCurrentQuestionIndex(99);
+
+        expect(gameState.getCurrentQuestion()).toBeNull();
+    });
+});
+
 describe('sendNextQuestion', () => {
     it('al empezar la partida recarga las preguntas desde la base', async () => {
         const findAll = stubQuestionsInDb();

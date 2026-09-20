@@ -3,8 +3,7 @@ const gameState = require('../utils/gameState');
 
 const {
     getGameState,
-    getCurrentQuestionIndex,
-    getQuestions,
+    getCurrentQuestion,
     getGameSessionId,
     getRemainingTime,
     players,
@@ -112,10 +111,10 @@ const registerPlayerHandlers = (io, socket) => {
             io.to('game_room').emit('update_players', Object.values(players))
 
             // Poner al día a quien ingresa tarde o se reconecta
-            if (getCurrentQuestionIndex() > 0) {
-                const currentQ = getQuestions()[getCurrentQuestionIndex() - 1];
+            const currentQ = getCurrentQuestion();
 
-                if (currentQ && getGameState() === 'QUESTION_ACTIVE') {
+            if (currentQ) {
+                if (getGameState() === 'QUESTION_ACTIVE') {
                     socket.emit('new_question', {
                         title: currentQ.title,
                         options: currentQ.options,
@@ -126,7 +125,7 @@ const registerPlayerHandlers = (io, socket) => {
                     console.log(`📤 Pregunta en curso enviada a ${groupId}`);
                 }
 
-                if (currentQ && getGameState() === 'SHOW_ANSWER') {
+                if (getGameState() === 'SHOW_ANSWER') {
                     socket.emit('show_correct_answer', {
                         correctIndex: currentQ.correctIndex,
                         correctOption: currentQ.options[currentQ.correctIndex]

@@ -3,6 +3,7 @@ const gameState = require('./gameState');
 
 const {
     getCurrentQuestionIndex,
+    getCurrentQuestion,
     getQuestions,
     getGameState,
     setQuestions,
@@ -61,10 +62,13 @@ const sendNextQuestion = async (io) => {
         return;
     }
 
-    // Preparar nueva pregunta con estado bloqueado 
+    // Preparar nueva pregunta con estado bloqueado
     setGameState("QUESTION_LOCKED");
-    
-    const fullQuestion = getQuestions()[getCurrentQuestionIndex()];
+
+    // Avanzamos primero: desde acá la pregunta en juego es getCurrentQuestion()
+    setCurrentQuestionIndex(getCurrentQuestionIndex() + 1);
+
+    const fullQuestion = getCurrentQuestion();
 
     const questionToSend = {
         title: fullQuestion.title,
@@ -91,8 +95,6 @@ const sendNextQuestion = async (io) => {
     } else {
         console.log('   ❌ HOST no encontrado');
     }
-    
-    setCurrentQuestionIndex(getCurrentQuestionIndex() + 1);
 };
 
 module.exports = {
