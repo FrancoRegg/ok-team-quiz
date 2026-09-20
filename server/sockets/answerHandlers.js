@@ -43,8 +43,7 @@ const registerAnswerHandlers = (io, socket) => {
                 return;
             }
 
-            player.hasAnswered = true;
-            const questionInPlay = getQuestions()[getCurrentQuestionIndex() - 1]; 
+            const questionInPlay = getQuestions()[getCurrentQuestionIndex() - 1];
 
             if(!questionInPlay){
                 throw new Error('No hay pregunta activa');
@@ -53,24 +52,47 @@ const registerAnswerHandlers = (io, socket) => {
             // Calcular puntaje
             const isCorrect = data.answer === questionInPlay.correctIndex;
 
-            // Si responde correcto primero
-            if (isCorrect) {
-                if (getFirstCorrectAnswer() === null) {
-                    setFirstCorrectAnswer(socket.id);
-                    player.score += 100;
-                    console.log(`🥇 ${player.name} respondió primero: +100 puntos`);
-                } else {
-                    // Respuestas correctas subsecuentes
-                    player.score += 90;
-                    console.log(`✅ ${player.name} respondió correcto: +90 puntos`);
+            // Quedan marcados antes de guardar: así un doble toque no suma dos
+            // veces y nadie más se queda con el bonus mientras escribimos.
+            player.hasAnswered = true;
+
+            const isFirstCorrect = isCorrect && getFirstCorrectAnswer() === null;
+            if (isFirstCorrect) {
+                setFirstCorrectAnswer(socket.id);
+            }
+
+            const points = isCorrect ? (isFirstCorrect ? 100 : 90) : 0;
+            const newScore = player.score + points;
+
+            // El puntaje en memoria sube solo si quedó guardado en la base. Si el
+            // guardado falla, deshacemos la marca y el bonus: el jugador puede
+            // volver a responder y el proyector no muestra puntos inexistentes.
+            if (player.dbId) {
+                try {
+                    await Player.update(
+                        { score: newScore },
+                        { where: { id: player.dbId } }
+                    );
+                } catch (error) {
+                    player.hasAnswered = false;
+                    if (isFirstCorrect) {
+                        setFirstCorrectAnswer(null);
+                    }
+
+                    console.error(`❌ No se pudo guardar el puntaje de ${player.name}:`, error.message);
+                    socket.emit('error', {
+                        message: 'No pudimos registrar tu respuesta. Intenta de nuevo.'
+                    });
+                    return;
                 }
             }
 
-            if (player.dbId) {
-                await Player.update(
-                    { score: player.score },
-                    { where: { id: player.dbId } }
-                );
+            player.score = newScore;
+
+            if (isCorrect) {
+                console.log(isFirstCorrect
+                    ? `🥇 ${player.name} respondió primero: +100 puntos`
+                    : `✅ ${player.name} respondió correcto: +90 puntos`);
             }
 
             // El jugador no recibe si acertó: la respuesta correcta se revela

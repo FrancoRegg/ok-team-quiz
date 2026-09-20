@@ -140,6 +140,63 @@ describe('submit_answer: puntaje', () => {
     });
 });
 
+describe('submit_answer: si falla el guardado en la base', () => {
+    const failOnce = () => savedScores.mockRejectedValueOnce(new Error('sin conexión'));
+
+    it('no suma los puntos en memoria', async () => {
+        const socket = connectPlayer('s1', { name: 'Equipo 1', score: 250 });
+        failOnce();
+
+        await socket.trigger('submit_answer', { answer: CORRECT });
+
+        expect(gameState.players.s1.score).toBe(250);
+    });
+
+    it('avisa al jugador y lo deja volver a responder', async () => {
+        const socket = connectPlayer('s1', { name: 'Equipo 1' });
+        connectPlayer('s2', { name: 'Equipo 2' }); // así no responden todos con la primera
+        failOnce();
+
+        await socket.trigger('submit_answer', { answer: CORRECT });
+
+        expect(sentToSocket(socket, 'error')).toEqual([
+            { message: 'No pudimos registrar tu respuesta. Intenta de nuevo.' }
+        ]);
+        expect(gameState.players.s1.hasAnswered).toBe(false);
+
+        // El reintento sí se guarda y recién ahí suma
+        await socket.trigger('submit_answer', { answer: CORRECT });
+
+        expect(gameState.players.s1).toMatchObject({ score: 100, hasAnswered: true });
+        expect(savedScores).toHaveBeenCalledTimes(2);
+    });
+
+    it('libera el bonus del primer acierto para quien sí se guarde', async () => {
+        const failing = connectPlayer('s1', { name: 'Equipo 1' });
+        const other = connectPlayer('s2', { name: 'Equipo 2' });
+        connectPlayer('s3', { name: 'Equipo 3' });
+        failOnce();
+
+        await failing.trigger('submit_answer', { answer: CORRECT });
+        await other.trigger('submit_answer', { answer: CORRECT });
+
+        expect(gameState.getFirstCorrectAnswer()).toBe('s2');
+        expect(gameState.players.s2.score).toBe(100);
+    });
+
+    it('no cuenta como respondida para detener el temporizador', async () => {
+        vi.useFakeTimers();
+        gameState.setRemainingTime(7);
+        gameState.setTimerInterval(setInterval(() => {}, 1000));
+        const socket = connectPlayer('s1', { name: 'Equipo 1' });
+        failOnce();
+
+        await socket.trigger('submit_answer', { answer: CORRECT });
+
+        expect(gameState.getTimerInterval()).not.toBeNull();
+    });
+});
+
 describe('submit_answer: cuando responden todos', () => {
     beforeEach(() => {
         vi.useFakeTimers();
