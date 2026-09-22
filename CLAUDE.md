@@ -29,7 +29,7 @@ Guía para retomar el trabajo en este repo. Se actualiza al cerrar cada tanda (v
 | Rama | Estado |
 |---|---|
 | `master` | `7deb2ad`, igual en GitHub. Es lo que corre en producción. |
-| `mejoras-cliente` | En GitHub (`d8774c5`, CI en verde): tandas 1 a 3, validadas por Franco en el staging, y la primera parte de la tanda 4 (A11, A12, A29, A16, B5). En local, además, el resto de la tanda 4 (A10, A14, A27, A28), sin pushear. |
+| `mejoras-cliente` | En GitHub (`8ca52a6`): tandas 1 a 4 completas, pusheadas y probadas por Franco en el staging. |
 | `feature_*`, `IC`, `password`, `refactoring` | Históricas, ya integradas en `master`. |
 
 Plan de entrega: tanda por tanda, push a `mejoras-cliente`, CI en verde y prueba de Franco en el staging. No fusionar a `master` sin la decisión de Franco.
@@ -130,11 +130,16 @@ reset_game (desde cualquier estado) → LOBBY
 
 ### Tanda 5: seguridad, esquema y deploy
 
+Orden acordado con Franco: **A1** primero, después **A3** y **A25**, después el resto.
+
 | ID | Qué | Dónde | Notas |
 |---|---|---|---|
 | A1 | Autenticación en los eventos de socket | `server/sockets/` | Prioridad alta. Detalle en la checklist |
 | A3 | `trust proxy` detrás de Render para el rate limit por IP | `server.js`, `routes/authRoutes.js` | |
 | A25 | Rate limit en la recuperación de contraseña | `routes/authRoutes.js:91` | |
+| A32 | El cliente no escucha el evento `error` del server | `hooks/useGameSocket.js`, `App.jsx:94` | Deja a medias A29: el celular bloquea los botones al tocar y nunca se entera de que puede reintentar |
+| A33 | Un origen rechazado por CORS responde 500 | `config/cors.js:31` | Pasarlo a 403 separa este caso de los otros sospechosos de B3 |
+| A31 | Imágenes de preguntas: cualquier URL se acepta y falla en silencio | `AdminView.jsx`, `HostView.jsx`, README | Vista previa en el panel, aviso visible en el proyector y ayuda de Drive corregida |
 | A20 | Un nombre de equipo repetido hereda el puntaje anterior | `models/Players.js`, `playerHandlers.js` | Riesgo medio |
 | A26 | Unificar los dos `package.json` | raíz y `server/` | Cambia cómo instala Render |
 | A30 | Alinear la versión de Node | `package.json`, README, CI | Requiere ver el log de build de Render |
@@ -145,15 +150,14 @@ reset_game (desde cualquier estado) → LOBBY
 
 - **B3 «Server Error» en producción**: falta que el cliente diga en qué pantalla pasó, cuántas veces y si venía de un rato sin usar la app. Los logs de Render lo resolverían.
 - **A23 migraciones y estado en un solo proceso**: diferido por decisión de Franco. B4 y B6 lo van a poner sobre la mesa.
-- **Pendiente del cliente** (conviene pedirlo en un solo mensaje): acceso a Render, detalles de B3 y definición de B6.
+- **Pendiente del cliente** (conviene pedirlo en un solo mensaje): acceso a Render, detalles de B3 y definición de B6. Sin novedades al 2026-09-22.
 
 ### Observaciones sin cargar en la checklist
 
+No suman robustez por sí solas; se retoman si se toca esa zona.
+
 - `DELETE /api/players/clean-season` no lo usa nadie: el panel limpia la temporada con `reset_game` por socket.
 - `disconnectSocket` (`client/src/hooks/useSocket.js:50`) se exporta y no se usa.
-- **Imágenes de preguntas (candidato a A31):** el admin acepta cualquier URL http(s) aunque no sea una imagen. En el staging se cargó `drive.google.com/drive/u/1/home`, la portada de Drive, y el proyector no mostró nada. Además, la ayuda confunde: el README recomienda enlaces de Drive `/preview` (páginas, no imágenes) y el formulario sugiere `drive.google.com/uc?id=`, que Google bloquea cada vez más para usarlo en otros sitios. Propuesta: vista previa de la imagen en el formulario y ayuda corregida.
-- **El cliente no escucha el evento `error`:** el server le manda mensajes al jugador («Las respuestas aún no están activadas», el aviso de A29, los de `join_game`) y ninguno se ve en pantalla, porque `useGameSocket` no registra ese listener. Pendiente de decidir si se muestran.
-- **Un origen rechazado por CORS responde 500 «Error interno»:** `config/cors.js` rechaza con un `Error` sin status. Encaja con el tercer sospechoso de B3 (el «Server Error» al entrar a `/admin`); darle status 403 lo haría distinguible.
 - El script `build` de la raíz no instala Vite con `NODE_ENV=production` (ver Trampas); el README lo presenta como la estrategia de deploy.
 
 ## Registro de tandas
@@ -172,10 +176,11 @@ reset_game (desde cualquier estado) → LOBBY
 | 2026-09-20 | 4 | A29, A16 y B5 (155 tests, mutaciones verificadas, flujo probado contra la base local). B5: «Atrás» solo antes de activar respuestas, decidido por Franco ante la falta de respuesta del cliente |
 | 2026-09-20 | — | Franco pushea la primera parte de la tanda 4 (`d8774c5`), CI en verde |
 | 2026-09-22 | 4 | A10, A14, A27 y A28: tanda 4 cerrada. 160 tests, lint en cero y en el CI. Probado en el navegador con el server en 3100: modales del proyector estables durante el temporizador, «Atrás», reinicio, redirección de `/` y login del admin. Falta ver en el staging la carga inicial del panel admin (necesita login) |
+| 2026-09-22 | — | Franco pushea el resto de la tanda 4 (`8ca52a6`) y valida el panel admin en el staging. Se cargan A31, A32 y A33 en la checklist y se fija el orden de la tanda 5 |
 
 ## Cómo mantener este archivo
 
 - Al cerrar una tanda: pasar los ítems a «Hecho», sumar una fila al registro, actualizar «Estado de ramas» y tildar en la checklist.
-- Un hallazgo nuevo lleva el siguiente ID libre (A31, …) en la checklist y en la tabla que corresponda.
+- Un hallazgo nuevo lleva el siguiente ID libre (A34, …) en la checklist y en la tabla que corresponda.
 - El detalle de cada ítem vive en la checklist. Acá va lo justo para retomar el trabajo.
 - Las referencias de línea se corren con cada cambio: verificarlas al empezar un ítem.
