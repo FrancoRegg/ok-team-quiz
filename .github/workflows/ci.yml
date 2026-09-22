@@ -68,9 +68,10 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      # Cualquier hallazgo de ESLint (error o advertencia) hace fallar el job
+      - name: Revisar con ESLint
+        run: npm run lint -- --max-warnings=0
+
       # Lo mismo que compila Render al desplegar
       - name: Compilar
         run: npm run build
-
-      # ESLint todavía no corre acá: reporta 19 hallazgos pendientes (A28 en
-      # la checklist). Sumar `npm run lint` cuando estén resueltos.
