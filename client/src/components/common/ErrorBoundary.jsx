@@ -14,7 +14,7 @@ class ErrorBoundary extends Component {
         };
     }
 
-    static getDerivedStateFromError(error) {
+    static getDerivedStateFromError() {
         // Actualizar estado para que el próximo render muestre el fallback
         return { hasError: true };
     }
@@ -47,7 +47,7 @@ class ErrorBoundary extends Component {
                         <h1>Ha ocurrido un error</h1>
                         <p>La aplicación encontró un error inesperado.</p>
                         
-                        {process.env.NODE_ENV === 'development' && this.state.error && (
+                        {import.meta.env.DEV && this.state.error && (
                             <details className="error-details">
                                 <summary>Detalles técnicos</summary>
                                 <pre>{this.state.error.toString()}</pre>

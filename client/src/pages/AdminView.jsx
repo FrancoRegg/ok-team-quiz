@@ -338,7 +338,7 @@ function AdminView() {
         if ((type === 'IMAGE' || type === 'VIDEO') && mediaUrl.trim()) {
             try {
                 new URL(mediaUrl);
-            } catch (error) {
+            } catch {
                 alert("⚠️ La URL ingresada no es válida. Debe comenzar con http:// o https://");
                 return;
             }
