@@ -118,9 +118,12 @@ app.use((err, req, res, next) => {
     }
 
     const isProduction = process.env.NODE_ENV === 'production';
+    const status = err.status || err.statusCode || 500;
 
-    res.status(err.status || 500).json({
-        error: 'Error interno del servidor',
+    // Un 4xx es un problema del pedido (por ejemplo, un JSON mal formado), no
+    // una falla del servidor: rotularlo como "Error interno" confunde al depurar
+    res.status(status).json({
+        error: status >= 500 ? 'Error interno del servidor' : 'Solicitud inválida',
         // En producción no exponemos detalles internos al cliente
         details: isProduction ? undefined : err.message
     });
