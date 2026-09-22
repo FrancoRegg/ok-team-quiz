@@ -1,4 +1,6 @@
 const Player = require('../models/Players');
+// Jugadores conectados a la partida en curso, para reflejar ahí los cambios de puntaje
+const { players } = require('../utils/gameState');
 
 let io = null;
 
@@ -39,8 +41,6 @@ exports.updatePlayerScore = async (req, res) => {
         
         // Actualizar jugador en memoria Y notificar via Socket.io
         if (io) {
-            const { players } = require('../server');
-            
             // Buscar jugador en memoria y actualizar
             const socketId = Object.keys(players).find(id => players[id].dbId === player.id);
             if (socketId) {

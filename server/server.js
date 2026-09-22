@@ -60,14 +60,10 @@ playerController.setSocketIO(io);
 const {
     getServerRunId,
     getGameSessionId,
-    players,
 } = gameStateModule;
 
 // Constantes locales
 const SERVER_RUN_ID = getServerRunId();
-
-// Exportar players para playerController
-module.exports.players = players;
 
 // --- SOCKETS ---
 io.on("connection", (socket) => {
