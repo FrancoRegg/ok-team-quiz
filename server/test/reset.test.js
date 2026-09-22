@@ -136,4 +136,16 @@ describe('reset_game: errores', () => {
 
         expect(sentToRoom(io, 'game_room', 'error')).toEqual([{ message: 'Error al reiniciar el juego' }]);
     });
+
+    it('si la base falla la partida sigue como estaba, sin reiniciarse a medias', async () => {
+        const previousSession = gameState.getGameSessionId();
+        vi.setSystemTime(Date.now() + 60000);
+        table.update.mockRejectedValue(new Error('sin conexión'));
+
+        await host.trigger('reset_game', { cleanPlayers: false });
+
+        expect(gameState.getGameState()).toBe('QUESTION_ACTIVE');
+        expect(gameState.getCurrentQuestionIndex()).toBe(2);
+        expect(gameState.getGameSessionId()).toBe(previousSession);
+    });
 });

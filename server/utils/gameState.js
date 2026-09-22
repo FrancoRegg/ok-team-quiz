@@ -90,20 +90,19 @@ const setRemainingTime = (time) => {
 }
 
 // Funciones de utilidad
+
+// Vuelve la partida al lobby con una sesión nueva: sin pregunta en curso, sin
+// temporizador y sin desconexiones pendientes. Los jugadores en memoria no se
+// tocan: qué pasa con ellos depende de la opción de reinicio (adminHandlers).
 const resetGame = () => {
     GAME_SESSION_ID = Date.now();
-    
+
     // Limpiar timeouts
     for (const key in playerTimeouts) {
         clearTimeout(playerTimeouts[key]);
         delete playerTimeouts[key];
     }
-    
-    // Vaciar players
-    for (const key in players) {
-        delete players[key];
-    }
-    
+
     gameState = 'LOBBY';
     currentQuestionIndex = 0;
     firstCorrectAnswer = null;

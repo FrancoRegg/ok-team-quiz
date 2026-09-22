@@ -29,6 +29,9 @@ const QUESTIONS = [
 // Partida en el lobby, sin jugadores ni timers, con las preguntas de ejemplo
 const resetGameState = (questions = QUESTIONS) => {
     gameState.resetGame();
+    for (const id in gameState.players) {
+        delete gameState.players[id];
+    }
     gameState.setQuestions(questions.map((q) => ({ ...q, options: [...q.options] })));
 };
 

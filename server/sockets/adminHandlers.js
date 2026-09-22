@@ -2,105 +2,79 @@ const Player = require('../models/Players');
 const gameState = require('../utils/gameState');
 
 const {
-    getTimerInterval,
-    setGameSessionId,
-    setGameState,
-    setCurrentQuestionIndex,
-    setFirstCorrectAnswer,
-    setTimerInterval,
-    setRemainingTime,
+    resetGame,
     getGameState,
-    players,
-    playerTimeouts
+    players
 } = gameState;
 
 const registerAdminHandlers = (io, socket, loadQuestions) => {
 
     // --- RESET GAME ---
-    socket.on('reset_game', async (data) => { 
+    socket.on('reset_game', async (data) => {
         try{
-        const cleanPlayers = data?.cleanPlayers || false;
-        
-        console.log(`🧹 Reiniciando juego - Limpiar jugadores: ${cleanPlayers}`);
-        
-        setGameSessionId(Date.now());
+            const cleanPlayers = data?.cleanPlayers || false;
 
-        // Limpiar todos los timeouts pendientes
-        for (const key in playerTimeouts){
-            clearTimeout(playerTimeouts[key]);
-            delete playerTimeouts[key];
-        }
+            console.log(`🧹 Reiniciando juego - Limpiar jugadores: ${cleanPlayers}`);
 
-        if (cleanPlayers) {
-    // Borrar todos los jugadores de BD
-    await Player.destroy({ where: {} });
-    console.log('🧹 Jugadores eliminados de BD');
-    
-    // Vaciar players de memoria (EXCEPTO HOST)
-    for (const key in players) {
-        if (players[key].name !== 'HOST') {
-            delete players[key];
-        }
-    }
-    console.log('🗑️ Jugadores eliminados de memoria');
-    } else {
-        // Solo marcar como desconectados en BD
-        await Player.update(
-            { isConnected: false },
-            { where: {} }
-        );
-        console.log('🔄 Jugadores mantenidos en BD (marcados como desconectados)');
-        
-        // Mantener jugadores en memoria, solo resetear estado
-        for (const key in players) {
-            if (players[key].name !== 'HOST') {
-                players[key].hasAnswered = false;
-                players[key].isConnected = true;
+            // Primero los jugadores, que es lo que depende de la opción elegida
+            if (cleanPlayers) {
+                // Borrar todos los jugadores de BD
+                await Player.destroy({ where: {} });
+                console.log('🧹 Jugadores eliminados de BD');
+
+                // Vaciar players de memoria (EXCEPTO HOST)
+                for (const key in players) {
+                    if (players[key].name !== 'HOST') {
+                        delete players[key];
+                    }
+                }
+                console.log('🗑️ Jugadores eliminados de memoria');
+            } else {
+                // Solo marcar como desconectados en BD
+                await Player.update(
+                    { isConnected: false },
+                    { where: {} }
+                );
+                console.log('🔄 Jugadores mantenidos en BD (marcados como desconectados)');
+
+                // Mantener jugadores en memoria, solo resetear estado
+                for (const key in players) {
+                    if (players[key].name !== 'HOST') {
+                        players[key].hasAnswered = false;
+                        players[key].isConnected = true;
+                    }
+                }
+                console.log('✅ Jugadores mantenidos en memoria (estado reseteado)');
             }
-        }
-        console.log('✅ Jugadores mantenidos en memoria (estado reseteado)');
-    }
 
-        // Reiniciamos variables
-        setGameState("LOBBY");
-        
-        setCurrentQuestionIndex(0);
-        
-        setFirstCorrectAnswer(null);
+            // Después, la partida: lobby, sesión nueva, sin timer ni pregunta en curso
+            resetGame();
 
-        // Limpiar timer
-        if (getTimerInterval()) {
-            clearInterval(getTimerInterval());
-            setTimerInterval(null);
-        }
-        
-        setRemainingTime(0);
+            await loadQuestions();
+            console.log("🔄 Preguntas recargadas");
 
-        await loadQuestions();
-        console.log("🔄 Preguntas recargadas");
+            // Avisamos a todos
+            io.emit('game_state', getGameState());
 
-        // Avisamos a todos
-        io.emit('game_state', getGameState());
+            // Enviar lista correcta de jugadores según si se limpió o no
+            if (cleanPlayers) {
+                io.emit('update_players', []);
+            } else {
+                io.emit('update_players', Object.values(players));
+            }
 
-        // Enviar lista correcta de jugadores según si se limpió o no
-        if (cleanPlayers) {
-            io.emit('update_players', []);
-        } else {
-            io.emit('update_players', Object.values(players));
-        } 
-
-        if (cleanPlayers) {
-            console.log('📢 Emitiendo force_refresh (limpiar todo)');
-            io.emit('force_refresh');
-        } else {
-            console.log('ℹ️ No se emite force_refresh (mantener jugadores)');
-            // Los jugadores recibirán game_state y volverán al lobby automáticamente
-        } 
+            if (cleanPlayers) {
+                console.log('📢 Emitiendo force_refresh (limpiar todo)');
+                io.emit('force_refresh');
+            } else {
+                console.log('ℹ️ No se emite force_refresh (mantener jugadores)');
+                // Los jugadores recibirán game_state y volverán al lobby automáticamente
+            }
 
         } catch (error){
             console.error('❌ Error en reset_game:', error.message);
-            io.to('game_room').emit('error', { 
-                message: 'Error al reiniciar el juego' 
+            io.to('game_room').emit('error', {
+                message: 'Error al reiniciar el juego'
             });
         }
     });
