@@ -24,15 +24,15 @@ Guía para retomar el trabajo en este repo. Se actualiza al cerrar cada tanda (v
 7. **Nunca tocar `master`**: ni merge ni push. Lo hace Franco o lo pide explícitamente. Push a GitHub solo cuando lo pida: un push a `mejoras-cliente` despliega el staging.
 8. Al cerrar la tanda: tildar lo terminado en la checklist y actualizar este archivo.
 
-## Estado de ramas (2026-09-17)
+## Estado de ramas (2026-09-22)
 
 | Rama | Estado |
 |---|---|
 | `master` | `7deb2ad`, igual en GitHub. Es lo que corre en producción. |
-| `mejoras-cliente` | En GitHub: tandas 1 a 3 (`dc30b1f`), CI en verde, validadas por Franco en el staging. En local, además, lo hecho de la tanda 4, sin pushear. |
+| `mejoras-cliente` | En GitHub (`d8774c5`, CI en verde): tandas 1 a 3, validadas por Franco en el staging, y la primera parte de la tanda 4 (A11, A12, A29, A16, B5). En local, además, el resto de la tanda 4 (A10, A14, A27, A28), sin pushear. |
 | `feature_*`, `IC`, `password`, `refactoring` | Históricas, ya integradas en `master`. |
 
-Plan de entrega: pushear `mejoras-cliente` (respaldo, primera corrida de CI y deploy al staging), validar las tandas 1 a 3 en el staging y después trabajar tanda por tanda: push, CI en verde, prueba en staging. No fusionar a `master` sin la decisión de Franco.
+Plan de entrega: tanda por tanda, push a `mejoras-cliente`, CI en verde y prueba de Franco en el staging. No fusionar a `master` sin la decisión de Franco.
 
 ## Comandos
 
@@ -46,10 +46,10 @@ Plan de entrega: pushear `mejoras-cliente` (respaldo, primera corrida de CI y de
 | `node seed.js --confirm` | `server/` | Preguntas de ejemplo. **Borra todas las preguntas.** Se niega a correr contra producción |
 | `npm run dev` | `client/` | Vite en 5173, con proxy de `/api` a 3000 |
 | `npm run dev:https` | `client/` | Vite por HTTPS, para probar Wake Lock desde el celular |
-| `npm run lint` | `client/` | ESLint (hoy con 19 hallazgos, ver A28) |
+| `npm run lint` | `client/` | ESLint. Está en cero y el CI falla ante cualquier hallazgo (`--max-warnings=0`) |
 
 - Logs del server en los tests: `TEST_LOGS=1 npm test` (bash) o `$env:TEST_LOGS=1; npm test` (PowerShell).
-- Server de prueba en 3100: `PORT=3100 node server.js` en `server/`, y el cliente con `VITE_API_URL=http://localhost:3100 VITE_SOCKET_URL=http://localhost:3100 npm run dev`.
+- **Probar sin pisar lo de Franco**, que suele tener su server en 3000 y su Vite en 5173: copiar `server/.env` de la carpeta principal y levantar `PORT=3100 NODE_ENV=production CLIENT_URL=http://localhost:5180 node server.js` en `server/` y `VITE_API_URL=http://localhost:3100 VITE_SOCKET_URL=http://localhost:3100 npx vite --port 5180 --strictPort` en `client/`. `NODE_ENV=production` hace que CORS acepte solo `CLIENT_URL`; en desarrollo el 5180 no está en la lista. Al terminar: cortar solo los PID de 3100 y 5180, borrar los jugadores de prueba de su base y el `.env` copiado.
 - Variables: `server/.env` (ver `server/.env.example`; `JWT_SECRET` es obligatoria) y `client/.env.local` (`VITE_API_URL`, `VITE_SOCKET_URL`). En producción la base sale de `DATABASE_URL` y las `VITE_*` quedan vacías (mismo origen).
 
 ## Arquitectura
@@ -64,7 +64,7 @@ Monorepo sin workspaces. El `package.json` de la raíz es el del deploy: depende
 
 - `server.js`: corta si falta `JWT_SECRET`. Monta CORS, Socket.io, handlers, rutas `/api/*`, un 404 JSON para `/api` desconocido, los estáticos y el manejador global de errores. Arranque: `testConnection → sync({ alter }) → initializePassword → loadQuestions → listen`. Si algo falla, `process.exit(1)`.
 - `config/`: `db.js` (`DATABASE_URL` con SSL o variables `PG*`), `cors.js` (orígenes por entorno más `LOCAL_IP`), `socket.js`, `sync.js`.
-- `utils/gameState.js`: todo el estado de la partida en variables de módulo, con getters y setters. `players` y `playerTimeouts` se exportan por referencia: se mutan, nunca se reasignan.
+- `utils/gameState.js`: todo el estado de la partida en variables de módulo, con getters y setters. `players` y `playerTimeouts` se exportan por referencia: se mutan, nunca se reasignan. `resetGame()` vuelve la partida al lobby con sesión nueva pero **no toca los jugadores**: eso lo decide `reset_game` según la opción elegida.
 - `utils/gameLogics.js`: `loadQuestions` y `sendNextQuestion`.
 - `sockets/`: `playerHandlers` (`join_game`, `disconnect` con 30 s de gracia), `gameHandlers` (`next_question`, `previous_question`, `activate_answers` con timer, `show_answer`), `answerHandlers` (`submit_answer` y puntaje), `adminHandlers` (`reset_game`).
 - REST: `/api/auth` (`login` con rate limit, `change-password` con JWT, `recover-with-code`), `/api/questions` (CRUD con JWT), `/api/players` (listar, `PUT /:id` con `scoreChange`, `DELETE /clean-season`; con JWT).
@@ -95,7 +95,8 @@ reset_game (desde cualquier estado) → LOBBY
 ### Cliente
 
 - Rutas (`main.jsx`): `/` detecta si es móvil y redirige a `/play` o `/host`. `/play` → `App.jsx` (flujo del jugador). `/host` → `pages/HostView.jsx`. `/admin` → `guards/AdminGuard.jsx` (login y recuperación, token en `localStorage.admin_token`) envolviendo `pages/AdminView.jsx`.
-- Hooks: `useSocket` (socket único compartido, 5 reintentos), `useGameSession` (`server_check` y reconexión), `useGameSocket` (eventos del juego), `useWakeLock` (pantalla encendida; requiere HTTPS e iOS 16.4 o superior).
+- Hooks: `useSocket` (socket único, creado la primera vez que se pide, así existe desde el primer render; `isConnected` sale de `useSyncExternalStore`; 5 reintentos), `useGameSession` (`server_check` y reconexión), `useGameSocket` (eventos del juego; el efecto depende de los setters, no del objeto que arma `App` en cada render), `useWakeLock` (pantalla encendida; requiere HTTPS e iOS 16.4 o superior).
+- Componentes: no definirlos dentro de otro componente (HostView tenía sus modales así y se desmontaban con cada tic del temporizador). ESLint lo marca con `react-hooks/static-components`.
 - `App.jsx` elige la pantalla de `components/screens/` según `gameState`. Hay un CSS por componente en `src/styles/`.
 
 ## Tests y CI
@@ -107,7 +108,7 @@ reset_game (desde cualquier estado) → LOBBY
 - Los tests describen el comportamiento **actual**. Si destapan un bug, no se consagra en un test: se anota en la checklist.
 - Cada suite nueva se valida con una mutación (romper el código a propósito y ver que falla) y corriendo todo en orden aleatorio.
 - El cliente no tiene tests.
-- CI (`.github/workflows/ci.yml`), en cada push y cada PR a `master`, con Node 22: tests del server y build del cliente. ESLint todavía no corre en CI (A28).
+- CI (`.github/workflows/ci.yml`), en cada push y cada PR a `master`, con Node 22: tests del server, ESLint del cliente sin tolerar advertencias y build del cliente.
 
 ## Trampas conocidas
 
@@ -120,21 +121,12 @@ reset_game (desde cualquier estado) → LOBBY
 
 ## Estado del trabajo
 
-### Hecho (en `mejoras-cliente`, sin desplegar)
+### Hecho (en `mejoras-cliente`, todavía no en producción)
 
 - **Tanda 1:** A2 el jugador que entra tarde recibe la pregunta en curso · A22 manejador global de errores y arranque que falla sin base · B1 pantalla encendida · B2 respuesta correcta en el celular. Además, modo `dev:https` e indicador de Wake Lock en desarrollo.
 - **Tanda 2:** A4 404 JSON en `/api` · A5 dependencias faltantes en `server/` · A6 `VITE_API_URL` en AdminGuard · A7 ESLint analiza `.js`/`.jsx` · A8 README al día · A9 fuera `ADMIN_PASSWORD` · A13 listener de conexión duplicado · A15 logs de debug y códigos de recuperación fuera de los logs · A19 guardas en `seed.js` · A24 `JWT_SECRET` obligatoria.
 - **Tanda 3:** A17 tests del server · A18 CI en GitHub Actions · A21 descartado (el HOST no se acumula en memoria).
-- **Tanda 4 (en curso):** A12 fuera el avance automático comentado · A11 fuera el feedback de acierto sin uso (decisión de Franco: la partida no avanza sola y el jugador ve la respuesta recién cuando el Host la muestra) · A29 el puntaje en memoria sube solo si se guardó en la base · A16 `getCurrentQuestion()` · B5 botón «Atrás».
-
-### Tanda 4: lógica del juego y limpieza (no depende de Render ni del cliente)
-
-| ID | Qué | Dónde | Notas |
-|---|---|---|---|
-| A10 | `resetGame()` no se usa: `adminHandlers` la reimplementa | `utils/gameState.js:84` | La usan los tests (`test/helpers/game.js`) |
-| A14 | Dependencia circular `require('../server')` | `controllers/player.controller.js:42` | Tomar `players` de `gameState` y quitar `module.exports.players` de `server.js:70` |
-| A27 | El manejador de errores rotula todo como «Error interno» | `server.js:127` | |
-| A28 | 19 hallazgos de ESLint (9 en HostView por componentes definidos dentro del render) | `HostView.jsx`, `useGameSocket.js`, `AdminView.jsx`, `ErrorBoundary.jsx` | Riesgo medio: corregir dependencias de hooks cambia cuándo corren los efectos. Después, sumar lint al CI |
+- **Tanda 4:** A12 fuera el avance automático comentado · A11 fuera el feedback de acierto sin uso (decisión de Franco: la partida no avanza sola y el jugador ve la respuesta recién cuando el Host la muestra) · A29 el puntaje en memoria sube solo si se guardó en la base · A16 `getCurrentQuestion()` · B5 botón «Atrás» · A10 `reset_game` usa `resetGame()` y ya no reinicia a medias si falla la base · A14 sin `require` circular (el controller de jugadores ahora tiene tests) · A27 los 4xx se informan como «Solicitud inválida» · A28 ESLint en cero y en el CI.
 
 ### Tanda 5: seguridad, esquema y deploy
 
@@ -161,6 +153,7 @@ reset_game (desde cualquier estado) → LOBBY
 - `disconnectSocket` (`client/src/hooks/useSocket.js:50`) se exporta y no se usa.
 - **Imágenes de preguntas (candidato a A31):** el admin acepta cualquier URL http(s) aunque no sea una imagen. En el staging se cargó `drive.google.com/drive/u/1/home`, la portada de Drive, y el proyector no mostró nada. Además, la ayuda confunde: el README recomienda enlaces de Drive `/preview` (páginas, no imágenes) y el formulario sugiere `drive.google.com/uc?id=`, que Google bloquea cada vez más para usarlo en otros sitios. Propuesta: vista previa de la imagen en el formulario y ayuda corregida.
 - **El cliente no escucha el evento `error`:** el server le manda mensajes al jugador («Las respuestas aún no están activadas», el aviso de A29, los de `join_game`) y ninguno se ve en pantalla, porque `useGameSocket` no registra ese listener. Pendiente de decidir si se muestran.
+- **Un origen rechazado por CORS responde 500 «Error interno»:** `config/cors.js` rechaza con un `Error` sin status. Encaja con el tercer sospechoso de B3 (el «Server Error» al entrar a `/admin`); darle status 403 lo haría distinguible.
 - El script `build` de la raíz no instala Vite con `NODE_ENV=production` (ver Trampas); el README lo presenta como la estrategia de deploy.
 
 ## Registro de tandas
@@ -176,8 +169,9 @@ reset_game (desde cualquier estado) → LOBBY
 | 2026-09-17 | 4 | A12 y A11 eliminados (139 tests, lint sin cambios). Fuera del primer push al staging |
 | 2026-09-17 | — | Push de `mejoras-cliente` con las tandas 1 a 3: primera corrida de CI en verde |
 | 2026-09-17 | — | Franco valida en el staging: admin, partida, respuesta en el celular, Wake Lock en iPhone, entrada tarde, reinicio manteniendo participantes y 404 JSON. La imagen no se vio por la URL usada (ver A31). Commits de la tanda 4 reescritos a una línea |
-
 | 2026-09-20 | 4 | A29, A16 y B5 (155 tests, mutaciones verificadas, flujo probado contra la base local). B5: «Atrás» solo antes de activar respuestas, decidido por Franco ante la falta de respuesta del cliente |
+| 2026-09-20 | — | Franco pushea la primera parte de la tanda 4 (`d8774c5`), CI en verde |
+| 2026-09-22 | 4 | A10, A14, A27 y A28: tanda 4 cerrada. 160 tests, lint en cero y en el CI. Probado en el navegador con el server en 3100: modales del proyector estables durante el temporizador, «Atrás», reinicio, redirección de `/` y login del admin. Falta ver en el staging la carga inicial del panel admin (necesita login) |
 
 ## Cómo mantener este archivo
 
