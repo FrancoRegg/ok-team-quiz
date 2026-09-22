@@ -139,7 +139,8 @@ function HostView() {
     const [timer, setTimer] = useState(null);
     const [showResetModal, setShowResetModal] = useState(false);
     const [showRankingModal, setShowRankingModal] = useState(false);
-    const [joinUrl, setJoinUrl] = useState("");
+    // Dirección que muestran el QR y el texto del lobby: la misma de esta página
+    const joinUrl = window.location.origin;
 
     useEffect(() => {
         if (!socket) {
@@ -148,8 +149,6 @@ function HostView() {
         }
 
         console.log('✅ Socket disponible, inicializando HostView');
-
-        setJoinUrl(window.location.origin);
 
         socket.emit('join_game', {name:'HOST'})
         

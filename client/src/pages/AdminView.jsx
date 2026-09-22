@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useEffectEvent } from "react"
 import { useSocket } from '../hooks/useSocket';
 import RecoveryCodeModal from '../components/screens/RecoveryCodeModal';
 import '../styles/Admin.css'
@@ -249,9 +249,16 @@ function AdminView() {
         }, 500);
     };
 
-    useEffect(() => {
+    // Carga inicial del panel, una sola vez al entrar. fetchQuestions y
+    // fetchPlayers se reutilizan en otros handlers; useEffectEvent evita que el
+    // efecto dependa de ellas (son funciones nuevas en cada render)
+    const loadPanelData = useEffectEvent(() => {
         fetchQuestions();
         fetchPlayers();
+    });
+
+    useEffect(() => {
+        loadPanelData();
     }, []);
 
     const handleOptionChange = (index, value) => {

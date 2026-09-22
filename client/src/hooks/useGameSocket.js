@@ -65,5 +65,8 @@ export const useGameSocket = (socket, gameHandlers) => {
             socket.off('timer_update', handleTimerUpdate); 
             socket.off('timer_finished', handleTimerFinished);
         };
-    }, [socket, gameHandlers]);
+    // Los setters de useState son estables: el efecto corre una vez por socket.
+    // Antes dependía de gameHandlers, un objeto nuevo en cada render de App, y
+    // todos los listeners se daban de baja y se volvían a registrar cada vez.
+    }, [socket, setGameState, setOptionsAnswers, setHasAnswered, setMyAnswer, setCorrectOption, setScoreGroup, setTimer]);
 }
