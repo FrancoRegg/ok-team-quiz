@@ -1,7 +1,133 @@
 import { useEffect, useState } from 'react';
 import { useSocket } from '../hooks/useSocket';
 import QRCode from "react-qr-code";
+import PropTypes from 'prop-types';
 import '../styles/HostView.css'
+
+// Piezas del proyector. Van fuera de HostView porque, definidas adentro, React
+// las creaba de nuevo en cada render (una vez por segundo con el temporizador)
+// y los modales abiertos se desmontaban y volvían a montar.
+
+const AdminButton = () => (
+    <button
+        className="admin-access-btn"
+        onClick={() => window.open('/admin', '_blank')}
+        title="Ir al Panel de Administración"
+    >
+        🔒
+    </button>
+);
+
+const ResetModal = ({ isOpen, onClose, onReset }) => {
+    if (!isOpen) return null;
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>Reiniciar Partida</h2>
+                    <button className="modal-close" onClick={onClose}>
+                        ✕
+                    </button>
+                </div>
+
+                <div className="modal-body">
+                    <p className="modal-question">¿Qué desea hacer con los participantes?</p>
+
+                    <div className="reset-options">
+                        <button
+                            className="reset-option-btn keep"
+                            onClick={() => {
+                                onReset(false);
+                                onClose();
+                            }}
+                        >
+                            <span className="option-icon">🔄</span>
+                            <div className="option-text">
+                                <strong>Mantener participantes</strong>
+                                <small>Reiniciar solo las preguntas (conservar puntos)</small>
+                            </div>
+                        </button>
+
+                        <button
+                            className="reset-option-btn clean"
+                            onClick={() => {
+                                if (window.confirm('⚠️ ¿Seguro? Esto borrará TODOS los jugadores y puntos permanentemente.')) {
+                                    onReset(true);
+                                    onClose();
+                                }
+                            }}
+                        >
+                            <span className="option-icon">🧹</span>
+                            <div className="option-text">
+                                <strong>Limpiar todo</strong>
+                                <small>Eliminar participantes y comenzar de cero</small>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+ResetModal.propTypes = {
+    isOpen: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
+    onReset: PropTypes.func.isRequired
+};
+
+const RankingModal = ({ isOpen, onClose, groups }) => {
+    if (!isOpen) return null;
+
+    const ranking = groups
+        .filter(g => g.name !== 'HOST')
+        .sort((a, b) => b.score - a.score);
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content ranking-modal" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>Tabla de Posiciones</h2>
+                    <button className="modal-close" onClick={onClose}>
+                        ✕
+                    </button>
+                </div>
+
+                <div className="modal-body">
+                    {ranking.length === 0 ? (
+                        <p className="no-players">No hay participantes registrados</p>
+                    ) : (
+                        <div className="ranking-full-list">
+                            {ranking.map((player, index) => (
+                                <div key={player.id} className="ranking-item">
+                                    <span className="rank-position">
+                                        {index === 0 ? '🥇' :
+                                         index === 1 ? '🥈' :
+                                         index === 2 ? '🥉' :
+                                         `${index + 1}.`}
+                                    </span>
+                                    <span className="rank-player-name">{player.name}</span>
+                                    <span className="rank-player-score">{player.score} pts</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+RankingModal.propTypes = {
+    isOpen: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.string,
+        name: PropTypes.string,
+        score: PropTypes.number
+    })).isRequired
+};
 
 function HostView() {
     const { socket } = useSocket();
@@ -84,106 +210,9 @@ function HostView() {
         }
     }, [socket]);
 
-    const AdminButton = () => (
-        <button 
-            className="admin-access-btn"
-            onClick={() => window.open('/admin', '_blank')} 
-            title="Ir al Panel de Administración"
-        >
-            🔒
-        </button>
-    );
-
-    const ResetModal = () => (
-        showResetModal && (
-            <div className="modal-overlay" onClick={() => setShowResetModal(false)}>
-                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                    <div className="modal-header">
-                        <h2>Reiniciar Partida</h2>
-                        <button className="modal-close" onClick={() => setShowResetModal(false)}>
-                            ✕
-                        </button>
-                    </div>
-                    
-                    <div className="modal-body">
-                        <p className="modal-question">¿Qué desea hacer con los participantes?</p>
-                        
-                        <div className="reset-options">
-                            <button 
-                                className="reset-option-btn keep"
-                                onClick={() => {
-                                    socket.emit('reset_game', { cleanPlayers: false });
-                                    setShowResetModal(false);
-                                }}
-                            >
-                                <span className="option-icon">🔄</span>
-                                <div className="option-text">
-                                    <strong>Mantener participantes</strong>
-                                    <small>Reiniciar solo las preguntas (conservar puntos)</small>
-                                </div>
-                            </button>
-                            
-                            <button 
-                                className="reset-option-btn clean"
-                                onClick={() => {
-                                    if (window.confirm('⚠️ ¿Seguro? Esto borrará TODOS los jugadores y puntos permanentemente.')) {
-                                        socket.emit('reset_game', { cleanPlayers: true });
-                                        setShowResetModal(false);
-                                    }
-                                }}
-                            >
-                                <span className="option-icon">🧹</span>
-                                <div className="option-text">
-                                    <strong>Limpiar todo</strong>
-                                    <small>Eliminar participantes y comenzar de cero</small>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )
-    );
-
-    const RankingModal = () => (
-        showRankingModal && (
-            <div className="modal-overlay" onClick={() => setShowRankingModal(false)}>
-                <div className="modal-content ranking-modal" onClick={(e) => e.stopPropagation()}>
-                    <div className="modal-header">
-                        <h2>Tabla de Posiciones</h2>
-                        <button className="modal-close" onClick={() => setShowRankingModal(false)}>
-                            ✕
-                        </button>
-                    </div>
-                    
-                    <div className="modal-body">
-                        {groups.filter(g => g.name !== 'HOST').length === 0 ? (
-                            <p className="no-players">No hay participantes registrados</p>
-                        ) : (
-                            <div className="ranking-full-list">
-                                {groups
-                                    .filter(g => g.name !== 'HOST')
-                                    .sort((a, b) => b.score - a.score)
-                                    .map((player, index) => (
-                                        <div key={player.id} className="ranking-item">
-                                            <span className="rank-position">
-                                                {index === 0 ? '🥇' : 
-                                                 index === 1 ? '🥈' : 
-                                                 index === 2 ? '🥉' : 
-                                                 `${index + 1}.`}
-                                            </span>
-                                            <span className="rank-player-name">{player.name}</span>
-                                            <span className="rank-player-score">{player.score} pts</span>
-                                        </div>
-                                    ))
-                                }
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        )
-    );
+    const closeResetModal = () => setShowResetModal(false);
+    const closeRankingModal = () => setShowRankingModal(false);
+    const resetGame = (cleanPlayers) => socket.emit('reset_game', { cleanPlayers });
 
     if(gameState === 'LOBBY'){
         return(
@@ -220,8 +249,8 @@ function HostView() {
                         Iniciar Partida
                 </button>
                 <AdminButton />
-                <ResetModal />
-                <RankingModal />
+                <ResetModal isOpen={showResetModal} onClose={closeResetModal} onReset={resetGame} />
+                <RankingModal isOpen={showRankingModal} onClose={closeRankingModal} groups={groups} />
             </div>
         );
     }
@@ -266,8 +295,8 @@ function HostView() {
                     Nueva Partida
                 </button>
                 <AdminButton />
-                <ResetModal />
-                <RankingModal />
+                <ResetModal isOpen={showResetModal} onClose={closeResetModal} onReset={resetGame} />
+                <RankingModal isOpen={showRankingModal} onClose={closeRankingModal} groups={groups} />
             </div>
         )
     }
@@ -385,8 +414,8 @@ function HostView() {
             </div>
             
             <AdminButton />
-            <ResetModal />
-            <RankingModal />
+            <ResetModal isOpen={showResetModal} onClose={closeResetModal} onReset={resetGame} />
+            <RankingModal isOpen={showRankingModal} onClose={closeRankingModal} groups={groups} />
         </div>
     );
 }
