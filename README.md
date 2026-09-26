@@ -90,7 +90,7 @@ El sistema permite a un presentador (Host) proyectar preguntas en una pantalla g
 ## 🚀 Instalación y Configuración Local
 
 ### 1. Requisitos Previos
-* **Node.js** (v18 o superior).
+* **Node.js v20.19 o superior.** Vite 7, que compila el cliente, no funciona con versiones anteriores. El CI usa Node 22. (El campo `engines` de `package.json` todavía dice `18.x`: quedó de una versión anterior del proyecto y no se toca porque el hosting ya elige una versión más nueva por su cuenta.)
 * **PostgreSQL** instalado y ejecutándose localmente.
 
 ### 2. Clonar e Instalar
