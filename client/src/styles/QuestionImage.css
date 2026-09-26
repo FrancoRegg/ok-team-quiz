@@ -1,0 +1,35 @@
+/* Aviso que ocupa el lugar de la imagen que no cargó, tanto en el proyector
+   como en la vista previa del panel */
+
+.question-image-failed {
+    margin: 0;
+    padding: var(--spacing-md);
+    border: 2px dashed #f59e0b;
+    border-radius: var(--radius-md);
+    background: #fffbeb;
+    color: #92400e;
+
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.4;
+    text-align: center;
+}
+
+/* Vista previa del panel: más chica y con el ancho del formulario */
+.media-preview {
+    margin-top: var(--spacing-xs);
+}
+
+.media-preview img {
+    display: block;
+    max-width: 100%;
+    max-height: 180px;
+    border: 1px solid #d1d5db;
+    border-radius: var(--radius-sm);
+    object-fit: contain;
+}
+
+.media-preview .question-image-failed {
+    font-size: 0.9rem;
+    padding: var(--spacing-sm);
+}

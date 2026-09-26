@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSocket } from '../hooks/useSocket';
 import QRCode from "react-qr-code";
 import PropTypes from 'prop-types';
+import QuestionImage from '../components/common/QuestionImage';
 import '../styles/HostView.css'
 
 // Piezas del proyector. Van fuera de HostView porque, definidas adentro, React
@@ -324,9 +325,9 @@ function HostView() {
                     {currentQuestion?.mediaUrl && (
                         <div className="media-frame">
                             {currentQuestion.type === 'IMAGE' ? (
-                                <img 
-                                    src={currentQuestion.mediaUrl} 
-                                    alt="Pregunta" 
+                                <QuestionImage
+                                    src={currentQuestion.mediaUrl}
+                                    alt="Pregunta"
                                     className="question-media"
                                 />
                             ) : currentQuestion.type === 'VIDEO' ? (

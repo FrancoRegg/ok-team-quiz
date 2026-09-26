@@ -1,6 +1,7 @@
 import { useState, useEffect, useEffectEvent } from "react"
 import { useSocket } from '../hooks/useSocket';
 import RecoveryCodeModal from '../components/screens/RecoveryCodeModal';
+import QuestionImage from '../components/common/QuestionImage';
 import '../styles/Admin.css'
 
 const PlayerEditItem = ({ player, onEdit }) => {
@@ -540,7 +541,7 @@ function AdminView() {
                             type="text" 
                             placeholder={
                                 type === 'IMAGE' 
-                                    ? "https://drive.google.com/uc?id=... o https://i.imgur.com/..." 
+                                    ? "https://i.imgur.com/ejemplo.jpg" 
                                     : "https://www.youtube.com/embed/..."
                             }
                             value={mediaUrl} 
@@ -548,9 +549,17 @@ function AdminView() {
                         />
                         <p className="input-hint">
                             {type === 'IMAGE' 
-                                ? "💡 Sube tu imagen a Google Drive o Imgur y pega el enlace público aquí" 
+                                ? "💡 Tiene que ser el enlace directo a la imagen, de los que terminan en .jpg o .png (en Imgur: clic derecho sobre la imagen → «Copiar dirección de imagen»). Los enlaces para compartir de Google Drive no sirven acá." 
                                 : "💡 Sube tu video a YouTube y usa el enlace de 'Insertar' (embed)"}
                         </p>
+
+                        {/* Vista previa: así el error se ve al cargar la pregunta
+                            y no recién en el proyector, con el evento en marcha */}
+                        {type === 'IMAGE' && mediaUrl.trim() && (
+                            <div className="media-preview">
+                                <QuestionImage src={mediaUrl.trim()} alt="Vista previa de la imagen" />
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

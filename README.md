@@ -350,6 +350,11 @@ OK-TEAM-QUIZ/
 * Verifica que la URL sea de formato `/embed` (YouTube) o `/preview` (Drive)
 * Algunos videos de YouTube tienen restricciones de embedding
 
+### "La imagen no se ve en el proyector"
+* La URL tiene que ser el enlace directo al archivo (termina en `.jpg` o `.png`), no una página que lo contiene
+* Los enlaces para compartir de Google Drive no funcionan como imagen (ver *Gestión de Imágenes y Videos*)
+* Al cargar la pregunta, la vista previa del panel avisa si la URL no carga
+
 ### "Jugadores no aparecen en el host"
 * Verifica que ambos estén en la misma URL (http vs https)
 * Recarga la página del host
@@ -370,18 +375,24 @@ OK-TEAM-QUIZ/
 
 ### Subir Imágenes:
 
-**Opción 1: Google Drive**
-1.  Sube la imagen a Google Drive
-2.  Click derecho → "Compartir" → "Cualquier persona con el enlace"
-3.  Copia el enlace (ej: `https://drive.google.com/file/d/1A2B3C4D5E/view`)
-4.  **Modifica la URL:** Cambia `/view` por `/preview`
-5.  URL final: `https://drive.google.com/file/d/1A2B3C4D5E/preview`
+La imagen se muestra con una etiqueta `<img>`, así que la URL tiene que ser el
+**enlace directo al archivo**: el que termina en `.jpg`, `.png` o similar. Un
+enlace que abre una página con la imagen adentro no sirve.
 
-**Opción 2: Imgur (Recomendado para imágenes)**
+**Imgur (recomendado)**
 1.  Ve a https://imgur.com/upload
 2.  Sube tu imagen (no requiere cuenta)
 3.  Click derecho en la imagen → "Copiar dirección de imagen"
-4.  Pega esa URL en el panel de admin
+4.  Pega esa URL en el panel de admin (queda como `https://i.imgur.com/ABC123.jpg`)
+
+**Google Drive: no sirve para imágenes.** Ni el enlace para compartir
+(`/view`), que abre una página de Drive, ni `/preview`, que está pensado para
+incrustarse en un iframe. El viejo truco `uc?id=` tampoco es confiable: Google
+lo bloquea cada vez más fuera de su sitio.
+
+Al pegar la URL, el panel muestra una **vista previa** debajo del campo. Si ahí
+aparece el aviso de que no se pudo cargar, en el proyector tampoco se va a ver:
+conviene resolverlo antes del evento.
 
 ### Subir Videos:
 
@@ -393,7 +404,10 @@ OK-TEAM-QUIZ/
 
 **Opción 2: Google Drive**
 1.  Sube el video a Google Drive
-2.  Mismo proceso que imágenes: cambiar `/view` por `/preview`
+2.  Comparte el archivo y cambia `/view` por `/preview` en el enlace
+
+> El `/preview` de Drive funciona para **videos**, que van en un iframe, pero
+> no para imágenes.
 
 ---
 
