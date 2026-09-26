@@ -1,4 +1,5 @@
 const { Server } = require('socket.io');
+const { authenticateSocket } = require('../middleware/socketAuth');
 
 function configureSocket(server, allowedOrigins) {
     console.log('🔧 Configurando Socket.io con orígenes:', allowedOrigins);
@@ -10,6 +11,9 @@ function configureSocket(server, allowedOrigins) {
             credentials: true, 
         }
     });
+
+    // Marca los sockets del panel admin antes de registrar los handlers
+    io.use(authenticateSocket);
 
     console.log('✅ Socket.io configurado');
 

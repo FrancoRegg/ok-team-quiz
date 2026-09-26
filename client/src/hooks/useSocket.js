@@ -13,6 +13,17 @@ const getSocket = () => {
         console.log('🔌 Creando nueva instancia de socket:', SOCKET_URL);
 
         socketInstance = io(SOCKET_URL, {
+            // El panel admin manda su token para poder reiniciar la partida.
+            // Se lee en cada conexión, así una reconexión no usa uno viejo.
+            auth: (cb) => {
+                let token = null;
+                try {
+                    token = localStorage.getItem('admin_token');
+                } catch {
+                    // Almacenamiento no disponible: se conecta sin token
+                }
+                cb(token ? { token } : {});
+            },
             reconnection: true,
             reconnectionDelay: 1000,
             reconnectionAttempts: 5,

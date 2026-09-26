@@ -24,6 +24,8 @@ const createFakeSocket = (id) => {
         id,
         emitted,
         rooms,
+        // socket.data: donde el server marca al panel admin autenticado
+        data: {},
         on: (event, handler) => { handlers[event] = handler; },
         emit: (event, data) => emitted.push({ event, data }),
         join: (room) => rooms.add(room),

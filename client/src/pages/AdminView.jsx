@@ -261,6 +261,20 @@ function AdminView() {
         loadPanelData();
     }, []);
 
+    // El server rechaza el reinicio si el token del panel venció: sin esto, el
+    // rechazo pasaría inadvertido y el panel diría que limpió la temporada
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleErrorMessage = (data) => {
+            alert(`⚠️ ${data?.message || 'El servidor rechazó la acción'}`);
+        };
+
+        socket.on('error_message', handleErrorMessage);
+
+        return () => socket.off('error_message', handleErrorMessage);
+    }, [socket]);
+
     const handleOptionChange = (index, value) => {
         let copyOptions = [...options];
         copyOptions[index] = value;

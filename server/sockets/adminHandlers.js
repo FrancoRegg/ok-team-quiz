@@ -1,5 +1,6 @@
 const Player = require('../models/Players');
 const gameState = require('../utils/gameState');
+const { isGameController, rejectUnauthorized } = require('./authorization');
 
 const {
     resetGame,
@@ -12,6 +13,10 @@ const registerAdminHandlers = (io, socket, loadQuestions) => {
     // --- RESET GAME ---
     socket.on('reset_game', async (data) => {
         try{
+            if (!isGameController(socket)) {
+                return rejectUnauthorized(socket, 'reset_game');
+            }
+
             const cleanPlayers = data?.cleanPlayers || false;
 
             console.log(`🧹 Reiniciando juego - Limpiar jugadores: ${cleanPlayers}`);

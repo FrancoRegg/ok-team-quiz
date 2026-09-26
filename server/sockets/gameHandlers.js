@@ -1,4 +1,5 @@
 const gameState = require('../utils/gameState');
+const { isGameController, rejectUnauthorized } = require('./authorization');
 
 const {
     getGameState,
@@ -18,6 +19,10 @@ const registerGameHandlers = (io, socket, sendNextQuestion) => {
     // --- NEXT QUESTION --- 
     socket.on('next_question', async () => {
         try{
+            if (!isGameController(socket)) {
+                return rejectUnauthorized(socket, 'next_question');
+            }
+
             console.log('➡️ Evento next_question recibido (avance manual)');
             await sendNextQuestion(io);
         } catch (error){
@@ -36,6 +41,10 @@ const registerGameHandlers = (io, socket, sendNextQuestion) => {
     // sin activar, así que nadie respondió todavía y no hay puntos que revertir.
     socket.on('previous_question', () => {
         try{
+            if (!isGameController(socket)) {
+                return rejectUnauthorized(socket, 'previous_question');
+            }
+
             if (getGameState() !== 'QUESTION_LOCKED') {
                 console.log('⚠️ Intento de volver atrás en estado:', getGameState());
                 return;
@@ -81,6 +90,10 @@ const registerGameHandlers = (io, socket, sendNextQuestion) => {
     // --- ACTIVATE ANSWERS ---
     socket.on('activate_answers', () => {
         try{
+            if (!isGameController(socket)) {
+                return rejectUnauthorized(socket, 'activate_answers');
+            }
+
         console.log('🟢 Activando respuestas...');
         
         if (getGameState() !== 'QUESTION_LOCKED') {
@@ -156,6 +169,10 @@ const registerGameHandlers = (io, socket, sendNextQuestion) => {
     // --- SHOW ANSWER ---
     socket.on('show_answer', () => {
         try{
+            if (!isGameController(socket)) {
+                return rejectUnauthorized(socket, 'show_answer');
+            }
+
             console.log('📺 Mostrando respuesta correcta...');
 
             if (getTimerInterval()) {
