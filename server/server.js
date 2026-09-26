@@ -45,6 +45,13 @@ const port = process.env.PORT;
 const { initializePassword } = require('./utils/passwordManager');
 
 const app = express() // Inicializar express
+
+// En Render la app corre detrás de un proxy: sin esto, req.ip es la IP del
+// proxy para todo el mundo y el rate limit del login se comparte entre todos
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+}
+
 app.use(express.json());
 
 const { corsMiddleware, allowedOrigins } = configureCORS(); 
