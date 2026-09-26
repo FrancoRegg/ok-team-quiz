@@ -54,6 +54,25 @@ const registerPlayerHandlers = (io, socket) => {
             }
             console.log(`✅ Validación pasada para: ${groupId}`);
             
+            // Un nombre en uso no se puede tomar: el jugador que ya lo tiene
+            // sigue conectado y el recién llegado se quedaría con sus puntos.
+            // Si el equipo está en los 30s de gracia (o ya se fue del todo),
+            // el nombre vuelve a estar disponible para él mismo: es la
+            // reconexión de siempre, con su puntaje.
+            if (groupId !== 'HOST') {
+                const sameName = Object.keys(players).find(key => players[key].name === groupId);
+                const enUso = sameName && sameName !== socket.id && !playerTimeouts[sameName];
+
+                if (enUso) {
+                    console.log(`⛔ Nombre en uso: ${groupId} ya está conectado`);
+                    socket.emit('error', {
+                        code: 'NAME_TAKEN',
+                        message: `Ya hay un equipo con el nombre "${groupId}". Elige otro.`
+                    });
+                    return;
+                }
+            }
+
             // Buscar o crear jugador en base de datos
             let dbPlayer;
             if (groupId !== 'HOST') {

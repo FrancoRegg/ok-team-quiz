@@ -98,15 +98,49 @@ describe('join_game: equipos', () => {
         expect(gameState.players.s1).toMatchObject({ score: 250, dbId: 'uuid-7' });
     });
 
-    it('el mismo nombre desde otro dispositivo reemplaza la conexión anterior', async () => {
+    it('un nombre en uso se rechaza: nadie se queda con los puntos de otro', async () => {
         stubPlayersTable([dbRecord({ name: 'Equipo 1', score: 90 })]);
 
-        await connect('celular-viejo').trigger('join_game', { name: 'Equipo 1' });
-        await connect('celular-nuevo').trigger('join_game', { name: 'Equipo 1' });
+        await connect('celular-del-equipo').trigger('join_game', { name: 'Equipo 1' });
+        const intruso = connect('otro-celular');
+        await intruso.trigger('join_game', { name: 'Equipo 1' });
 
+        expect(sentToSocket(intruso, 'error')).toEqual([
+            { code: 'NAME_TAKEN', message: 'Ya hay un equipo con el nombre "Equipo 1". Elige otro.' },
+        ]);
+        expect(gameState.players['otro-celular']).toBeUndefined();
+        // El equipo que ya estaba sigue en su lugar, con sus puntos
+        expect(gameState.players['celular-del-equipo']).toMatchObject({ score: 90 });
+    });
+
+    it('el equipo desconectado vuelve con su nombre y su puntaje', async () => {
+        vi.useFakeTimers();
+        stubPlayersTable([dbRecord({ name: 'Equipo 1', score: 90 })]);
+
+        const viejo = connect('celular-viejo');
+        await viejo.trigger('join_game', { name: 'Equipo 1' });
+
+        // Se le cayó el teléfono: quedan los 30s de gracia
+        viejo.trigger('disconnect');
+
+        const nuevo = connect('celular-nuevo');
+        await nuevo.trigger('join_game', { name: 'Equipo 1' });
+
+        expect(sentToSocket(nuevo, 'error')).toEqual([]);
         expect(playersNamed('Equipo 1')).toHaveLength(1);
         expect(gameState.players['celular-nuevo']).toMatchObject({ score: 90 });
         expect(gameState.players['celular-viejo']).toBeUndefined();
+    });
+
+    it('volver a mandar join_game desde el mismo socket no se rechaza', async () => {
+        stubPlayersTable([dbRecord({ name: 'Equipo 1', score: 90 })]);
+        const socket = connect('s1');
+
+        await socket.trigger('join_game', { name: 'Equipo 1' });
+        await socket.trigger('join_game', { name: 'Equipo 1' });
+
+        expect(sentToSocket(socket, 'error')).toEqual([]);
+        expect(gameState.players.s1).toMatchObject({ score: 90 });
     });
 });
 

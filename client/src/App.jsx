@@ -36,6 +36,14 @@ function App() {
   // Estable: ServerNotice lo usa dentro de un efecto para cerrarse solo
   const dismissNotice = useCallback(() => setNotice(null), []);
 
+  // El server rechazó la entrada (nombre en uso): volver al login. El nombre
+  // guardado se borra para que la reconexión automática no lo reintente sola
+  const handleJoinRejected = useCallback(() => {
+    localStorage.removeItem("savedGroupName");
+    setInside(false);
+    setNameGroup("");
+  }, []);
+
   // Mantiene la pantalla encendida mientras el jugador esta en la partida.
   // Va atado a 'inside' para que tambien cubra las reconexiones automaticas.
   const wakeLockStatus = useWakeLock(inside);
@@ -51,7 +59,8 @@ function App() {
     setCorrectOption,
     setScoreGroup,
     setTimer,
-    setNotice
+    setNotice,
+    onJoinRejected: handleJoinRejected
   });
 
   // Funciones
