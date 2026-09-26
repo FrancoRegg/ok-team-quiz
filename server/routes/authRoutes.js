@@ -24,6 +24,23 @@ const loginLimiter = rateLimit({
     }
 });
 
+// La recuperación es la otra puerta de entrada al panel: sin freno, se pueden
+// probar códigos sin límite. Más holgado que el login porque el código es
+// largo y quien lo usa suele tipearlo mal alguna vez
+const recoveryLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 10, // 10 intentos
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+        console.log('🚫 Rate limit de recuperación alcanzado para IP:', req.ip);
+        res.status(429).json({
+            success: false,
+            message: 'Demasiados intentos de recuperación. Espera 15 minutos.'
+        });
+    }
+});
+
 // Aplicar rate limiter al endpoint de login
 router.post('/login', loginLimiter, async (req, res) => {  // ← async
     const { password } = req.body;
@@ -88,7 +105,7 @@ router.post('/change-password', authenticateAdmin, async (req, res) => {
     }
 });
 
-router.post('/recover-with-code', async (req, res) => {
+router.post('/recover-with-code', recoveryLimiter, async (req, res) => {
     const { recoveryCode, newPassword } = req.body;
     
     if (!recoveryCode || !newPassword) {
