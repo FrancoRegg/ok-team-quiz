@@ -29,7 +29,7 @@ Guía para retomar el trabajo en este repo. Se actualiza al cerrar cada tanda (v
 | Rama | Estado |
 |---|---|
 | `master` | `7deb2ad`, igual en GitHub. Es lo que corre en producción. |
-| `mejoras-cliente` | En GitHub (`8ca52a6`): tandas 1 a 4 completas, pusheadas y probadas por Franco en el staging. En local, además, la primera parte de la tanda 5 (A1, A3, A25, A32, A33, A31), sin pushear. |
+| `mejoras-cliente` | En GitHub: tandas 1 a 4 y la primera parte de la tanda 5 (A1, A3, A25, A32, A33, A31), pusheadas por Franco. En local, además, el cierre de la tanda 5 (A20, B4, A30), sin pushear. |
 | `feature_*`, `IC`, `password`, `refactoring` | Históricas, ya integradas en `master`. |
 
 Plan de entrega: tanda por tanda, push a `mejoras-cliente`, CI en verde y prueba de Franco en el staging. No fusionar a `master` sin la decisión de Franco.
@@ -127,25 +127,21 @@ reset_game (desde cualquier estado) → LOBBY
 - **Tanda 1:** A2 el jugador que entra tarde recibe la pregunta en curso · A22 manejador global de errores y arranque que falla sin base · B1 pantalla encendida · B2 respuesta correcta en el celular. Además, modo `dev:https` e indicador de Wake Lock en desarrollo.
 - **Tanda 2:** A4 404 JSON en `/api` · A5 dependencias faltantes en `server/` · A6 `VITE_API_URL` en AdminGuard · A7 ESLint analiza `.js`/`.jsx` · A8 README al día · A9 fuera `ADMIN_PASSWORD` · A13 listener de conexión duplicado · A15 logs de debug y códigos de recuperación fuera de los logs · A19 guardas en `seed.js` · A24 `JWT_SECRET` obligatoria.
 - **Tanda 3:** A17 tests del server · A18 CI en GitHub Actions · A21 descartado (el HOST no se acumula en memoria).
-- **Tanda 5 (primera parte):** A1 los eventos de control solo se aceptan del proyector o del panel autenticado · A3 `trust proxy` · A25 rate limit en la recuperación · A32 los avisos del server se ven en el celular · A33 CORS responde 403 · A31 aviso cuando la imagen no carga, en el proyector y en el panel.
+- **Tanda 5:** A1 los eventos de control solo se aceptan del proyector o del panel autenticado · A3 `trust proxy` · A25 rate limit en la recuperación · A32 los avisos del server se ven en el celular · A33 CORS responde 403 · A31 aviso cuando la imagen no carga, en el proyector y en el panel · A20 un nombre en uso se rechaza · B4 las preguntas se cargan por fecha de creación · A30 README corregido. **A26 y B6 no se hacen** (ver abajo).
 - **Tanda 4:** A12 fuera el avance automático comentado · A11 fuera el feedback de acierto sin uso (decisión de Franco: la partida no avanza sola y el jugador ve la respuesta recién cuando el Host la muestra) · A29 el puntaje en memoria sube solo si se guardó en la base · A16 `getCurrentQuestion()` · B5 botón «Atrás» · A10 `reset_game` usa `resetGame()` y ya no reinicia a medias si falla la base · A14 sin `require` circular (el controller de jugadores ahora tiene tests) · A27 los 4xx se informan como «Solicitud inválida» · A28 ESLint en cero y en el CI.
 
-### Tanda 5: seguridad, esquema y deploy
+### Decisiones de Franco sobre lo que no se hace (2026-09-26)
 
-Hecho: A1, A3, A25, A32, A33 y A31. Lo que queda toca el esquema o el deploy, así que necesita una decisión de Franco antes de empezar.
-
-| ID | Qué | Dónde | Notas |
-|---|---|---|---|
-| A20 | Un nombre de equipo repetido hereda el puntaje anterior | `models/Players.js`, `playerHandlers.js` | Riesgo medio |
-| A26 | Unificar los dos `package.json` | raíz y `server/` | Cambia cómo instala Render |
-| A30 | Alinear la versión de Node | `package.json`, README, CI | Requiere ver el log de build de Render |
-| B4 | Reordenar preguntas sin borrarlas | `question.controller.js:136`, `gameLogics.js:18` | Causa: `findAll()` sin `order`. Toca esquema |
-| B6 | Respuestas múltiples | `correctIndex` (unas 22 referencias entre server y cliente) | **Bloqueado**: definir si vale cualquiera de las correctas o hay que marcarlas todas. Función nueva, fuera del mantenimiento |
+- **A26, unificar los dos `package.json`: no se hace.** Obliga a reconfigurar el Render del cliente, al que todavía no tiene acceso, y el proyecto no va a crecer más. Sigue vigente la regla de las Trampas: **una dependencia nueva del server va en los dos**.
+- **A30, versión de Node: solo documentación.** Los deploys funcionan, así que tocar `engines` es lo único que podría cambiar qué versión elige Render. Se corrigió el README (pide 20.19 o superior) y `engines` queda en `18.x`, con la explicación al lado. Si algún día hay acceso a Render, conviene confirmar la versión real del build.
+- **B6, respuestas múltiples: no se hace.** El cliente nunca definió qué significa «dos respuestas correctas» y la función queda fuera del mantenimiento.
+- **B4 quedó acotado:** no se agrega reordenar preguntas. Lo que importaba era que editar una no la mandara al final, y eso se resolvió con `ORDER BY createdAt` en las dos consultas, sin tocar el esquema.
+- **A20 se resolvió sin tocar el modelo:** un nombre se rechaza mientras ese equipo siga conectado y sigue disponible para él si se desconecta. Entre eventos, la herencia de puntos se corta limpiando la temporada desde el panel.
 
 ### Bloqueado o diferido
 
 - **B3 «Server Error» en producción**: falta que el cliente diga en qué pantalla pasó, cuántas veces y si venía de un rato sin usar la app. Los logs de Render lo resolverían.
-- **A23 migraciones y estado en un solo proceso**: diferido por decisión de Franco. B4 y B6 lo van a poner sobre la mesa.
+- **A23 migraciones y estado en un solo proceso**: diferido por decisión de Franco. Ni B4 ni B6 lo tocan al final: B4 se resolvió sin esquema y B6 no se hace.
 - **Pendiente del cliente** (conviene pedirlo en un solo mensaje): acceso a Render, detalles de B3 y definición de B6. Sin novedades al 2026-09-22.
 
 ### Observaciones sin cargar en la checklist
@@ -174,6 +170,7 @@ No suman robustez por sí solas; se retoman si se toca esa zona.
 | 2026-09-22 | 4 | A10, A14, A27 y A28: tanda 4 cerrada. 160 tests, lint en cero y en el CI. Probado en el navegador con el server en 3100: modales del proyector estables durante el temporizador, «Atrás», reinicio, redirección de `/` y login del admin. Falta ver en el staging la carga inicial del panel admin (necesita login) |
 | 2026-09-22 | — | Franco pushea el resto de la tanda 4 (`8ca52a6`) y valida el panel admin en el staging. Se cargan A31, A32 y A33 en la checklist y se fija el orden de la tanda 5 |
 | 2026-09-26 | 5 | A1, A3, A25, A32, A33 y A31 (177 tests, mutaciones verificadas, lint en cero). Probado con el server en 3100: el proyector maneja la partida igual que antes, un socket ajeno recibe «No tienes permiso» en `next_question` y `reset_game`, el rate limit corta al 6.º login y al 11.º intento de recuperación por IP, un origen ajeno recibe 403, el aviso de respuesta no guardada se ve en el celular y deja reintentar, y el proyector avisa cuando la imagen no carga. Falta probar en el staging el reinicio desde el panel admin (necesita login) |
+| 2026-09-26 | 5 | Cierre: A20, B4 y A30 (181 tests, mutación verificada, lint en cero). A20 probado en el navegador: el segundo equipo con el mismo nombre vuelve al login con el aviso, y el equipo legítimo reconecta con su puntaje. B4 reproducido contra la base local: al editar, el orden físico manda la pregunta al final y con `ORDER BY createdAt` se queda en su lugar. A26 y B6 descartados por Franco |
 
 ## Cómo mantener este archivo
 
