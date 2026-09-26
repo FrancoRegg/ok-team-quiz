@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { useSocket } from './hooks/useSocket';
 import { useGameSession } from './hooks/useGameSession';
@@ -13,6 +13,7 @@ import QuestionScreen from './components/screens/QuestionScreen';
 import WaitingScreen from './components/screens/WaitingScreen';
 import ReconnectingScreen from './components/screens/ReconnectingScreen';
 import WakeLockBadge from './components/common/WakeLockBadge';
+import ServerNotice from './components/common/ServerNotice';
 
 import './styles/App.css';
 
@@ -30,6 +31,10 @@ function App() {
   const [scoreGroup, setScoreGroup] = useState(0);
   const [timer, setTimer] = useState(null);
   const [isValidating, setIsValidating] = useState(true); 
+  const [notice, setNotice] = useState(null);
+
+  // Estable: ServerNotice lo usa dentro de un efecto para cerrarse solo
+  const dismissNotice = useCallback(() => setNotice(null), []);
 
   // Mantiene la pantalla encendida mientras el jugador esta en la partida.
   // Va atado a 'inside' para que tambien cubra las reconexiones automaticas.
@@ -45,7 +50,8 @@ function App() {
     setMyAnswer,
     setCorrectOption,
     setScoreGroup,
-    setTimer
+    setTimer,
+    setNotice
   });
 
   // Funciones
@@ -160,6 +166,7 @@ function App() {
 
   return (
     <>
+      <ServerNotice message={notice} onClose={dismissNotice} />
       {renderScreen()}
       {/* Indicador de prueba del wake lock: solo en desarrollo */}
       {import.meta.env.DEV && <WakeLockBadge status={wakeLockStatus} />}

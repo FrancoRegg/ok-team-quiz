@@ -79,7 +79,10 @@ const registerAnswerHandlers = (io, socket) => {
                     }
 
                     console.error(`❌ No se pudo guardar el puntaje de ${player.name}:`, error.message);
+                    // El código deja que el móvil vuelva a habilitar las opciones:
+                    // el server ya liberó al jugador para que reintente
                     socket.emit('error', {
+                        code: 'ANSWER_NOT_SAVED',
                         message: 'No pudimos registrar tu respuesta. Intenta de nuevo.'
                     });
                     return;

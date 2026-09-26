@@ -10,7 +10,8 @@ export const useGameSocket = (socket, gameHandlers) => {
         setMyAnswer,
         setCorrectOption,
         setScoreGroup,
-        setTimer
+        setTimer,
+        setNotice
     } = gameHandlers;
 
     useEffect(() => {
@@ -49,6 +50,18 @@ export const useGameSocket = (socket, gameHandlers) => {
             }
         };
 
+        // El server manda avisos al jugador (respuestas sin activar, respuesta
+        // que no se pudo guardar). Sin este listener no se veían en pantalla
+        const handleError = (data) => {
+            setNotice(data?.message || 'El servidor rechazó la acción');
+
+            // La respuesta no llegó a guardarse: el server la dio por no hecha
+            if (data?.code === 'ANSWER_NOT_SAVED') {
+                setHasAnswered(false);
+                setMyAnswer(null);
+            }
+        };
+
         // Registrar eventos
         socket.on('game_state', handleGameState);
         socket.on('new_question', handleNewQuestion);
@@ -56,6 +69,7 @@ export const useGameSocket = (socket, gameHandlers) => {
         socket.on('update_players', handleUpdatePlayers);
         socket.on('timer_update', handleTimerUpdate); 
         socket.on('timer_finished', handleTimerFinished);
+        socket.on('error', handleError);
 
         return () => {
             socket.off('game_state', handleGameState);
@@ -64,9 +78,10 @@ export const useGameSocket = (socket, gameHandlers) => {
             socket.off('update_players', handleUpdatePlayers);
             socket.off('timer_update', handleTimerUpdate); 
             socket.off('timer_finished', handleTimerFinished);
+            socket.off('error', handleError);
         };
     // Los setters de useState son estables: el efecto corre una vez por socket.
     // Antes dependía de gameHandlers, un objeto nuevo en cada render de App, y
     // todos los listeners se daban de baja y se volvían a registrar cada vez.
-    }, [socket, setGameState, setOptionsAnswers, setHasAnswered, setMyAnswer, setCorrectOption, setScoreGroup, setTimer]);
+    }, [socket, setGameState, setOptionsAnswers, setHasAnswered, setMyAnswer, setCorrectOption, setScoreGroup, setTimer, setNotice]);
 }

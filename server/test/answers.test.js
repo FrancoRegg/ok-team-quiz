@@ -159,8 +159,12 @@ describe('submit_answer: si falla el guardado en la base', () => {
 
         await socket.trigger('submit_answer', { answer: CORRECT });
 
+        // El código es lo que el móvil mira para volver a habilitar las opciones
         expect(sentToSocket(socket, 'error')).toEqual([
-            { message: 'No pudimos registrar tu respuesta. Intenta de nuevo.' }
+            {
+                code: 'ANSWER_NOT_SAVED',
+                message: 'No pudimos registrar tu respuesta. Intenta de nuevo.'
+            }
         ]);
         expect(gameState.players.s1.hasAnswered).toBe(false);
 
