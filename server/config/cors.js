@@ -18,24 +18,35 @@ const configureCORS = () => {
             process.env.LOCAL_IP ? `https://${process.env.LOCAL_IP}:5173` : null    // Celular con `npm run dev:https`
         ].filter(Boolean);
 
+    // Se nombra aparte para poder probarla sin levantar Express
+    const checkOrigin = (origin, callback) => {
+        // Permitir requests sin origin
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+            return;
+        }
+
+        console.log('⚠️ Origen bloqueado por CORS:', origin);
+
+        // Sin status, el manejador global lo tomaba por un fallo del servidor
+        // y respondía 500 «Error interno»: el navegador mostraba «Server
+        // Error» sin pista de que el problema es el origen. Con 403 se
+        // distingue de una caída real del servidor
+        const error = new Error('Origen no permitido por CORS');
+        error.status = 403;
+        callback(error);
+    };
+
     const corsOptions = {
-        origin: (origin, callback) => {
-            // Permitir requests sin origin
-            if (!origin) return callback(null, true);
-            
-            if (allowedOrigins.includes(origin)) {
-                callback(null, true);
-            } else {
-                console.log('⚠️ Origen bloqueado por CORS:', origin);
-                callback(new Error('No permitido por CORS'));
-            }
-        },
+        origin: checkOrigin,
         credentials: true,
     };
 
     console.log('✅ CORS configurado para:', allowedOrigins);
     
-    return { corsMiddleware: cors(corsOptions), allowedOrigins };
+    return { corsMiddleware: cors(corsOptions), allowedOrigins, checkOrigin };
 }
 
 module.exports = { configureCORS };
