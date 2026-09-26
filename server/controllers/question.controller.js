@@ -133,7 +133,9 @@ function validateQuestionData(data) {
 
 exports.getQuestion = async(req, res) => {
  try{
-    const question = await Question.findAll()
+    // Mismo orden que en la partida: el panel y el proyector tienen que
+    // mostrar las preguntas en la misma secuencia (ver gameLogics)
+    const question = await Question.findAll({ order: [['createdAt', 'ASC']] })
     return res.status(200).json(question);
  }catch(error){
     return res.status(500).json({ message: 'Error al obtener preguntas' });

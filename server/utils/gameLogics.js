@@ -16,7 +16,10 @@ const {
 // --- Cargar preguntas al inicio ---
 const loadQuestions = async() => {
     try {
-        const questionsFromDB = await Question.findAll();
+        // Sin ORDER BY, Postgres devuelve las filas en orden físico: al editar
+        // una pregunta se reescribe al final de la tabla y se jugaba última.
+        // Por fecha de creación, editarla la deja donde estaba
+        const questionsFromDB = await Question.findAll({ order: [['createdAt', 'ASC']] });
         const loadedQuestions = questionsFromDB.map(q => q.toJSON());
         setQuestions(loadedQuestions);
         console.log(`✅ ${loadedQuestions.length} preguntas cargadas.`);

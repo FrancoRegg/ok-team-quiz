@@ -202,4 +202,12 @@ describe('getQuestion', () => {
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith([{ id: 'q1' }, { id: 'q2' }]);
     });
+
+    it('las pide por fecha de creación, así editar una no la manda al final', async () => {
+        const findAll = vi.spyOn(Question, 'findAll').mockResolvedValue([]);
+
+        await getQuestion({}, fakeRes());
+
+        expect(findAll).toHaveBeenCalledWith({ order: [['createdAt', 'ASC']] });
+    });
 });

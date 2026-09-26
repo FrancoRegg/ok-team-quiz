@@ -48,6 +48,14 @@ describe('sendNextQuestion', () => {
         expect(findAll).toHaveBeenCalledOnce();
     });
 
+    it('las carga por fecha de creación: el orden no cambia porque se edite una', async () => {
+        const findAll = stubQuestionsInDb();
+
+        await sendNextQuestion(createFakeIo());
+
+        expect(findAll).toHaveBeenCalledWith({ order: [['createdAt', 'ASC']] });
+    });
+
     it('sin preguntas cargadas avisa al HOST y no arranca', async () => {
         stubQuestionsInDb([]);
         const io = createFakeIo();
