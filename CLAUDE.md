@@ -24,12 +24,12 @@ Guía para retomar el trabajo en este repo. Se actualiza al cerrar cada tanda (v
 7. **Nunca tocar `master`**: ni merge ni push. Lo hace Franco o lo pide explícitamente. Push a GitHub solo cuando lo pida: un push a `mejoras-cliente` despliega el staging.
 8. Al cerrar la tanda: tildar lo terminado en la checklist y actualizar este archivo.
 
-## Estado de ramas (2026-09-22)
+## Estado de ramas (2026-09-26)
 
 | Rama | Estado |
 |---|---|
 | `master` | `7deb2ad`, igual en GitHub. Es lo que corre en producción. |
-| `mejoras-cliente` | En GitHub (`8ca52a6`): tandas 1 a 4 completas, pusheadas y probadas por Franco en el staging. |
+| `mejoras-cliente` | En GitHub (`8ca52a6`): tandas 1 a 4 completas, pusheadas y probadas por Franco en el staging. En local, además, la primera parte de la tanda 5 (A1, A3, A25, A32, A33, A31), sin pushear. |
 | `feature_*`, `IC`, `password`, `refactoring` | Históricas, ya integradas en `master`. |
 
 Plan de entrega: tanda por tanda, push a `mejoras-cliente`, CI en verde y prueba de Franco en el staging. No fusionar a `master` sin la decisión de Franco.
@@ -66,6 +66,7 @@ Monorepo sin workspaces. El `package.json` de la raíz es el del deploy: depende
 - `config/`: `db.js` (`DATABASE_URL` con SSL o variables `PG*`), `cors.js` (orígenes por entorno más `LOCAL_IP`), `socket.js`, `sync.js`.
 - `utils/gameState.js`: todo el estado de la partida en variables de módulo, con getters y setters. `players` y `playerTimeouts` se exportan por referencia: se mutan, nunca se reasignan. `resetGame()` vuelve la partida al lobby con sesión nueva pero **no toca los jugadores**: eso lo decide `reset_game` según la opción elegida.
 - `utils/gameLogics.js`: `loadQuestions` y `sendNextQuestion`.
+- `sockets/authorization.js`: `isGameController(socket)`. Los cinco eventos de control (`next_question`, `previous_question`, `activate_answers`, `show_answer`, `reset_game`) solo se aceptan del socket que entró como HOST o de uno del panel admin, que manda su token en el handshake (`middleware/socketAuth.js`). El acceso a `/host` sigue abierto, por decisión de Franco: el evento es chico y controlado.
 - `sockets/`: `playerHandlers` (`join_game`, `disconnect` con 30 s de gracia), `gameHandlers` (`next_question`, `previous_question`, `activate_answers` con timer, `show_answer`), `answerHandlers` (`submit_answer` y puntaje), `adminHandlers` (`reset_game`).
 - REST: `/api/auth` (`login` con rate limit, `change-password` con JWT, `recover-with-code`), `/api/questions` (CRUD con JWT), `/api/players` (listar, `PUT /:id` con `scoreChange`, `DELETE /clean-season`; con JWT).
 - Modelos: `Question` (`title`, `type` TEXT|IMAGE|VIDEO, `options[]`, `mediaUrl`, `correctIndex`, `timeLimit` 5–120), `Player` (`name` **único**, `score`, `isConnected`), `Password` (fila única: hash, `isDefault`, `recoveryCode`). Si la tabla está vacía, se crea la contraseña por defecto `Admin2024!`.
@@ -126,20 +127,15 @@ reset_game (desde cualquier estado) → LOBBY
 - **Tanda 1:** A2 el jugador que entra tarde recibe la pregunta en curso · A22 manejador global de errores y arranque que falla sin base · B1 pantalla encendida · B2 respuesta correcta en el celular. Además, modo `dev:https` e indicador de Wake Lock en desarrollo.
 - **Tanda 2:** A4 404 JSON en `/api` · A5 dependencias faltantes en `server/` · A6 `VITE_API_URL` en AdminGuard · A7 ESLint analiza `.js`/`.jsx` · A8 README al día · A9 fuera `ADMIN_PASSWORD` · A13 listener de conexión duplicado · A15 logs de debug y códigos de recuperación fuera de los logs · A19 guardas en `seed.js` · A24 `JWT_SECRET` obligatoria.
 - **Tanda 3:** A17 tests del server · A18 CI en GitHub Actions · A21 descartado (el HOST no se acumula en memoria).
+- **Tanda 5 (primera parte):** A1 los eventos de control solo se aceptan del proyector o del panel autenticado · A3 `trust proxy` · A25 rate limit en la recuperación · A32 los avisos del server se ven en el celular · A33 CORS responde 403 · A31 aviso cuando la imagen no carga, en el proyector y en el panel.
 - **Tanda 4:** A12 fuera el avance automático comentado · A11 fuera el feedback de acierto sin uso (decisión de Franco: la partida no avanza sola y el jugador ve la respuesta recién cuando el Host la muestra) · A29 el puntaje en memoria sube solo si se guardó en la base · A16 `getCurrentQuestion()` · B5 botón «Atrás» · A10 `reset_game` usa `resetGame()` y ya no reinicia a medias si falla la base · A14 sin `require` circular (el controller de jugadores ahora tiene tests) · A27 los 4xx se informan como «Solicitud inválida» · A28 ESLint en cero y en el CI.
 
 ### Tanda 5: seguridad, esquema y deploy
 
-Orden acordado con Franco: **A1** primero, después **A3** y **A25**, después el resto.
+Hecho: A1, A3, A25, A32, A33 y A31. Lo que queda toca el esquema o el deploy, así que necesita una decisión de Franco antes de empezar.
 
 | ID | Qué | Dónde | Notas |
 |---|---|---|---|
-| A1 | Autenticación en los eventos de socket | `server/sockets/` | Prioridad alta. Detalle en la checklist |
-| A3 | `trust proxy` detrás de Render para el rate limit por IP | `server.js`, `routes/authRoutes.js` | |
-| A25 | Rate limit en la recuperación de contraseña | `routes/authRoutes.js:91` | |
-| A32 | El cliente no escucha el evento `error` del server | `hooks/useGameSocket.js`, `App.jsx:94` | Deja a medias A29: el celular bloquea los botones al tocar y nunca se entera de que puede reintentar |
-| A33 | Un origen rechazado por CORS responde 500 | `config/cors.js:31` | Pasarlo a 403 separa este caso de los otros sospechosos de B3 |
-| A31 | Imágenes de preguntas: cualquier URL se acepta y falla en silencio | `AdminView.jsx`, `HostView.jsx`, README | Vista previa en el panel, aviso visible en el proyector y ayuda de Drive corregida |
 | A20 | Un nombre de equipo repetido hereda el puntaje anterior | `models/Players.js`, `playerHandlers.js` | Riesgo medio |
 | A26 | Unificar los dos `package.json` | raíz y `server/` | Cambia cómo instala Render |
 | A30 | Alinear la versión de Node | `package.json`, README, CI | Requiere ver el log de build de Render |
@@ -177,6 +173,7 @@ No suman robustez por sí solas; se retoman si se toca esa zona.
 | 2026-09-20 | — | Franco pushea la primera parte de la tanda 4 (`d8774c5`), CI en verde |
 | 2026-09-22 | 4 | A10, A14, A27 y A28: tanda 4 cerrada. 160 tests, lint en cero y en el CI. Probado en el navegador con el server en 3100: modales del proyector estables durante el temporizador, «Atrás», reinicio, redirección de `/` y login del admin. Falta ver en el staging la carga inicial del panel admin (necesita login) |
 | 2026-09-22 | — | Franco pushea el resto de la tanda 4 (`8ca52a6`) y valida el panel admin en el staging. Se cargan A31, A32 y A33 en la checklist y se fija el orden de la tanda 5 |
+| 2026-09-26 | 5 | A1, A3, A25, A32, A33 y A31 (177 tests, mutaciones verificadas, lint en cero). Probado con el server en 3100: el proyector maneja la partida igual que antes, un socket ajeno recibe «No tienes permiso» en `next_question` y `reset_game`, el rate limit corta al 6.º login y al 11.º intento de recuperación por IP, un origen ajeno recibe 403, el aviso de respuesta no guardada se ve en el celular y deja reintentar, y el proyector avisa cuando la imagen no carga. Falta probar en el staging el reinicio desde el panel admin (necesita login) |
 
 ## Cómo mantener este archivo
 
